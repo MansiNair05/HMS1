@@ -116,7 +116,7 @@ const Add_Enquiry = () => {
                         onChange={handleInputChange}
                         required
                       />
-                                              {errors.dateName && (
+                                              {errors.date && (
                           <p style={{ color: "red" }}>{errors.date}</p>
                         )}
                     </Form.Group>

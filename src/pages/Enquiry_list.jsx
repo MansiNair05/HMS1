@@ -2,9 +2,6 @@ import React, { useState, useEffect } from "react";
 import { FilterMatchMode } from "primereact/api";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import FeatherIcon from "feather-icons-react";
-
-import { Link } from "react-router-dom";
 import {
   Container,
   Row,
@@ -15,23 +12,33 @@ import {
   Button,
   Spinner,
 } from "react-bootstrap";
-
 import PageBreadcrumb from "/Medflex/medflex/src/components/PageBreadcrumb";
 
-const BASE_URL = "http://192.168.1.139:5000/api"; // Update your API base URL here
+const BASE_URL = "http://192.168.90.116:5000/api";
 
 export default function EnquiryList() {
   const [enquiries, setEnquiries] = useState([]);
   const [filters1, setFilters1] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
-  const [loading, setLoading] = useState(false); // Loading state
+  const [loading, setLoading] = useState(false);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
-  // Fetch enquiry data
   const fetchEnquiriesData = async () => {
-    setLoading(true); // Show loader
+    setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/V1/enquiry/listEnquiry`, {
+      const url = new URL(`${BASE_URL}/V1/enquiry/listEnquiry`);
+      const params = {
+        from: fromDate.split("-").reverse().join("/"), // Convert yyyy-mm-dd to dd/mm/yyyy
+        to: toDate.split("-").reverse().join("/"), // Convert yyyy-mm-dd to dd/mm/yyyy
+      };
+
+      Object.keys(params).forEach((key) =>
+        url.searchParams.append(key, params[key])
+      );
+
+      const response = await fetch(url, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -39,10 +46,9 @@ export default function EnquiryList() {
       });
 
       const data = await response.json();
-
       if (response.ok) {
-        console.log("Fetched Data:", data.data); // Debugging: Log the fetched data
-        setEnquiries(data.data || []); // Update state with fetched enquiry data
+        // Ensure data is an array
+        setEnquiries(Array.isArray(data.data) ? data.data : []);
       } else {
         console.error(
           "Error fetching enquiries:",
@@ -52,74 +58,75 @@ export default function EnquiryList() {
     } catch (error) {
       console.error("Error fetching enquiries:", error);
     } finally {
-      setLoading(false); // Hide loader
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchEnquiriesData(); // Fetch data on component mount
-  }, []);
-
-  // Actions template for the DataTable
-  const actionBodyTemplate = (rowData) => (
-    <div className="cart-action">
-      <Link className="appoinment" to={`/add-appointment/${rowData.id}`}>
-        <FeatherIcon icon="plus-square" className="w-18" />
-      </Link>
-      <Link className="edit" to={`/edit-enquiry/${rowData.id}`}>
-        <FeatherIcon icon="edit" className="w-18" />
-      </Link>
-      <Link className="print" to="">
-        <FeatherIcon icon="printer" className="w-18" />
-      </Link>
-    </div>
-  );
-
-  // Global filter handler
-  const onGlobalFilterChange = (e) => {
-    const value = e.target.value;
-    setFilters1({
-      global: { value, matchMode: FilterMatchMode.CONTAINS },
-    });
-  };
-
-  // Header content with search and refresh button
+    fetchEnquiriesData();
+  }, [fromDate, toDate]);
+  
   const renderHeader = () => (
     <div className="d-flex justify-content-between align-items-center">
-      <div>
+      {/* Left Section */}
+      <div className="d-flex align-items-center" style={{ gap: '30px' }}>
+        <Form.Group className="d-flex align-items-center pe-3 mb-0">
+          <Form.Label>Search</Form.Label>
+          <InputGroup>
+            <Form.Control
+              type="search"
+              value={filters1.global.value || ""}
+              onChange={(e) =>
+                setFilters1({
+                  global: {
+                    value: e.target.value,
+                    matchMode: FilterMatchMode.CONTAINS,
+                  },
+                })
+              }
+              placeholder="Global Search"
+            />
+          </InputGroup>
+        </Form.Group>
+      </div>
+  
+      {/* Right Section */}
+      <div className="d-flex align-items-center" style={{ gap: '15px' }}>
+        <Form.Group className="pe-3 mb-0">
+          <Form.Label>From Date</Form.Label>
+          <Form.Control
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+          />
+        </Form.Group>
+        <Form.Group className="pe-3 mb-0">
+          <Form.Label>To Date</Form.Label>
+          <Form.Control
+            type="date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+          />
+        </Form.Group>
         <Button variant="primary" onClick={fetchEnquiriesData}>
           Refresh Data
         </Button>
       </div>
-      <Form.Group className="d-flex align-items-center">
-        <Form.Label className="pe-3 mb-0">Search</Form.Label>
-        <InputGroup>
-          <Form.Control
-            type="search"
-            value={filters1.global.value || ""}
-            onChange={onGlobalFilterChange}
-            placeholder="Global Search"
-          />
-        </InputGroup>
-      </Form.Group>
-    </div>
+    </div>
   );
-
+  
   const header = renderHeader();
 
   return (
     <div className="themebody-wrap">
-      {/* Breadcrumb */}
       <PageBreadcrumb pagename="Enquiry List" />
-
-      {/* Theme body */}
       <div className="theme-body">
         <Container fluid>
           <Row>
             <Col>
               <Card>
                 <Card.Body>
-                  {loading ? ( // Show loader if data is being fetched
+                  {loading ? (
                     <div className="d-flex justify-content-center py-5">
                       <Spinner animation="border" role="status">
                         <span className="visually-hidden">Loading...</span>
@@ -140,95 +147,15 @@ export default function EnquiryList() {
                         "enquirytype",
                         "FDE_Name",
                       ]}
-                      currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
-                      paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
                       responsiveLayout="scroll"
-                      className="p-datatable-customers"
-                      style={{
-                        borderCollapse: "collapse", // Ensure consistent borders
-                        width: "100%",
-                      }}
                     >
-                      <Column
-                        field="srNo"
-                        header="Sr. No"
-                        sortable
-                        style={{
-                          border: "1px solid #dee2e6",
-                          textAlign: "center",
-                          padding: "0.75rem",
-                        }}
-                      />
-                      <Column
-                        field="date"
-                        header="Date"
-                        sortable
-                        style={{
-                          border: "1px solid #dee2e6",
-                          textAlign: "center",
-                          padding: "0.75rem",
-                        }}
-                      />
-                      <Column
-                        field="patient_name"
-                        header="Patient Name"
-                        sortable
-                        style={{
-                          border: "1px solid #dee2e6",
-                          textAlign: "center",
-                          padding: "0.75rem",
-                        }}
-                      />
-                      <Column
-                        field="patient_phone"
-                        header="Contact No"
-                        sortable
-                        style={{
-                          border: "1px solid #dee2e6",
-                          textAlign: "center",
-                          padding: "0.75rem",
-                        }}
-                      />
-                      <Column
-                        field="patient_location"
-                        header="Address"
-                        sortable
-                        style={{
-                          border: "1px solid #dee2e6",
-                          textAlign: "center",
-                          padding: "0.75rem",
-                        }}
-                      />
-                      <Column
-                        field="enquirytype"
-                        header="Enquiry Type"
-                        sortable
-                        style={{
-                          border: "1px solid #dee2e6",
-                          textAlign: "center",
-                          padding: "0.75rem",
-                        }}
-                      />
-                      <Column
-                        field="FDE_Name"
-                        header="FDE Name"
-                        sortable
-                        style={{
-                          border: "1px solid #dee2e6",
-                          textAlign: "center",
-                          padding: "0.75rem",
-                        }}
-                      />
-                      <Column
-                        header="Actions"
-                        body={actionBodyTemplate}
-                        exportable={false}
-                        style={{
-                          border: "1px solid #dee2e6",
-                          textAlign: "center",
-                          padding: "0.75rem",
-                        }}
-                      />
+                      <Column field="srNo" header="Sr. No" sortable />
+                      <Column field="date" header="Date" sortable />
+                      <Column field="patient_name" header="Patient Name" sortable />
+                      <Column field="patient_phone" header="Contact No" sortable />
+                      <Column field="patient_location" header="Address" sortable />
+                      <Column field="enquirytype" header="Enquiry Type" sortable />
+                      <Column field="FDE_Name" header="FDE Name" sortable />
                     </DataTable>
                   )}
                 </Card.Body>
