@@ -1,0 +1,85 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: white;
+    color: black;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .report-container {
+    margin: 20px auto;
+    padding: 130px;
+    width: 60%;
+    text-align: center;
+    position: relative;
+  }
+  
+  /* Style for tables */
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 14px;
+  }
+  
+  .table th, .table td {
+    border: 1px solid #d43636;
+    padding: 6px 12px;
+    text-align: center;
+  }
+  
+  .table th {
+    background-color: #f2f2f2;
+  }
+  
+  .table tr:hover {
+    background-color: #f1f1f1;
+  }
+  
+  h1 {
+    text-align: center;
+    font-size: 22px;
+  }
+  
+  h2 {
+    text-align: center;
+    font-size: 20px;
+    margin-top: 30px;
+  }
+  
+  /* Print Button Styling */
+  .print-button {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 5px;
+    margin-top: 20px;  /* Space between the last table and button */
+  }
+  
+  .print-button:hover {
+    background-color: #a06245;
+    text-align: left;
+    
+  }
+  
+  /* Responsive design for mobile */
+  @media (max-width: 768px) {
+    .report-container {
+      width: 90%;
+    }
+    
+    h1 {
+      font-size: 20px;
+    }
+  
+    h2 {
+      font-size: 18px;
+    }
+  
+    .table th, .table td {
+      padding: 4px 8px;
+    }
+}
