@@ -18,7 +18,7 @@ import {
 
 import PageBreadcrumb from "/Medflex/medflex/src/components/PageBreadcrumb";
 
-const BASE_URL = "http://192.168.1.139:5000/api"; // Update your API base URL here
+const BASE_URL = "http://192.168.90.147:5000/api"; // Update your API base URL here
 
 export default function All_patient() {
   const [patients, setPatients] = useState([]);

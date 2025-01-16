@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Container, Row, Col, Card, Form, Button, Spinner } from "react-bootstrap";
 import PageBreadcrumb from "../components/PageBreadcrumb";
 
-const BASE_URL = "http://192.168.1.139:5000/api";
+const BASE_URL = "http://192.168.90.147:5000/api";
 
 const Add_Enquiry = () => {
   const [formData, setFormData] = useState ({

@@ -20,6 +20,8 @@ import Enquiry_list from "./pages/Enquiry_list";
 import Add_enquiry from "./pages/Add_enquiry";
 import Edit_appointment from "./pages/Edit_appointment";
 import Appointment_list from "./pages/Appointment_list";
+import Add_invoice from "./pages/Add_invoice";
+import Add_invoice_ex from "./pages/Add_invoice_ex"
 
 import All_Hospitals from "./pages/All_Locations";
 import Add_Locations from "./pages/Add_Locations";
@@ -160,6 +162,8 @@ function AppContent() {
           <Route exact path="/add-enquiry" element={<Add_enquiry/>}/>
           <Route exact path="/edit-appointment" element={<Edit_appointment />}/>
           <Route exact path="/appointment-list" element={<Appointment_list />} />
+          <Route exact path="/add-invoice" element={<Add_invoice/>}/>
+          <Route exact path="/add-invoice-ex" element={<Add_invoice_ex/>}/>
           <Route exact path="/add-receptionist" element={<Add_receptionist />} />
           <Route exact path="/receptionist-list" element={<Receptionist_list />} />
                 

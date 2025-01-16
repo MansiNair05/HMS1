@@ -7,6 +7,8 @@ import PageBreadcrumb from "../components/PageBreadcrumb";
 // import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 // import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
+const BASE_URL = "http://192.168.90.147:5000/api";
+
 export default function Add_doctor() {
   const [Doctordata, setDoctordata] = useState([]);
   const [formData, setFormData] = useState({

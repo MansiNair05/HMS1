@@ -1,18 +1,22 @@
 import React, { useState } from "react";
 import { Row, Col, Form, Container, Card } from "react-bootstrap";
-import { Link } from "react-router-dom";
-import { CountryDropdown, StateDropdown, CityDropdown } from "react-country-state-dropdown";
+import {
+  CountryDropdown,
+  StateDropdown,
+  CityDropdown,
+} from "react-country-state-dropdown";
 import PageBreadcrumb from "../components/PageBreadcrumb";
+import { Link } from "react-router-dom";
+
+const BASE_URL = "http://192.168.90.147:5000/api"; // Update with your backend API base URL
 
 export default function Add_appointment() {
-  const [Appointmentdata, setAppointmentdata] = useState({});
   const [country, setCountry] = useState(null);
   const [state, setState] = useState(null);
   const [city, setCity] = useState(null);
   const [doctor, setDoctor] = useState("");
   const [fde, setFde] = useState("");
   const [formData, setFormData] = useState({
-    title: "",
     date: "",
     doctorName: "",
     patientName: "",
@@ -31,87 +35,108 @@ export default function Add_appointment() {
     city: "",
   });
 
-const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState({});
 
-  const doctorsList = ["Dr. Smith", "Dr. Lee", "Dr. Johnson", "Dr. Brown"]; // Add your list of doctors
-  const fdeList = ["John Doe", "Jane Smith", "Alice Johnson", "Michael Brown"]; // Add your list of FDE names
+  const doctorsList = ["Dr. Smith", "Dr. Lee", "Dr. Johnson", "Dr. Brown"];
+  const fdeList = ["John Doe", "Jane Smith", "Alice Johnson", "Michael Brown"];
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({ ...prevState, [name]: value }));
-
-
-    const newErrors = validate();
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = () => {
-    if (validate()) {
-      alert("Form submitted successfully");
-      setAppointmentdata([...Appointmentdata, { formData }]);
-      console.log(Appointmentdata)
-    }
-  };
-  const validate = () => {
-    const newErrors = {};
-
-    if (!formData.title) newErrors.title = "Title is required";
-    if (!formData.date) newErrors.date = "Date is required";
-    if (!formData.doctorName) newErrors.doctorName = "Doctor Name is required";
-    if (!formData.patientName)
-      newErrors.patientName = "Patient Name is required";
-    if (!formData.mobileNo) newErrors.mobileNo = "Mobile No is required";
-    if (!formData.address) newErrors.address = "Address is required";
-    if (!formData.reference) newErrors.reference = "Reference is required";
-    if (!formData.appointmentTime)
-      newErrors.appointmentTime = "Appointment Time is required";
-    if (!formData.fdeName) newErrors.fdeName = "FDE Name is required";
-    if (!formData.note) newErrors.note = "Note is required";
-    if (!formData.email) newErrors.email = "Email is required";
-    if (!formData.gender) newErrors.gender = "Gender is required";
-    if (!formData.departmentName)
-      newErrors.departmentName = "Department Name is required";
-    if (!formData.appointmentWith)
-      newErrors.appointmentWith = "Appointment With is required";
-    if (!formData.country) newErrors.country = "Country is required";
-    if (!formData.state) newErrors.state = "State is required";
-    if (!formData.city) newErrors.city = "City is required";
-
-
-    // Email validation
-    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-    if (formData.email && !emailRegex.test(formData.email))
-      newErrors.email = "Email is not valid";
-
-    // Phone validation (10 digit number)
-    const phoneRegex = /^[0-9]{10}$/;
-    if (formData.phone && !phoneRegex.test(formData.phone)) {
-      newErrors.phone = "Phone number is not valid";
-    }
-
-    // Password validation (Minimum 8 characters, at least one letter and one number)
-    if (
-      formData.password &&
-      !/(?=.*[A-Za-z])(?=.*\d).{8,}/.test(formData.password)
-    )
-      newErrors.password = "Password is not valid";
-
-    // URL validation
-    const urlRegex = /^(ftp|http|https):\/\/[^ "]+$/;
-    ["facebookUrl", "twitterUrl", "instagramUrl", "googlePlusUrl"].forEach(
-      (feild) => {
-        if (formData[feild] && !urlRegex.test(formData[feild]))
-          newErrors[feild] = "URL is not valid";
-      }
-    );
-    return newErrors;
   };
 
   const handleSetCountry = (value) => setCountry(value);
   const handleSetState = (value) => setState(value);
   const handleSetCity = (value) => setCity(value);
 
+  const validate = () => {
+    const newErrors = {};
+    const requiredFields = [
+      "date",
+      "doctorName",
+      "patientName",
+      "mobileNo",
+      "address",
+      "reference",
+      "appointmentTime",
+      "fdeName",
+      "note",
+      "email",
+      "gender",
+      "departmentName",
+      "appointmentWith",
+      "country",
+      "state",
+      "city",
+    ];
+
+    requiredFields.forEach((field) => {
+      if (!formData[field]) {
+        newErrors[field] =`${field.replace(/([A-Z])/g, " $1")} is required`;
+      }
+    });
+
+    const phoneRegex = /^[0-9]{10}$/;
+    if (formData.mobileNo && !phoneRegex.test(formData.mobileNo)) {
+      newErrors.mobileNo = "Mobile number must be 10 digits";
+    }
+
+    return newErrors;
+  };
+
+  const handleSubmit = async (saveType) => {
+    const validationErrors = validate();
+    console.log("Form Data:", formData);
+    setErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length === 0) {
+      try {
+        console.log("Sending request to backend...");
+        const response = await fetch(`${BASE_URL}/V1/appointment/addAppointment`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...formData, saveType }),
+        });
+
+        console.log("Response received:", response);
+
+        if (response.ok) {
+          alert("Appointment added successfully");
+
+          setFormData({
+            date: "",
+            doctorName: "",
+            patientName: "",
+            mobileNo: "",
+            address: "",
+            reference: "",
+            appointmentTime: "",
+            fdeName: "",
+            note: "",
+            email: "",
+            gender: "",
+            departmentName: "",
+            appointmentWith: "",
+            country: "",
+            state: "",
+            city: "",
+          });
+
+          // Reset country, state, and city
+          setCountry(null);
+          setState(null);
+          setCity(null);
+        } else {
+          const errorData = await response.json();
+          console.error("Error response from API:", errorData);
+          alert("Failed to add appointment");
+        }
+      } catch (error) {
+        console.error("Error adding appointment:", error);
+        alert("An error occurred while adding the appointment");
+      }
+    }
+  };
   return (
     <div className="themebody-wrap">
       <PageBreadcrumb pagename="Add Appointment" />
@@ -122,20 +147,6 @@ const [errors, setErrors] = useState({});
               <Card.Body>
                 <Form>
                   <Row>
-                    {/* Title */}
-                    <Col md={4} className="mb-4">
-                      <Form.Group className="mb-3">
-                        <Form.Label>Title</Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="title"
-                          value={formData.title}
-                          onChange={handleInputChange}
-                          placeholder="Enter Title"
-                        />
-                      </Form.Group>
-                    </Col>
-
                     {/* Date */}
                     <Col md={4} className="mb-4">
                       <Form.Group className="mb-3">
@@ -146,9 +157,6 @@ const [errors, setErrors] = useState({});
                           value={formData.date}
                           onChange={handleInputChange}
                         />
-                        {errors.dateName && (
-                          <p style={{ color: "red" }}>{errors.date}</p>
-                        )}
                       </Form.Group>
                     </Col>
 
@@ -180,9 +188,6 @@ const [errors, setErrors] = useState({});
                         </Form.Control>
                       </Form.Group>
                     </Col>
-                  </Row>
-
-                  <Row>
                     {/* Patient Name */}
                     <Col md={4} className="mb-4">
                       <Form.Group className="mb-3">
@@ -233,9 +238,7 @@ const [errors, setErrors] = useState({});
                         )}
                       </Form.Group>
                     </Col>
-                  </Row>
 
-                  <Row>
                     {/* Reference */}
                     <Col md={4} className="mb-4">
                       <Form.Group className="mb-3">
@@ -247,9 +250,6 @@ const [errors, setErrors] = useState({});
                           onChange={handleInputChange}
                           placeholder="Enter Reference"
                         />
-                        {errors.reference && (
-                          <p style={{ color: "red" }}>{errors.reference}</p>
-                        )}
                       </Form.Group>
                     </Col>
 
@@ -293,30 +293,7 @@ const [errors, setErrors] = useState({});
                               {fdeName}
                             </option>
                           ))}
-                          {errors.fdeName && (
-                            <p style={{ color: "red" }}>{errors.fdeName}</p>
-                          )}
                         </Form.Control>
-                      </Form.Group>
-                    </Col>
-                  </Row>
-
-                  <Row>
-                    {/* Note */}
-                    <Col md={4} className="mb-4">
-                      <Form.Group className="mb-3">
-                        <Form.Label>Note</Form.Label>
-                        <Form.Control
-                          as="textarea"
-                          rows={2}
-                          name="note"
-                          value={formData.note}
-                          onChange={handleInputChange}
-                          placeholder="Add Notes"
-                        />
-                        {errors.note && (
-                          <p style={{ color: "red" }}>{errors.note}</p>
-                        )}
                       </Form.Group>
                     </Col>
 
@@ -352,14 +329,9 @@ const [errors, setErrors] = useState({});
                           <option value="Female">Female</option>
                           <option value="Other">Other</option>
                         </Form.Control>
-                        {errors.gender && (
-                          <p style={{ color: "red" }}>{errors.gender}</p>
-                        )}
                       </Form.Group>
                     </Col>
-                  </Row>
 
-                  <Row>
                     {/* Department Name */}
                     <Col md={4} className="mb-4">
                       <Form.Group className="mb-3">
@@ -371,9 +343,6 @@ const [errors, setErrors] = useState({});
                           onChange={handleInputChange}
                           placeholder="Enter Department Name"
                         />
-                        {errors.departmentName && (
-                          <p style={{ color: "red" }}>{errors.departmentName}</p>
-                        )}
                       </Form.Group>
                     </Col>
 
@@ -388,11 +357,6 @@ const [errors, setErrors] = useState({});
                           onChange={handleInputChange}
                           placeholder="Enter Appointment With"
                         />
-                        {errors.appointmentWith && (
-                          <p style={{ color: "red" }}>
-                            {errors.appointmentWith}
-                          </p>
-                        )}
                       </Form.Group>
                     </Col>
 
@@ -412,18 +376,13 @@ const [errors, setErrors] = useState({});
                             handleSetCountry(value);
                             setFormData((prev) => ({
                               ...prev,
-                              country: value,
+                              country: value.name,
                             }));
                           }}
                         />
-                        {errors.country && (
-                          <p style={{ color: "red" }}>{errors.country}</p>
-                        )}
                       </Form.Group>
                     </Col>
-                  </Row>
 
-                  <Row>
                     {/* State Dropdown */}
                     <Col md={4} className="mb-4">
                       <Form.Group className="mb-3">
@@ -438,12 +397,9 @@ const [errors, setErrors] = useState({});
                           }}
                           onChange={(e, value) => {
                             handleSetState(value);
-                            setFormData((prev) => ({ ...prev, state: value }));
+                            setFormData((prev) => ({ ...prev, state: value.name }));
                           }}
                         />
-                        {errors.state && (
-                          <p style={{ color: "red" }}>{errors.state}</p>
-                        )}
                       </Form.Group>
                     </Col>
 
@@ -462,23 +418,38 @@ const [errors, setErrors] = useState({});
                           }}
                           onChange={(e, value) => {
                             handleSetCity(value);
-                            setFormData((prev) => ({ ...prev, city: value }));
+                            setFormData((prev) => ({ ...prev, city: value.name }));
                           }}
                         />
-                        {errors.city && (
-                          <p style={{ color: "red" }}>{errors.city}</p>
-                        )}
                       </Form.Group>
                     </Col>
+
+                    {/* Note */}
+                    <Col md={4} className="mb-4">
+                      <Form.Group className="mb-3">
+                        <Form.Label>Note</Form.Label>
+                        <Form.Control
+                          as="textarea"
+                          rows={2}
+                          name="note"
+                          value={formData.note}
+                          onChange={handleInputChange}
+                          placeholder="Add Notes"
+                        />
+                      </Form.Group>
+                    </Col>
+
                     <Form.Group className="text-end mb-0">
                       <button
+                        type="button"
                         className="btn btn-primary"
                         style={{ marginTop: "30px" }}
+                        onClick={() => handleSubmit("save")}
                       >
-                        Submit
+                        Save
                       </button>
                       <Link
-                        to="/appointment_list"
+                        to=""
                         className="btn btn-danger ms-2"
                         style={{ marginTop: "30px" }}
                       >
@@ -492,6 +463,6 @@ const [errors, setErrors] = useState({});
           </Col>
         </Row>
       </Container>
-    </div>
-  );
+ </div>
+);
 }

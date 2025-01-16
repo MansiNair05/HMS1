@@ -15,7 +15,7 @@ const menuPaths = {
     Doctors: ["/all-doctors", "/add-doctor", "/edit-doctor"],
     Patients: ["/all-patient", "/add-patient", "/edit-patient"],
     Hospitals: ["/all-hospitals", "/add-locations"],
-    Appointments: ["/doctor-schedule", "/add-appointment","enquiry-list","add-enquiry", "/edit-appointment", "/appointment-list"],
+    Appointments: ["/doctor-schedule", "/add-appointment","enquiry-list","add-enquiry", "/edit-appointment", "/appointment-list","/add-invoice","/add-invoice-ex"],
     Receptionist: ["/receptionist-list","/add-receptionist"],
     Billing: ["/payment-list", "/add-payment", "/patient-invoice"],
     ManageReports: ["/dailyOPDReport","/birthdayAlert","/billingReport","enquiryConversation","enquiryData","oPDCollectionReport","pharmacyCollectionReport","iPDCollectionReport","refferenceReport","conditionWiseReport","sxConversionReport","iPDDueReport","insuranceDueReport","oPDIPDCollection","oPDIPDCollGraph","oPDReceiptsReport","appointmentConversion"],
@@ -165,6 +165,12 @@ export default function Sidebar() {
                 </li>
                 <li>
                   <Link to="/appointment-list">view all appointment</Link>
+                </li>
+                <li>
+                  <Link to="/add-invoice">add invoice</Link>
+                </li>
+                <li>
+                  <Link to="/add-invoice-ex">add invoice ex</Link>
                 </li>
               </ul>
             </li>
