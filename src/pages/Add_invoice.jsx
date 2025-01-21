@@ -3,7 +3,8 @@ import PageBreadcrumb from "../components/PageBreadcrumb";
 import { Row, Col, Form, Container, Card } from "react-bootstrap";
 import { Link } from "react-router-dom";
 
-const BASE_URL = "http://192.168.90.152:5000/api";
+
+const BASE_URL = "http://192.168.90.122:5000/api";
 
 const AddInvoice = () => {
   const initialFormData = {
@@ -19,8 +20,14 @@ const AddInvoice = () => {
     surgeonName: "",
     Sub_Total: "",
     bill_Type: "",
+    bill_method:"",
     note: "",
     dynamicRows: [{ label: "", value: "" }], // New field for dynamic rows
+    discount: "",
+    payableAmount: "",
+    chequeno:"",
+    pdc:"",
+    reimbursement:"",
   };
 
   const [formData, setFormData] = useState(initialFormData);
@@ -112,15 +119,34 @@ const AddInvoice = () => {
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({...formData,[name]:value});
-
+    let updatedFormData = { ...formData, [name]: value };
+  
+    // Update payableAmount based on discount or PDC
+    if (name === "discount" || name === "pdc") {
+      const discount = parseFloat(updatedFormData.discount || 0); // Ensure discount is a number
+      const pdc = parseFloat(updatedFormData.pdc || 0);           // Ensure PDC is a number
+      const subTotal = parseFloat(updatedFormData.Sub_Total || 0); // Ensure Sub_Total is a number
+  
+      const payable = Math.max(subTotal - (updatedFormData.bill_method === "PDC" ? pdc : discount), 0);
+      updatedFormData = { ...updatedFormData, payableAmount: payable.toFixed(2) };
+    }
+  
+    // Automatically set payableAmount to Sub_Total for reimbursement
+    if (name === "bill_method" && value === "reimbursement") {
+      const subTotal = parseFloat(updatedFormData.Sub_Total || 0);
+      updatedFormData = { ...updatedFormData, payableAmount: subTotal.toFixed(2) };
+    }
+  
+    setFormData(updatedFormData);
   };
+  
+
+  
   const handleDynamicRowChange = (index, field, value) => {
     const updatedRows = formData.dynamicRows.map((row, i) =>
       i === index ? { ...row, [field]: value } : row
     );
-  
-    // Calculate the new subtotal
+   // Calculate the new subtotal
     const newSubTotal = updatedRows.reduce((total, row) => {
       const rowValue = parseFloat(row.value) || 0; // Ensure valid number
       return total + rowValue;
@@ -132,6 +158,7 @@ const AddInvoice = () => {
       Sub_Total: newSubTotal.toFixed(2), // Update Sub_Total with the calculated sum
     });
   };
+
   
 
 const addDynamicRow = () => {
@@ -143,8 +170,8 @@ const addDynamicRow = () => {
 
 const deleteDynamicRow = (index) => {
   const updatedRows = formData.dynamicRows.filter((_, i) => i !== index);
-  setFormData({ ...formData, dynamicRows: updatedRows });
-  };
+  setFormData({ ...formData, dynamicRows: updatedRows });
+};
 
   // Reset form
   const handleReset = () => {
@@ -174,6 +201,7 @@ const deleteDynamicRow = (index) => {
         const data = await response.json();
 
         if (response.ok) {
+          console.log(data);
           alert("Invoice added successfully!");
           handleReset(); // Reset form data
         } else {
@@ -353,7 +381,7 @@ const deleteDynamicRow = (index) => {
                           onChange={handleInputChange}
                           isInvalid={errors.consultantName}
                         >
-                          <option value="">Select Consultant</option>
+                          <option value="" disabled>SELECT CONSULTANT</option>
                           {consultants.map((consultant) => (
                             <option key={consultant._id} value={consultant.name}>
                               {consultant.name}
@@ -377,7 +405,7 @@ const deleteDynamicRow = (index) => {
                           onChange={handleInputChange}
                           isInvalid={errors.surgeonName}
                         >
-                          <option value="">Select Surgeon</option>
+                          <option value="" disabled>SELECT SURGEON</option>
                           {surgeons.map((surgeon) => (
                             <option key={surgeon._id} value={surgeon.name}>
                               {surgeon.name}
@@ -465,7 +493,7 @@ const deleteDynamicRow = (index) => {
       onChange={handleInputChange}
       isInvalid={errors.bill_Type}
     >
-      <option value="">Select Bill Type</option>
+      <option value="" disabled>SELECT BILL TYPE</option>
       <option value="insurance">Insurance</option>
       <option value="non_insurance">Non-Insurance</option>
       <option value="charity">Charity</option>
@@ -489,7 +517,7 @@ const deleteDynamicRow = (index) => {
                           onChange={handleInputChange}
                           isInvalid={errors.insurance}
                         >
-                          <option value="">Choose Insuarance</option>
+                          <option value="">CHOOSE INSURANCE</option>
                           {insurance.map((insurance) => (
                             <option key={insurance._id} value={insurance.companyname}>
                               {insurance.companyname}
@@ -502,6 +530,85 @@ const deleteDynamicRow = (index) => {
       </Form.Group>
     </Col>
 
+    {/* Payment Method Dropdown */}
+    {formData.insurance && (
+                      <Col md={4} className="mb-4">
+                        <Form.Group className="mb-3">
+                          <Form.Label>Select Bill Method</Form.Label>
+                          <Form.Select
+                            id="bill_method"
+                            name="bill_method"
+                            value={formData.bill_method}
+                            onChange={handleInputChange}
+                          >
+                            <option value="" disabled>SELECT BILL METHOD</option>
+                            <option value="cashless">Cashless</option>
+                            <option value="PDC">PDC</option>
+                            <option value="reimbursement">Reimbursement</option>
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                    )}
+
+
+{/* Conditional Fields for PDC */}
+{formData.bill_method === "PDC" && (
+  <>  
+    <Col md={4} className="mb-4">
+      <Form.Group className="mb-3">
+        <Form.Label>Enter Cheque No</Form.Label>
+        <Form.Control
+          type="number"
+          id="chequeno"
+          name="chequeno"
+          value={formData.chequeno || ""}
+          onChange={handleInputChange}
+        />
+      </Form.Group>
+    </Col>
+    <Col md={4} className="mb-4">
+      <Form.Group className="mb-3">
+        <Form.Label>Enter PDC Amount</Form.Label>
+        <Form.Control
+          type="number"
+          id="pdc"
+          name="pdc"
+          value={formData.pdc || ""}
+          onChange={handleInputChange}
+        />
+      </Form.Group>
+    </Col>
+    <Col md={4} className="mb-4">
+      <Form.Group className="mb-3">
+        <Form.Label>Payable Amount</Form.Label>
+        <Form.Control
+          type="number"
+          id="payableAmount"
+          name="payableAmount"
+          value={formData.payableAmount || ""}
+          onChange={handleInputChange}
+        />
+      </Form.Group>
+    </Col>
+  </>
+)}
+
+{/* Conditional Fields for Reimbursement */}
+{formData.bill_method === "reimbursement" && (
+  <Col md={4} className="mb-4">
+    <Form.Group className="mb-3">
+      <Form.Label>Payable Amount</Form.Label>
+      <Form.Control
+        type="number"
+        id="payableAmount"
+        name="payableAmount"
+        value={formData.payableAmount || ""}
+        onChange={handleInputChange}
+      />
+    </Form.Group>
+  </Col>
+)}
+
     <Col md={4} className="mb-4">
       <Form.Group className="mb-3">
         <Form.Label>TPA</Form.Label>
@@ -512,7 +619,7 @@ const deleteDynamicRow = (index) => {
                           onChange={handleInputChange}
                           isInvalid={errors.tpa}
                         >
-                          <option value="">Medi Assist TPA</option>
+                          <option value="">MEDI ASSIST TPA</option>
                           {tpa.map((tpa) => (
                             <option key={tpa._id} value={tpa.companyname}>
                               {tpa.companyname}
@@ -536,8 +643,8 @@ const deleteDynamicRow = (index) => {
         <Form.Label>Discount Amount</Form.Label>
         <Form.Control
           type="number"
-          name="discountAmount"
-          value={formData.discountAmount}
+          name="discount"
+          value={formData.discount}
           onChange={handleInputChange}
         />
       </Form.Group>
@@ -550,6 +657,7 @@ const deleteDynamicRow = (index) => {
           type="number"
           name="payableAmount"
           value={formData.payableAmount}
+          readonly
           onChange={handleInputChange}
         />
       </Form.Group>

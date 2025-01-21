@@ -15,8 +15,9 @@ const menuPaths = {
     Doctors: ["/all-doctors", "/add-doctor", "/edit-doctor"],
     Patients: ["/all-patient", "/add-patient", "/edit-patient"],
     Hospitals: ["/all-hospitals", "/add-locations"],
-    Appointments: ["/doctor-schedule", "/add-appointment","enquiry-list","add-enquiry", "/edit-appointment", "/appointment-list","/add-invoice","/add-invoice-ex"],
+    Appointments: ["/doctor-schedule", "/add-appointment","enquiry-list","add-enquiry", "/edit-appointment", "/appointment-list"],
     Receptionist: ["/receptionist-list","/add-receptionist"],
+    IpdBills:["/add-invoice","/invoice-list","/edit-invoice"],
     Billing: ["/payment-list", "/add-payment", "/patient-invoice"],
     ManageReports: ["/dailyOPDReport","/birthdayAlert","/billingReport","enquiryConversation","enquiryData","oPDCollectionReport","pharmacyCollectionReport","iPDCollectionReport","refferenceReport","conditionWiseReport","sxConversionReport","iPDDueReport","insuranceDueReport","oPDIPDCollection","oPDIPDCollGraph","oPDReceiptsReport","appointmentConversion"],
     EventManagement: ["/event-management"],
@@ -166,12 +167,6 @@ export default function Sidebar() {
                 <li>
                   <Link to="/appointment-list">view all appointment</Link>
                 </li>
-                <li>
-                  <Link to="/add-invoice">add invoice</Link>
-                </li>
-                <li>
-                  <Link to="/add-invoice-ex">add invoice ex</Link>
-                </li>
               </ul>
             </li>
 
@@ -224,6 +219,31 @@ export default function Sidebar() {
             >
               <Link>
                 <div className="icon-item">
+                  <i className="fa fa-folder"></i>
+                </div>
+                <span>IPD Bills</span>
+                <i className="fa fa-angle-down"></i>
+              </Link>
+              <ul className="submenu-list">
+              <li>
+                  <Link to="/add-invoice">add invoice</Link>
+                </li>
+                <li>
+                  <Link to="/invoice-list">invoice list</Link>
+                </li>
+                <li>
+                  <Link to="/edit-invoice">edit invoice</Link>
+                </li>
+
+              </ul>
+            </li>
+
+            <li
+              onClick={() => handleMenuClick(7)}
+              className={`menu-item ${activeIndex === 7 ? "active" : ""}`}
+            >
+              <Link>
+                <div className="icon-item">
                   <FeatherIcon icon="file" />
                 </div>
                 <span>billing</span>
@@ -243,8 +263,8 @@ export default function Sidebar() {
             </li>
 
             <li
-              onClick={() => handleMenuClick(7)}
-              className={`menu-item ${activeIndex === 7 ? "active" : ""}`}
+              onClick={() => handleMenuClick(8)}
+              className={`menu-item ${activeIndex === 8 ? "active" : ""}`}
             >
               
               <Link>
