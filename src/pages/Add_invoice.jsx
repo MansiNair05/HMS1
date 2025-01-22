@@ -28,6 +28,8 @@ const AddInvoice = () => {
     chequeno:"",
     pdc:"",
     reimbursement:"",
+    insurance:"",
+    tpa:"",
   };
 
   const [formData, setFormData] = useState(initialFormData);
@@ -540,12 +542,17 @@ const deleteDynamicRow = (index) => {
                             name="bill_method"
                             value={formData.bill_method}
                             onChange={handleInputChange}
+                            isInvalid={errors.bill_method}
+
                           >
                             <option value="" disabled>SELECT BILL METHOD</option>
                             <option value="cashless">Cashless</option>
                             <option value="PDC">PDC</option>
                             <option value="reimbursement">Reimbursement</option>
                           </Form.Select>
+                          <Form.Control.Feedback type="invalid">
+                                {errors.bill_method}
+                              </Form.Control.Feedback>
                         </Form.Group>
                       </Col>
                     )}
@@ -731,5 +738,3 @@ const deleteDynamicRow = (index) => {
 };
 
 export default AddInvoice;
-
-
