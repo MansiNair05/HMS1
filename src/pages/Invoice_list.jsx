@@ -22,8 +22,18 @@ const InvoiceList = () => {
   const [tpa, setTpa] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState({
+    dynamicRows: [],
+    Sub_Total: "0.00",
+    discount: "0.00",
+    pdc: "0.00",
+    payableAmount: "0.00",
+  });
+
+  const initialFormData = { ...formData };
 
   // Fetch invoices on mount
   useEffect(() => {
@@ -64,13 +74,93 @@ const InvoiceList = () => {
           const data = await response.json();
           if (response.ok) setter(data.data || []);
         }
-      } catch {
+      } catch (err) {
         setError("Failed to fetch dropdown data.");
       }
     };
 
     fetchDropdowns();
   }, []);
+
+  // Update payable amount
+  useEffect(() => {
+    const subTotal = parseFloat(formData.Sub_Total || 0);
+    const discount = parseFloat(formData.discount || 0);
+    const pdc = parseFloat(formData.pdc || 0);
+
+    let payableAmount =
+      subTotal - (formData.bill_method === "PDC" ? pdc : discount);
+    payableAmount = Math.max(payableAmount, 0).toFixed(2);
+
+    setFormData((prevData) => ({
+      ...prevData,
+      payableAmount,
+    }));
+  }, [
+    formData.Sub_Total,
+    formData.discount,
+    formData.pdc,
+    formData.bill_method,
+  ]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    let updatedFormData = { ...formData, [name]: value };
+
+    if (["discount", "pdc"].includes(name)) {
+      const discount = parseFloat(updatedFormData.discount || 0);
+      const pdc = parseFloat(updatedFormData.pdc || 0);
+      const subTotal = parseFloat(updatedFormData.Sub_Total || 0);
+
+      const payable = Math.max(
+        subTotal - (updatedFormData.bill_method === "PDC" ? pdc : discount),
+        0
+      );
+      updatedFormData.payableAmount = payable.toFixed(2);
+    }
+
+    if (name === "bill_method" && value === "reimbursement") {
+      updatedFormData.payableAmount = parseFloat(
+        updatedFormData.Sub_Total || 0
+      ).toFixed(2);
+    }
+
+    setFormData(updatedFormData);
+  };
+
+  const handleDynamicRowChange = (index, field, value) => {
+    const updatedRows = formData.dynamicRows.map((row, i) =>
+      i === index ? { ...row, [field]: value } : row
+    );
+
+    const newSubTotal = updatedRows.reduce(
+      (total, row) => total + parseFloat(row.value || 0),
+      0
+    );
+
+    setFormData({
+      ...formData,
+      dynamicRows: updatedRows,
+      Sub_Total: newSubTotal.toFixed(2),
+    });
+  };
+
+  const addDynamicRow = () => {
+    setFormData({
+      ...formData,
+      dynamicRows: [...formData.dynamicRows, { label: "", value: "" }],
+    });
+  };
+
+  const deleteDynamicRow = (index) => {
+    const updatedRows = formData.dynamicRows.filter((_, i) => i !== index);
+    setFormData({ ...formData, dynamicRows: updatedRows });
+  };
+
+  const handleReset = () => {
+    setFormData(initialFormData);
+    setError("");
+  };
 
   const handleEditInvoice = (invoice) => {
     setSelectedInvoice(invoice);
@@ -81,18 +171,6 @@ const InvoiceList = () => {
     setShowModal(false);
     setSelectedInvoice(null);
   };
-
-  const updatePayableAmt = (invoice) => {
-    // Update the payable amount based on the calculation
-    const subTotal = invoice.dynamicRows.reduce(
-      (total, row) => total + (parseFloat(row.value) || 0),
-      0
-    );
-    invoice.Sub_Total = subTotal;
-    invoice.payable_amt = invoice.Sub_Total - (invoice.discount || 0);
-    setSelectedInvoice({ ...invoice });
-  };
-
   const handleSaveChanges = async () => {
     if (selectedInvoice) {
       try {
@@ -105,24 +183,47 @@ const InvoiceList = () => {
           }
         );
 
-        const updatedInvoice = await response.json();
-        const updatedInvoices = invoices.map((invoice) =>
-          invoice.invoice_id === updatedInvoice.invoice_id
-            ? updatedInvoice
-            : invoice
-        );
-        setInvoices(updatedInvoices);
-        setShowModal(false);
+        const result = await response.json();
+
         if (response.ok) {
+          // Update the invoice in the state
+          setInvoices((prevInvoices) =>
+            prevInvoices.map((invoice) =>
+              invoice.invoice_id === selectedInvoice.invoice_id
+                ? { ...invoice, ...selectedInvoice } // Update invoice with new details
+                : invoice
+            )
+          );
+
           alert("Invoice updated successfully!");
+          handleCloseModal(); // Close the modal
+          setShowSuccessPopup(true); // Show success popup
         } else {
-          alert(updatedInvoice.message || "Error updating invoice.");
+          alert(result.message || "Error updating invoice.");
         }
       } catch (err) {
         alert("An error occurred while updating the invoice.");
       }
     }
   };
+  const updatePayableAmt = (updatedInvoice) => {
+    let payableAmt = updatedInvoice.Sub_Total;
+
+    // If PDC is present, deduct it from the Sub_Total to get the payable amount
+    if (updatedInvoice.bill_method === "PDC") {
+      const pdcAmount = parseFloat(updatedInvoice.pdc) || 0;
+      payableAmt = updatedInvoice.Sub_Total - pdcAmount;
+    }
+
+    // Update the payable amount in the invoice state
+    updatedInvoice.payable_amt = payableAmt;
+    setSelectedInvoice(updatedInvoice);
+  }; 
+  const handleCloseSuccessPopup = () => {
+    setShowSuccessPopup(false);
+  };
+
+
   return (
     <div className="themebody-wrap">
       <PageBreadcrumb pagename="Invoice List" />
@@ -204,6 +305,22 @@ const InvoiceList = () => {
                       type="text"
                       value={selectedInvoice.invoice_id}
                       readOnly
+                    />
+                  </Form.Group>
+                </Col>
+
+                <Col md={4} className="mb-3">
+                  <Form.Group controlId="admission_no">
+                    <Form.Label>Admission No</Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={selectedInvoice.admission_no}
+                      onChange={(e) =>
+                        setSelectedInvoice({
+                          ...selectedInvoice,
+                          admission_no: e.target.value,
+                        })
+                      }
                     />
                   </Form.Group>
                 </Col>
@@ -382,6 +499,11 @@ const InvoiceList = () => {
                             updatedInvoice.dynamicRows[index].label =
                               e.target.value;
                             setSelectedInvoice(updatedInvoice);
+                            handleDynamicRowChange(
+                              index,
+                              "label",
+                              e.target.value
+                            );
 
                             // Recalculate Sub_Total after updating label
                             const subTotal = updatedInvoice.dynamicRows.reduce(
@@ -743,17 +865,29 @@ const InvoiceList = () => {
                   </Form.Group>
                 </Col>
               </Row>
+              <Modal.Footer>
+                <Button variant="primary" onClick={handleSaveChanges}>
+                  Save Changes
+                </Button>
+              </Modal.Footer>
             </Form>
           )}
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseModal}>
-            Close
+      </Modal>
+      <Modal show={showSuccessPopup} onHide={handleCloseSuccessPopup} centered>
+        <Modal.Body className="text-center">
+          <div className="mb-3">
+            <i
+              className="bi bi-check-circle"
+              style={{ fontSize: "50px", color: "green" }}
+            ></i>
+          </div>
+          <h4>Successfully</h4>
+          <p>Data has been updated</p>
+          <Button variant="primary" onClick={handleCloseSuccessPopup}>
+            OK
           </Button>
-          <Button variant="primary" onClick={handleSaveChanges}>
-            Save Changes
-          </Button>
-        </Modal.Footer>
+        </Modal.Body>
       </Modal>
     </div>
   );
