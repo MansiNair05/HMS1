@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, Button, Form, Row, Col, Container } from "react-bootstrap";
 import PageBreadcrumb from "../../componets/PageBreadcrumb"; // Fixed typo in 'components'
 
@@ -24,6 +24,35 @@ const Surgery = () => {
   });
 
   const [errors, setErrors] = useState({});
+  const [surgery, setSurgery] = useState([]);
+  const [assistantsDoctor, setAssistantsDoctor] = useState([]);
+
+  const [selectedOptions, setSelectedOptions] = useState([]); // Track selected checkboxes
+
+  const BASE_URL = "http://192.168.90.111:5000/api";
+
+  // Fetch options from API
+  useEffect(() => {
+    const fetchDropdownOptions = async () => {
+      try {
+        const endpoints = [
+          {
+            url: "/V1/patienttabs/assistantDoc_dropdown",
+            setter: setAssistantsDoctor,
+          },
+        ];
+
+        for (const { url, setter } of endpoints) {
+          const response = await fetch(`${BASE_URL}${url}`);
+          const data = await response.json();
+          if (response.ok) setter(data.data || []);
+        }
+      } catch (err) {
+        setErrors("Failed to fetch dropdown data.");
+      }
+    };
+    fetchDropdownOptions();
+  }, []);
 
   const validate = () => {
     const validationErrors = {};
@@ -112,7 +141,10 @@ const Surgery = () => {
                         <Form.Control
                           type="date"
                           name="admission_date"
-                          value={formData.admission_date}
+                          value={
+                            formData.admission_date ||
+                            new Date().toISOString().split("T")[0]
+                          }
                           onChange={handleInputChange}
                           isInvalid={!!errors.dateAdmission}
                         />
@@ -127,7 +159,10 @@ const Surgery = () => {
                         <Form.Control
                           type="date"
                           name="surgery_date"
-                          value={formData.surgery_date}
+                          value={
+                            formData.surgery_date ||
+                            new Date().toISOString().split("T")[0]
+                          }
                           onChange={handleInputChange}
                           isInvalid={!!errors.dateSurgery}
                         />
@@ -169,14 +204,29 @@ const Surgery = () => {
                       <Form.Group>
                         <Form.Label>Assistant Doctor:</Form.Label>
                         <Form.Select
-                          name="assistantDoctor"
-                          value={formData.assistantDoctor}
-                          onChange={handleInputChange}
+                          value={selectedOptions?.assistantsDoctorName || ""}
+                          onChange={(e) =>
+                            setSelectedOptions({
+                              ...selectedOptions,
+                              assistantsDoctorName: e.target.value,
+                            })
+                          }
                         >
-                          <option value="">Select an option</option>
-                          <option value="Dr. Smith">Dr. Smith</option>
-                          <option value="Dr. Johnson">Dr. Johnson</option>
-                          <option value="Dr. Lee">Dr. Lee</option>
+                          <option value="">Select Assistant</option>
+                          {[
+                            ...new Set([
+                              ...surgery.map(
+                                (option) => option.assistantsDoctorName
+                              ),
+                              ...assistantsDoctor.map(
+                                (assistantsDoctor) => assistantsDoctor.name
+                              ),
+                            ]),
+                          ].map((assistantsDoctorName, index) => (
+                            <option key={index} value={assistantsDoctorName}>
+                              {assistantsDoctorName}
+                            </option>
+                          ))}
                         </Form.Select>
                       </Form.Group>
                     </Col>

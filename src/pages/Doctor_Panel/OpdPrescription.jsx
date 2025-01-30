@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   Button,
@@ -12,9 +12,14 @@ import {
 } from "react-bootstrap";
 import PageBreadcrumb from "../../componets/PageBreadcrumb";
 
+const BASE_URL = "http://192.168.90.193:5000/api";
+
 const OpdPrescription = () => {
   const [formData, setFormData] = useState({
     prescription_id: "",
+    prepo_investigation: [],
+    medical_history: "",
+    investigation: "",
     creation_timestamp: "",
     allergy: false,
     doctor_id: "",
@@ -40,31 +45,93 @@ const OpdPrescription = () => {
 
   const [tableData, setTableData] = useState([]);
 
+  const [errors, setErrors] = useState({});
+  const [opdPrescription, setOpdPrescription] = useState([]);
+  const [assistantsDoctor, setAssistantsDoctor] = useState([]);
+  const [adviceMedicine, setdAdviceMedicine] = useState([]);
+
+  const [selectedOptions, setSelectedOptions] = useState({}); // Track selected checkboxes
+
+// Fetch options from API
+  useEffect(() => {
+    const fetchDropdownOptions = async () => {
+      try {
+        const endpoints = [
+          {
+            url: "/V1/patienttabs/assistantDoc_dropdown",
+            setter: setAssistantsDoctor,
+          },
+          {
+            url: "/V1/patienttabs/medicine_dropdown",
+            setter: setAssistantsDoctor,
+          },
+        ];
+
+        for (const { url, setter } of endpoints) {
+          const response = await fetch(`${BASE_URL}${url}`);
+          const data = await response.json();
+          if (response.ok) setter(data.data || []);
+        }
+      } catch (err) {
+        setErrors("Failed to fetch dropdown data.");
+      }
+    };
+    fetchDropdownOptions();
+  }, []);
+
   const testAdviceOptions = [
-    "Blood Test",
-    "X-Ray",
-    "ECG",
-    "MRI",
-    "CT Scan",
-    "Ultrasound",
-    "Urine Test",
+    "FLEXIBLE CYSTOSCOPY",
+    "USG ABD & PELVIC",
+    "PLAINCECT KUB",
+    "MRI PROSTATE",
+    "TRUS BIOPSY",
+    "UROFLOWMETRY",
+    "DJ STENT REMOVAL",
+    "X-RAY KUB",
+    "URINE ROUTINE",
+    "URINE CULTURE/SENSTIVITY",
+    "PSA, FREE PSA",
+    "PHI",
+    "B12",
+    "D3",
+    "USG SCROTUM",
+    "RGU",
+    "FDG PET SCAN",
+    "PSMA PER SCAN",
+    "USG KUB",
   ];
 
+
+  const prepoOptions = [
+    "CBC-RFT-LFT-BLOOD GROUP",
+    "HBSAG",
+    "HIV-HCV",
+    "PT INR ",
+    "S-CREATININE",
+    "CHEST X-RAY",
+    "2 D ECHO",
+    "ECG",
+    "URINE C/S",
+    "URINE R/N",
+  ];
+
+ 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleCheckboxChange = (e) => {
-    const { name, checked } = e.target;
-    setFormData({
-      ...formData,
-      medicine_time: {
-        ...formData.medicine_time,
-        [name]: checked,
-      },
-    });
-  };
+   const handleCheckboxChange = (option) => {
+     setFormData((prev) => {
+       const isSelected = prev.prepo_investigation.includes(option);
+       return {
+         ...prev,
+         prepo_investigation: isSelected
+           ? prev.prepo_investigation.filter((item) => item !== option) // Remove if already selected
+           : [...prev.prepo_investigation, option], // Add if not selected
+       };
+     });
+   };
 
   const handleTestAdviceChange = (e) => {
     const { value, checked } = e.target;
@@ -144,27 +211,100 @@ const OpdPrescription = () => {
               <Card.Body>
                 <Form>
                   <Row className="mb-3">
-                    <Col>
-                      <Form.Group>
-                        <Form.Label>Prescription Type:</Form.Label>
-                        <Form.Select
-                          name=" prescription_id"
-                          value={formData.prescription_id}
-                          onChange={handleInputChange}
-                        >
-                          <option value="">Select an option</option>
-                          <option value="Type 1">Type 1</option>
-                          <option value="Type 2">Type 2</option>
-                        </Form.Select>
-                      </Form.Group>
-                    </Col>
+                    <Form>
+                      <Row>
+                        <Col>
+                          <Form.Group>
+                            <Form.Label>Prescription Type:</Form.Label>
+                            <Form.Select
+                              name="prescription_id"
+                              value={formData.prescription_id}
+                              onChange={handleInputChange}
+                            >
+                              <option value="">Select an option</option>
+                              <option value="PROCTOLOGY">PROCTOLOGY</option>
+                              <option value="UROLOGY">UROLOGY</option>
+                            </Form.Select>
+                          </Form.Group>
+                        </Col>
+                      </Row>
+
+                      {formData.prescription_id === "UROLOGY" && (
+                        <>
+                          {/* PREPO Investigation Multiple Checkbox Dropdown */}
+                          <Row>
+                            <Col>
+                              <Form.Group>
+                                <Form.Label>PREPO Investigation:</Form.Label>
+                                <Dropdown>
+                                  <Dropdown.Toggle variant="primary">
+                                    {formData.prepo_investigation.length > 0
+                                      ? formData.prepo_investigation.join(", ")
+                                      : "Select Investigation"}
+                                  </Dropdown.Toggle>
+
+                                  <Dropdown.Menu>
+                                    {prepoOptions.map((option, index) => (
+                                      <Form.Check
+                                        key={index}
+                                        type="checkbox"
+                                        label={option}
+                                        checked={formData.prepo_investigation.includes(
+                                          option
+                                        )}
+                                        onChange={() =>
+                                          handleCheckboxChange(option)
+                                        }
+                                      />
+                                    ))}
+                                  </Dropdown.Menu>
+                                </Dropdown>
+                              </Form.Group>
+                            </Col>
+                          </Row>
+
+                          {/* Medical History */}
+                          <Row>
+                            <Col>
+                              <Form.Group>
+                                <Form.Label>Medical History:</Form.Label>
+                                <Form.Control
+                                  as="textarea"
+                                  name="medical_history"
+                                  value={formData.medical_history}
+                                  onChange={handleInputChange}
+                                />
+                              </Form.Group>
+                            </Col>
+                          </Row>
+
+                          {/* Investigation */}
+                          <Row>
+                            <Col>
+                              <Form.Group>
+                                <Form.Label>Investigation:</Form.Label>
+                                <Form.Control
+                                  as="textarea"
+                                  name="investigation"
+                                  value={formData.investigation}
+                                  onChange={handleInputChange}
+                                />
+                              </Form.Group>
+                            </Col>
+                          </Row>
+                        </>
+                      )}
+                    </Form>
                     <Col>
                       <Form.Group>
                         <Form.Label>Date of Prescription:</Form.Label>
                         <Form.Control
                           type="date"
                           name="creation_timestamp"
-                          value={formData.creation_timestamp}
+                          value={
+                            formData.creation_timestamp ||
+                            new Date().toISOString().split("T")[0]
+                          }
                           onChange={handleInputChange}
                         />
                       </Form.Group>
@@ -193,32 +333,61 @@ const OpdPrescription = () => {
                       <Form.Group>
                         <Form.Label>Assistant Doctor:</Form.Label>
                         <Form.Select
-                          name="doctor_id"
-                          value={formData.doctor_id}
-                          onChange={handleInputChange}
+                          value={selectedOptions.assistantsDoctorName || ""}
+                          onChange={(e) =>
+                            setSelectedOptions({
+                              ...selectedOptions,
+                              assistantsDoctorName: e.target.value,
+                            })
+                          }
                         >
-                          <option value="">Select an option</option>
-                          <option value="Dr. Smith">Dr. Smith</option>
-                          <option value="Dr. Johnson">Dr. Johnson</option>
+                          <option value="">Select Assistant</option>
+                          {[
+                            ...new Set([
+                              ...opdPrescription
+                                .map(
+                                  (option) =>
+                                    option.assistantsDoctorconsultantName
+                                )
+                                .filter(Boolean),
+                              ...assistantsDoctor
+                                .map((doctor) => doctor.name)
+                                .filter(Boolean),
+                            ]),
+                          ].map((assistantsDoctorName, index) => (
+                            <option key={index} value={assistantsDoctorName}>
+                              {assistantsDoctorName}
+                            </option>
+                          ))}
                         </Form.Select>
                       </Form.Group>
                     </Col>
                     <Col>
                       <Form.Group>
                         <Form.Label>Test Advice:</Form.Label>
-                        <DropdownButton title="Select Test Advice">
-                          {testAdviceOptions.map((option) => (
-                            <Dropdown.Item key={option}>
-                              <Form.Check
-                                type="checkbox"
-                                label={option}
-                                value={option}
-                                checked={formData.testAdvice.includes(option)}
-                                onChange={handleTestAdviceChange}
-                              />
-                            </Dropdown.Item>
-                          ))}
-                        </DropdownButton>
+                        <Dropdown>
+                          <Dropdown.Toggle variant="primary" as={Button}>
+                            {formData.testAdvice.length > 0
+                              ? formData.testAdvice.join(", ")
+                              : "Select Test Advice"}
+                          </Dropdown.Toggle>
+
+                          <Dropdown.Menu
+                            style={{ maxHeight: "200px", overflowY: "auto" }}
+                          >
+                            {testAdviceOptions.map((option) => (
+                              <Dropdown.Item key={option} as="div">
+                                <Form.Check
+                                  type="checkbox"
+                                  label={option}
+                                  value={option}
+                                  checked={formData.testAdvice.includes(option)}
+                                  onChange={handleTestAdviceChange}
+                                />
+                              </Dropdown.Item>
+                            ))}
+                          </Dropdown.Menu>
+                        </Dropdown>
                       </Form.Group>
                     </Col>
                   </Row>
@@ -271,9 +440,12 @@ const OpdPrescription = () => {
                           <option value="" disabled>
                             Select an option
                           </option>
-                          <option value="Follow-up">Follow-up</option>
-                          <option value="Routine Check-up">
-                            Routine Check-up
+                          <option value="Follow-up">Follow-up Patient</option>
+                          <option value="Post-Operative Patient">
+                            Post-Operative Patient
+                          </option>
+                          <option value="Surgery Patient">
+                            Surgery Patient
                           </option>
                         </Form.Select>
                       </Form.Group>

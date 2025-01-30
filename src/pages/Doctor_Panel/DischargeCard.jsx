@@ -11,7 +11,7 @@ import {
 import PageBreadcrumb from "../../componets/PageBreadcrumb";
 import { Link } from "react-router-dom";
 
-const BASE_URL = "http://192.168.90.193:5000/api"; // Update with your backend API base URL
+const BASE_URL = "http://192.168.90.111:5000/api"; // Update with your backend API base URL
 
 export default function DischargeCard() {
   const [discharge, setDischarge] = useState([]);

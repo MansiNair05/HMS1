@@ -225,9 +225,6 @@ const Diagnosis = () => {
   const [consultants, setConsultants] = useState([]);
   const [assistantsDoctor, setAssistantsDoctor] = useState([]);
 
-
-
-  const [dropdownOptions, setDropdownOptions] = useState([]); // Store API options
   const [selectedOptions, setSelectedOptions] = useState([]); // Track selected checkboxes
   
  // Fetch options from API
@@ -361,7 +358,7 @@ const handleCategoryChange = (category, e) => {
                         <Form.Control
                           type="date"
                           name="date_diagnosis"
-                          value={formData.date_diagnosis}
+                          value={formData.date_diagnosis|| new Date().toISOString().split("T")[0]}
                           onChange={handleInputChange}
                         />
                       </Form.Group>
@@ -551,23 +548,44 @@ const handleCategoryChange = (category, e) => {
                               <Col md={4} key={category}>
                                 <Form.Group>
                                   <Form.Label>{category}:</Form.Label>
-                                  <DropdownButton title={`Select ${category}`}>
-                                    {categoryOptions[category].map((option) => (
-                                      <Dropdown.Item key={option}>
-                                        <Form.Check
-                                          type="checkbox"
-                                          label={option}
-                                          value={option}
-                                          checked={formData[category].includes(
-                                            option
-                                          )}
-                                          onChange={(e) =>
-                                            handleCategoryChange(category, e)
-                                          }
-                                        />
-                                      </Dropdown.Item>
-                                    ))}
-                                  </DropdownButton>
+                                  <Dropdown>
+                                    <Dropdown.Toggle
+                                      variant="primary"
+                                      as={Button}
+                                    >
+                                      {formData[category].length > 0
+                                        ? formData[category].join(", ")
+                                        : `Select ${category}`}
+                                    </Dropdown.Toggle>
+
+                                    <Dropdown.Menu
+                                      style={{
+                                        maxHeight: "200px",
+                                        overflowY: "auto",
+                                      }}
+                                    >
+                                      {categoryOptions[category].map(
+                                        (option) => (
+                                          <Dropdown.Item key={option} as="div">
+                                            <Form.Check
+                                              type="checkbox"
+                                              label={option}
+                                              value={option}
+                                              checked={formData[
+                                                category
+                                              ].includes(option)}
+                                              onChange={(e) =>
+                                                handleCategoryChange(
+                                                  category,
+                                                  e
+                                                )
+                                              }
+                                            />
+                                          </Dropdown.Item>
+                                        )
+                                      )}
+                                    </Dropdown.Menu>
+                                  </Dropdown>
                                 </Form.Group>
                               </Col>
                             ))}
@@ -803,8 +821,7 @@ const handleCategoryChange = (category, e) => {
                           {[
                             ...new Set([
                               ...diagnosis.map(
-                                (option) =>
-                                  option.assistantsDoctorconsultantName
+                                (option) => option.assistantsDoctorName
                               ),
                               ...assistantsDoctor.map(
                                 (assistantsDoctor) => assistantsDoctor.name
@@ -838,3 +855,7 @@ const handleCategoryChange = (category, e) => {
 };
 
 export default Diagnosis;
+
+
+
+

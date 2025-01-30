@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   Button,
@@ -11,6 +11,7 @@ import {
 } from "react-bootstrap";
 import PageBreadcrumb from "../../componets/PageBreadcrumb"; // Fixed typo in 'components'
 
+const BASE_URL = "http://192.168.90.111:5000/api";
 
 const SurgeryTabs = () => {
   const [key, setKey] = useState("piles");
@@ -269,6 +270,34 @@ const PatientHistory = () => {
   });
 
   const [errors, setErrors] = useState({});
+  const [patientHistory, setPatientHistory] = useState([]);
+  const [assistantsDoctor, setAssistantsDoctor] = useState([]);
+
+  const [selectedOptions, setSelectedOptions] = useState([]); // Track selected checkboxes
+    
+
+// Fetch options from API
+  useEffect(() => {
+    const fetchDropdownOptions = async () => {
+      try {
+        const endpoints = [
+          {
+            url: "/V1/patienttabs/assistantDoc_dropdown",
+            setter: setAssistantsDoctor,
+          },
+        ];
+
+        for (const { url, setter } of endpoints) {
+          const response = await fetch(`${BASE_URL}${url}`);
+          const data = await response.json();
+          if (response.ok) setter(data.data || []);
+        }
+      } catch (err) {
+        setErrors("Failed to fetch dropdown data.");
+      }
+    };
+    fetchDropdownOptions();
+  }, []);
 
   const validate = () => {
     const validationErrors = {};
@@ -366,7 +395,10 @@ const PatientHistory = () => {
                         <Form.Control
                           type="date"
                           name="patient_date"
-                          value={formData.patient_date}
+                          value={
+                            formData.patient_date ||
+                            new Date().toISOString().split("T")[0]
+                          }
                           onChange={handleInputChange}
                           isInvalid={!!errors.patientDate}
                         />
@@ -378,13 +410,23 @@ const PatientHistory = () => {
                     <Col>
                       <Form.Group>
                         <Form.Label>Height:</Form.Label>
-                        <Form.Control
-                          type="number"
-                          name="height"
-                          value={formData.height}
-                          onChange={handleInputChange}
-                          isInvalid={!!errors.height}
-                        />
+                        <div className="d-flex">
+                          <Form.Control
+                            type="number"
+                            name="height"
+                            value={formData.height}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                height: e.target.value,
+                              })
+                            }
+                            isInvalid={!!errors.height}
+                            placeholder="Enter height"
+                          />
+                          <span className="ms-2 align-self-center">FEET</span>{" "}
+                          {/* Text outside the box */}
+                        </div>
                         <Form.Control.Feedback type="invalid">
                           {errors.height}
                         </Form.Control.Feedback>
@@ -393,13 +435,23 @@ const PatientHistory = () => {
                     <Col>
                       <Form.Group>
                         <Form.Label>Weight:</Form.Label>
-                        <Form.Control
-                          type="number"
-                          name="weight"
-                          value={formData.weight}
-                          onChange={handleInputChange}
-                          isInvalid={!!errors.weight}
-                        />
+                        <div className="d-flex">
+                          <Form.Control
+                            type="number"
+                            name="weight"
+                            value={formData.weight}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                weight: e.target.value,
+                              })
+                            }
+                            isInvalid={!!errors.weight}
+                            placeholder="Enter weight"
+                          />
+                          <span className="ms-2 align-self-center">kgs</span>{" "}
+                          {/* Text outside the box */}
+                        </div>
                         <Form.Control.Feedback type="invalid">
                           {errors.weight}
                         </Form.Control.Feedback>
@@ -435,34 +487,43 @@ const PatientHistory = () => {
                     <Col>
                       <Form.Group>
                         <Form.Label>BP:</Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="vitalSigns.BP"
-                          value={formData.vitalSigns.BP}
-                          onChange={handleInputChange}
-                        />
+                        <div className="d-flex align-items-center">
+                          <Form.Control
+                            type="text"
+                            name="vitalSigns.BP"
+                            value={formData.vitalSigns.BP}
+                            onChange={handleInputChange}
+                          />
+                          <span className="ms-2">mm of hg</span>
+                        </div>
                       </Form.Group>
                     </Col>
                     <Col>
                       <Form.Group>
                         <Form.Label>Pulse:</Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="vitalSigns.Pulse"
-                          value={formData.vitalSigns.Pulse}
-                          onChange={handleInputChange}
-                        />
+                        <div className="d-flex align-items-center">
+                          <Form.Control
+                            type="text"
+                            name="vitalSigns.Pulse"
+                            value={formData.vitalSigns.Pulse}
+                            onChange={handleInputChange}
+                          />
+                          <span className="ms-2">/Min</span>
+                        </div>
                       </Form.Group>
                     </Col>
                     <Col>
                       <Form.Group>
                         <Form.Label>RR:</Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="vitalSigns.RR"
-                          value={formData.vitalSigns.RR}
-                          onChange={handleInputChange}
-                        />
+                        <div className="d-flex align-items-center">
+                          <Form.Control
+                            type="text"
+                            name="vitalSigns.RR"
+                            value={formData.vitalSigns.RR}
+                            onChange={handleInputChange}
+                          />
+                          <span className="ms-2">/Min</span>
+                        </div>
                       </Form.Group>
                     </Col>
                   </Row>
@@ -1047,13 +1108,32 @@ const PatientHistory = () => {
                     <Form.Group>
                       <Form.Label>Assistant Doctor:</Form.Label>
                       <Form.Select
-                        name="assistantDoctor"
-                        value={formData.assistantDoctor}
-                        onChange={handleInputChange}
+                        value={selectedOptions.assistantsDoctorName || ""}
+                        onChange={(e) =>
+                          setSelectedOptions({
+                            ...selectedOptions,
+                            assistantsDoctorName: e.target.value,
+                          })
+                        }
                       >
-                        <option value="">Select an option</option>
-                        <option value="Dr. Smith">Dr. Smith</option>
-                        <option value="Dr. Johnson">Dr. Johnson</option>
+                        <option value="">Select Assistant</option>
+                        {[
+                          ...new Set([
+                            ...patientHistory
+                              .map(
+                                (option) =>
+                                  option.assistantsDoctorconsultantName
+                              )
+                              .filter(Boolean),
+                            ...assistantsDoctor
+                              .map((doctor) => doctor.name)
+                              .filter(Boolean),
+                          ]),
+                        ].map((assistantsDoctorName, index) => (
+                          <option key={index} value={assistantsDoctorName}>
+                            {assistantsDoctorName}
+                          </option>
+                        ))}
                       </Form.Select>
                     </Form.Group>
                   </Col>
