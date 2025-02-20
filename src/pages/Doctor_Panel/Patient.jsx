@@ -14,50 +14,45 @@ import {
   Button,
   Spinner,
 } from "react-bootstrap";
+// import NavBarD from "./NavbarD";
 import PageBreadcrumb from "../../componets/PageBreadcrumb";
 
-const BASE_URL = "http://192.168.90.146:5000/api"; // Update your API base URL here
+const BASE_URL = "http://192.168.90.158:5000/api"; // Update your API base URL here
 
 export default function Patient() {
   const [patients, setPatients] = useState([]);
-  const [filters1, setFilters1] = useState({
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-  });
+  const [filteredPatients, setFilteredPatients] = useState([]);
+  const [searchTerm, setSearchTerm] = useState(""); // State for search term
   const [loading, setLoading] = useState(false); // Loading state
-  const [fromDate, setFromDate] = useState(formatDate(new Date()));
-  const [toDate, setToDate] = useState(formatDate(new Date()));
-
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const navigate = useNavigate();
 
-  // Format date to "yyyy-MM-dd"
-  function formatDate(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  }
-
-  // Format date for API
-  const formatToApiDate = (date) => {
-    if (!date) return "";
-    const [year, month, day] = date.split("-");
-    return `${year}-${month}-${day}`;
-  };
-
   // Fetch patients data
-  const fetchPatientsData = async () => {
+  const fetchPatientsData = async (withFilters = false) => {
     setLoading(true);
     try {
       const url = new URL(`${BASE_URL}/V1/patients/listPatient`);
-      const params = {
-        from: formatToApiDate(fromDate),
-        to: formatToApiDate(toDate),
-      };
+      const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
 
-      Object.keys(params).forEach((key) => {
-        if (params[key]) url.searchParams.append(key, params[key]);
-      });
-
+      if (withFilters && fromDate && toDate) {
+        const params = {
+          from: fromDate.split("-").reverse().join("/"),
+          to: toDate.split("-").reverse().join("/"),
+        };
+        Object.keys(params).forEach((key) =>
+          url.searchParams.append(key, params[key])
+        );
+      } else {
+        // Default filter for current date
+        const params = {
+          from: today.split("-").reverse().join("/"),
+          to: today.split("-").reverse().join("/"),
+        };
+        Object.keys(params).forEach((key) =>
+          url.searchParams.append(key, params[key])
+        );
+      }
       const response = await fetch(url, {
         method: "GET",
         headers: {
@@ -66,10 +61,11 @@ export default function Patient() {
       });
 
       const data = await response.json();
-
       if (response.ok) {
-                console.log("Fetched Data:", data.data);
-        setPatients(data.data || []);
+        console.log("Fetched Data:", data.data);
+        const result = Array.isArray(data.data) ? data.data : [];
+        setPatients(result);
+        setFilteredPatients(result); // Initialize filtered data
       } else {
         console.error(
           "Error fetching patients:",
@@ -87,10 +83,80 @@ export default function Patient() {
     fetchPatientsData(); // Fetch data on component mount
   }, []);
 
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    const value = e.target.value.toLowerCase();
+    setSearchTerm(value);
+
+    const filteredData = patients.filter((patient) =>
+      Object.values(patient).some(
+        (field) =>
+          typeof field === "string" && field.toLowerCase().includes(value)
+      )
+    );
+
+    setFilteredPatients(filteredData); // Update filtered data
+  };
+
   // Navigate to Follow-Up page
-  const handleViewPatient = (patient) => {
-    // navigate("/follow-up", { state: { patient } });
-    navigate("/other-tests", { state: { patient } });
+  const handleViewPatient = async (patient) => {
+    console.log("Patient Data Being Passed:", patient);
+
+    try {
+      localStorage.setItem("selectedPatientId", patient.patient_id);
+
+      // Update API endpoints to match backend structure
+      const followUpResponse = await fetch(
+        `${BASE_URL}/V1/followUp/listFollowUp/${patient.patient_id}` // Updated endpoint
+      );
+
+      const personalResponse = await fetch(
+        `${BASE_URL}/V1/patienttabs/personal/${patient.patient_id}`
+      );
+
+      const patientHistoryResponse = await fetch(
+        `${BASE_URL}/V1/patientHistory/listPatientHistory/${patient.patient_id}` // Updated endpoint
+      );
+
+      // Check each response individually
+      if (!followUpResponse.ok) {
+        console.error("Follow-up fetch failed:", await followUpResponse.text());
+      }
+
+      if (!personalResponse.ok) {
+        console.error("Personal fetch failed:", await personalResponse.text());
+      }
+
+      if (!patientHistoryResponse.ok) {
+        console.error(
+          "History fetch failed:",
+          await patientHistoryResponse.text()
+        );
+      }
+
+      // If personal data is available, proceed with navigation
+      if (personalResponse.ok) {
+        const personalData = await personalResponse.json();
+        navigate("/personal", { state: { patient, personalData } });
+      } else {
+        // If personal data isn't available, still navigate but with just patient data
+        navigate("/personal", { state: { patient } });
+      }
+    } catch (error) {
+      console.error("Error in handleViewPatient:", error);
+      // Still navigate even if there's an error
+      navigate("/personal", { state: { patient } });
+    }
+  };
+
+  // const handleOtherTests = (patient) => {
+  //   console.log("Patient Data Being Passed to Other Tests:", patient); // Debugging line
+  //   navigate("/otherTests", { state: { patient } });
+  // };
+
+  const handlePersonal = (patient) => {
+    console.log("Patient Data Being Passed to Personal:", patient); // Debugging line
+    navigate("/personal", { state: { patient } });
   };
 
   // Actions template for the DataTable
@@ -99,7 +165,10 @@ export default function Patient() {
       <Button
         variant="info"
         title="View Details"
-        onClick={() => handleViewPatient(rowData)}
+        onClick={() => {
+          handleViewPatient(rowData);
+          handlePersonal(rowData);
+        }}
         style={{
           width: "35px",
           height: "35px",
@@ -135,15 +204,17 @@ export default function Patient() {
           <InputGroup>
             <Form.Control
               type="search"
-              value={filters1.global.value || ""}
-              onChange={(e) =>
-                setFilters1({
-                  global: {
-                    value: e.target.value,
-                    matchMode: FilterMatchMode.CONTAINS,
-                  },
-                })
-              }
+              value={searchTerm}
+              // value={filteredPatients.global.value || ""}
+              // onChange={(e) =>
+              //   setFilteredPatients({
+              //     global: {
+              //       value: e.target.value,
+              //       matchMode: FilterMatchMode.CONTAINS,
+              //     },
+              //   })
+              // }
+              onChange={handleSearchChange} // Handle live search
               placeholder="Global Search"
             />
           </InputGroup>
@@ -196,9 +267,9 @@ export default function Patient() {
         padding: "20px",
       }}
     >
-
       {/* Breadcrumb */}
       <PageBreadcrumb pagename="All Patients" />
+      {/* <NavBarD pagename="Patient List" /> */}
       {/* Theme body */}
       <div
         className="theme-body"
@@ -233,21 +304,20 @@ export default function Patient() {
                     </div>
                   ) : (
                     <DataTable
-                      value={patients}
+                      value={filteredPatients}
                       paginator
                       rows={10}
                       header={header}
-                      globalFilterFields={[
-                        "Uid_no",
-                        "name",
-                        "age",
-                        "sex",
-                        "phone",
-                        "email",
-                        "status",
-                      ]}
-                      currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
-                      paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+                      // globalFilterFields={[
+                      //   "Uid_no",
+                      //   "name",
+                      //   "age",
+                      //   "sex",
+                      //   "phone",
+                      //   "email",
+                      //   "status",
+                      // ]}
+
                       responsiveLayout="scroll"
                       className="p-datatable-customers"
                       rowClassName={(rowData, { rowIndex }) => ({

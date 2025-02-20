@@ -71,9 +71,9 @@ import BillingReport from "./pages/Manage Reports/BillingReports";
 import IPDDueReport from "./pages/Manage Reports/IPDDueReport";
 import InsuranceDueReport from "./pages/Manage Reports/InsuranceDueReport";
 import OPDIPDCollection from "./pages/Manage Reports/OPDIPDCollection";
-// import OPDIPDCollGraph from "./pages/Manage Reports/OPDIPDCollGraph";
+import OPDIPDCollGraph from "./pages/Manage Reports/OPDIPDCollGraph";
 
-import Navbar from "./pages/Doctor_Panel/Navbar";
+// import Navbar from "./pages/Doctor_Panel/Navbar";
 import Patient from "./pages/Doctor_Panel/Patient";
 import Personal from "./pages/Doctor_Panel/Personal";
 import PatientHistory from "./pages/Doctor_Panel/PatientHistory";
@@ -84,6 +84,7 @@ import OpdPrescription from "./pages/Doctor_Panel/OpdPrescription";
 import Surgery from "./pages/Doctor_Panel/Surgery";
 import DischargeCard from "./pages/Doctor_Panel/DischargeCard";
 
+import DiagnosisReport from "./pages/ManageReports/DiagnosisReport";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -197,11 +198,7 @@ function AppContent() {
         <Route exact path="/add-locations" element={<Add_Locations />} />
 
         <Route exact path="/add-receptionist" element={<Add_receptionist />} />
-        <Route
-          exact
-          path="/receptionist-list"
-          element={<Receptionist_list />}
-        />
+        <Route exact path="/receptionist-list" element={<Receptionist_list />}/>
         <Route
           exact
           path="/consultation-details"
@@ -280,17 +277,20 @@ function AppContent() {
           element={<InsuranceDueReport />}
         />
         <Route exact path="/oPDIPDCollection" element={<OPDIPDCollection />} />
+        <Route exact path="/oPDIPDCollGraph" element={<OPDIPDCollGraph />} />
 
-        <Route exact path="/navbar" element={<Navbar />} />
+        {/* <Route exact path="/navbar" element={<Navbar />} /> */}
         <Route exact path="/patient" element={<Patient />} />
         <Route exact path="/personal" element={<Personal />} />
         <Route exact path="/patientHistory" element={<PatientHistory />} />
-        <Route exact path="/diagnosis" element={<Diagnosis />} />
+        <Route exact path="/diagnosis" element={<Diagnosis/>} />
         <Route path="/follow-up" element={<FollowUp />} />
         <Route exact path="/otherTests" element={<OtherTests />} />
         <Route exact path="/opdPrescription" element={<OpdPrescription />} />
-        <Route exact path="/surgery" element={<Surgery />} />
+        <Route exact path="/surgery" element={<Surgery/>} />
         <Route exact path="/dischargeCard" element={<DischargeCard />} />
+        
+        <Route exact path="/diagnosisReport" element={<DiagnosisReport/>} />
 
         <Route exact path="/login" element={<Login />} />
         <Route exact path="/register" element={<Register />} />

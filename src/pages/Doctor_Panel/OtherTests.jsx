@@ -1,14 +1,21 @@
-import React, { useState, useEffect } from "react";
-import { Row, Col, Form, Container, Card } from "react-bootstrap";
-import PageBreadcrumb from "../../componets/PageBreadcrumb";
-import { useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Row, Col, Form, Container, Card, Dropdown } from "react-bootstrap";
+import NavBarD from "./NavbarD";
 
-const BASE_URL = "http://192.168.90.146:5000/api"; // Update with your backend API base URL
+const BASE_URL = "http://192.168.90.158:5000/api"; // Update with your backend API base URL
 
 export default function OtherTests() {
-  const location = useLocation();
-  const { state } = location; // Access the state passed by the previous page
-  console.log(state);
+  // const [dropdownOptions, setDropdownOptions] = useState([]); // Store API options
+  const [selectedOptions, setSelectedOptions] = useState({ test_type: [] }); // Track selected checkboxes
+  const [tests, setTests] = useState([]);
+  const [types, setTypes] = useState([]);
+  const [assistants, setAssistants] = useState([]);
+  const [errors, setErrors] = useState({});
+  const [isDisabled, setIsDisabled] = useState(false); // Controls edit mode
+  const [disablePreviousButton, setDisablePreviousButton] = useState(false); // Disables "Previous Records" after clicking
+  const [patientId, setPatientId] = useState(
+    localStorage.getItem("selectedPatientId")
+  );
   const [formData, setFormData] = useState({
     test_date: "",
     test_type: "",
@@ -17,11 +24,129 @@ export default function OtherTests() {
     visit_type: "",
     test_comment: "",
   });
+  const [previousRecordDate, setPreviousRecordDate] = useState("");
+  const [showEditButton, setShowEditButton] = useState(false);
+  const [showMedicalHistory, setShowMedicalHistory] = useState(false);
+  const [medicalHistory, setMedicalHistory] = useState([]);
 
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    const storedPatientId = localStorage.getItem("selectedPatientId");
+    console.log("Retrieved from localStorage:", storedPatientId);
+    if (storedPatientId) setPatientId(storedPatientId);
+  }, []);
+  useEffect(() => {
+    if (!patientId) {
+      console.warn("No patientId found, skipping fetch");
+      return;
+    }
+    const fetchPatientData = async () => {
+      console.log(`Fetching data for patient ID: ${patientId}`);
+      try {
+        const response = await fetch(
+          `${BASE_URL}/V1/otherTests/listOtherTests/${patientId}`,
+          {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+
+        if (!response.ok) {
+          console.error(
+            "API Response Error:",
+            response.status,
+            await response.text()
+          );
+          return;
+        }
+
+        const data = await response.json();
+        console.log("Parsed API Response:", data);
+
+        if (data?.data?.otherTests) {
+          const otherTests = data.data.otherTests;
+
+          // Parse test_response JSON
+          let testDetails = [];
+          try {
+            const testResponse = JSON.parse(otherTests.test_response);
+            testDetails = testResponse.acknowledgments || [];
+          } catch (error) {
+            console.error("Error parsing test_response JSON:", error);
+          }
+
+          setFormData({
+            test_date: otherTests.test_date?.split("T")[0] || "",
+            ref_doctor: otherTests.ref_doctor || "",
+            fee_status: otherTests.fee_status === "true" ? "YES" : "NO",
+            visit_type: otherTests.visit_type || "",
+            test_comment: otherTests.test_comment || "",
+          });
+
+          // Extract additional test details
+          const additionalTests = data?.data?.testDetails || [];
+
+          setMedicalHistory([
+            ...testDetails.map((test) => ({
+              test_name: test.test_name,
+              test_code: test.test_code,
+            })),
+            ...additionalTests.map((test) => ({
+              test_name: test.test_name || "",
+              test_code: test.test_code || "",
+            })),
+          ]);
+
+          setShowMedicalHistory(true);
+        } else {
+          console.warn("No patient data found in API response");
+          setFormData({});
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchPatientData();
+  }, [patientId]);
+
+  useEffect(() => {
+    const fetchDropdownOptions = async () => {
+      try {
+        const endpoints = [
+          {
+            url: "/V1/patienttabsdp/assistantDoc_dropdown",
+            setter: setAssistants,
+          },
+          {
+            url: "/V1/patienttabsdp/testType_dropdown",
+            setter: setTypes,
+          },
+        ];
+
+        for (const { url, setter } of endpoints) {
+          const response = await fetch(`${BASE_URL}${url}`);
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(
+              `Error fetching ${url}: ${data.message || "Unknown error"}`
+            );
+          }
+
+          console.log(`${url} Data:`, data.data); // Log fetched data to the console
+          setter(data.data || []);
+        }
+      } catch (err) {
+        console.error("Fetch error:", err);
+        setErrors("Failed to fetch dropdown data.");
+      }
+    };
+    fetchDropdownOptions();
+  }, []);
 
   const handleInputChange = (e) => {
+    if (isDisabled) return; // Don't update if form is disabled
+
     const { name, value, type, checked } = e.target;
     setFormData((prevState) => ({
       ...prevState,
@@ -29,94 +154,271 @@ export default function OtherTests() {
     }));
   };
 
-  const validate = () => {
-    const newErrors = {};
-    const requiredFields = [
-      "test_date",
-      "test_type",
-      "ref_doctor",
-      "fee_status",
-      "visit_type",
-      "test_comment",
-    ];
+  const handleSubmit = async () => {
+    try {
+      // Prepare the data to be sent
+      const dataToSend = {
+        ...formData,
+        test_type: selectedOptions.test_type.join(", "), // Join selected test types into a string
+        ref_doctor: selectedOptions.ref_doctor || formData.ref_doctor,
+        patient_id: patientId,
+      };
 
-    requiredFields.forEach((field) => {
-      if (!formData[field]) {
-        newErrors[field] = `${field.replace(/([A-Z])/g, " $1")} is required`;
+      console.log("Sending Data:", JSON.stringify(dataToSend, null, 2));
+
+      const response = await fetch(
+        `${BASE_URL}/V1/otherTests/addOtherTests/${patientId}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(dataToSend),
+        }
+      );
+
+      const responseData = await response.json();
+      console.log("Response Data:", responseData);
+
+      if (!response.ok) {
+        throw new Error(responseData.message || "Failed to save data");
       }
+
+      alert("Form submitted successfully!");
+
+      // Clear the form after successful submission
+      setFormData({
+        test_date: "",
+        test_type: "",
+        ref_doctor: "",
+        fee_status: "",
+        visit_type: "",
+        test_comment: "",
+      });
+
+      // Reset selected options
+      setSelectedOptions({
+        test_type: [],
+        ref_doctor: "",
+      });
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      alert("Failed to submit form. Please try again.");
+    }
+  };
+
+  // const handleSubmit = async (saveType) => {
+  //   const validationErrors = validate();
+  //   console.log("Form Data:", formData);
+  //   setErrors(validationErrors);
+
+  //   if (Object.keys(validationErrors).length === 0) {
+  //     try {
+  //       const response = await fetch(
+  //         ${BASE_URL}/V1/patienttabs/otherTests/${state.patient.patient_id},
+  //         {
+  //           method: "PUT",
+  //           headers: { "Content-Type": "application/json" },
+  //           body: JSON.stringify({ ...formData, saveType }),
+  //         }
+  //       );
+
+  //       console.log("Response received:", response);
+
+  //       if (response.ok) {
+  //         alert("Appointment added successfully");
+
+  //         setFormData({
+  //           patient_id: "",
+  //           test_date: state?.test_date || "",
+  //           test_type: state?.test_type || "",
+  //           ref_doctor: state?.ref_doctor || "",
+  //           fee_status: state?.fee_status || "",
+  //           visit_type: state?.visit_type || "",
+  //           test_comment: state?.test_comment || "",
+  //         });
+  //       } else {
+  //         const errorData = await response.json();
+  //         console.error("Error response from API:", errorData);
+  //         alert("Failed to add appointment");
+  //       }
+  //     } catch (error) {
+  //       console.error("Error adding appointment:", error);
+  //       alert("An error occurred while adding the appointment");
+  //     }
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   if (state?.patient) {
+  //     setLoading(true); // Start loading
+  //     fetch(${BASE_URL}/V1/patienttabs/otherTests/${state.patient.patient_id})
+  //       .then((response) => {
+  //         if (!response.ok) {
+  //           throw new Error("Failed to fetch data");
+  //         }
+  //         return response.json();
+  //       })
+  //       .then((data) => {
+  //         console.log("API Response:", data); // Log the API response
+  //         if (data?.data) {
+  //           // Check if data exists
+  //           // Prefill the form with the fetched data
+  //           setFormData({
+  //             test_date: data.data.test_date || "", // Ensure this is correctly populated
+  //             test_type: data.data.test_type || "",
+  //             ref_doctor: data.data.ref_doctor || "",
+  //             fee_status: data.data.fee_status || "",
+  //             visit_type: data.data.visit_type || "",
+  //             test_comment: data.data.test_comment || "",
+  //           });
+  //         }
+  //       })
+  //       .catch((error) => {
+  //         console.error("Error fetching data:", error);
+  //       })
+  //       .finally(() => setLoading(false)); // Stop loading
+  //   }
+  // }, [state?.patient]); // Depend on the patient data to refetch when needed
+
+  // Handle checkbox selection change for test type
+  const handleTestTypeChange = (e, test_type) => {
+    if (isDisabled) return; // Don't update if form is disabled
+
+    const { checked } = e.target;
+    setSelectedOptions((prevState) => {
+      const updatedTestTypes = checked
+        ? [...prevState.test_type, test_type]
+        : prevState.test_type.filter((item) => item !== test_type);
+
+      return {
+        ...prevState,
+        test_type: updatedTestTypes,
+      };
+    });
+  };
+
+  const handleNewRecord = () => {
+    // Clear form data
+    setFormData({
+      test_date: "",
+      test_type: "",
+      ref_doctor: "",
+      fee_status: "",
+      visit_type: "",
+      test_comment: "",
     });
 
-    return newErrors;
+    // Reset selected options
+    setSelectedOptions({
+      test_type: [],
+      ref_doctor: "",
+    });
+
+    // Enable the "Previous Records" button
+    setDisablePreviousButton(false);
+
+    // Hide the Edit button
+    setShowEditButton(false);
+
+    // Enable form editing
+    setIsDisabled(false);
+
+    // Clear previous record date
+    setPreviousRecordDate("");
+
+    // Hide medical history table
+    setShowMedicalHistory(false);
+    setMedicalHistory([]);
+
+    alert("New Record: You can now enter new data.");
   };
 
-  const handleSubmit = async (saveType) => {
-    const validationErrors = validate();
-    console.log("Form Data:", formData);
-    setErrors(validationErrors);
+  const fetchPreviousRecords = async (prevData) => {
+    try {
+      console.log("Fetching records for patientId:", patientId);
 
-    if (Object.keys(validationErrors).length === 0) {
-      try {
-        const response = await fetch(
-          `${BASE_URL}/V1/patienttabs/otherTests/${state.patient.patient_id}`,
-          {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...formData, saveType }),
-          }
-        );
-
-        console.log("Response received:", response);
-
-        if (response.ok) {
-          alert("Appointment added successfully");
-
-          setFormData({
-            // date: new Date().toISOString().split("T")[0],
-            test_date: state?.test_date || "",
-            test_type: state?.test_type || "",
-            ref_doctor: state?.ref_doctor || "",
-            fee_status: state?.fee_status || "",
-            visit_type: state?.visit_type || "",
-            test_comment: state?.test_comment || "",
-          });
-        } else {
-          const errorData = await response.json();
-          console.error("Error response from API:", errorData);
-          alert("Failed to add appointment");
-        }
-      } catch (error) {
-        console.error("Error adding appointment:", error);
-        alert("An error occurred while adding the appointment");
+      if (!patientId) {
+        console.error("No patientId available");
+        alert("Patient ID is missing");
+        return;
       }
+
+      const response = await fetch(
+        `${BASE_URL}/V1/otherTests/listOtherTests/${patientId}`
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API Error Response:", errorText);
+        throw new Error(
+          `Failed to fetch previous records: ${response.status} ${errorText}`
+        );
+      }
+
+      const result = await response.json();
+      console.log("Parsed API Response:", result);
+
+      if (!result?.data?.otherTests) {
+        console.log("No records found in response");
+        alert("No previous records found.");
+        return;
+      }
+
+      const { otherTests, testDetails } = result.data;
+      console.log("Other Tests Data:", otherTests);
+
+      // Format the date string to YYYY-MM-DD for the date input
+      const formattedDate = otherTests.test_date
+        ? new Date(otherTests.test_date).toISOString().split("T")[0]
+        : "";
+
+      // Update form data with previous record
+      const updatedFormData = {
+        test_date: formattedDate,
+        ref_doctor: otherTests.ref_doctor || "",
+        fee_status: otherTests.fee_status === "true" ? "YES" : "NO",
+        visit_type: otherTests.visit_type || "",
+        test_comment: otherTests.test_comment || "",
+      };
+
+      console.log("Updating form data with:", updatedFormData);
+      setFormData(updatedFormData);
+
+      // Set medical history data from testDetails and show the table
+      const medicalHistoryData =
+        testDetails?.map((test) => ({
+          test_name: test.test_name,
+          test_code: test.test_code,
+        })) || [];
+
+      setMedicalHistory(medicalHistoryData);
+      // Show medical history table only after fetching previous records
+      setShowMedicalHistory(true);
+
+      // Set previous record date for display
+      setPreviousRecordDate(formattedDate);
+
+      // Disable the Previous Records button
+      setDisablePreviousButton(true);
+
+      // Show Edit button
+      setShowEditButton(true);
+
+      // Disable form editing until Edit button is clicked
+      setIsDisabled(true);
+    } catch (error) {
+      console.error("Error in fetchPreviousRecords:", error);
+      alert(`Failed to fetch previous records: ${error.message}`);
+      // Hide medical history table if there's an error
+      setShowMedicalHistory(false);
+      setMedicalHistory([]);
     }
   };
 
-  useEffect(() => {
-    if (state?.patient) {
-      setLoading(true); // Start loading
-      fetch(`${BASE_URL}/V1/patienttabs/otherTests/${state.patient.patient_id}`)
-        .then((response) => response.json())
-        .then((data) => {
-          console.log("API Response:", data); // Log the API response
-          if (data?.data) {
-            // Check if data exists
-            // Prefill the form with the fetched data
-            setFormData({
-              test_date: data.data.test_date || "", // Ensure this is correctly populated
-              test_type: data.data.test_type || "",
-              ref_doctor: data.data.ref_doctor || "",
-              fee_status: data.data.fee_status || "",
-              visit_type: data.data.visit_type || "",
-              test_comment: data.data.test_comment || "",
-            });
-          }
-        })
-        .catch((error) => {
-          console.error("Error fetching data:", error);
-        })
-        .finally(() => setLoading(false)); // Stop loading
-    }
-  }, [state?.patient]); // Depend on the patient data to refetch when needed
+  // Add Edit button handler
+  const handleEditOtherTests = () => {
+    setIsDisabled(false);
+    alert("Editing mode enabled. You can now modify the test details.");
+  };
 
   return (
     <div
@@ -128,7 +430,7 @@ export default function OtherTests() {
         fontFamily: "'Poppins', Arial, sans-serif",
       }}
     >
-      <PageBreadcrumb pagename="Other Tests" />
+      <NavBarD pagename="Other Tests" />
       <Container fluid>
         <Row>
           <Col>
@@ -146,21 +448,44 @@ export default function OtherTests() {
                   <button
                     type="button"
                     className="btn btn-primary"
-                    style={{ marginTop: "30px" }}
-                    onClick={() => handleSubmit("save")}
+                    style={{ marginTop: "5px" }}
+                    onClick={handleNewRecord}
                   >
                     New Record
                   </button>
                   <button
                     type="button"
                     className="btn btn-primary"
-                    style={{ marginTop: "30px", float: "right" }}
-                    onClick={() => handleSubmit("previous")}
+                    style={{ marginTop: "5px", float: "right" }}
+                    onClick={fetchPreviousRecords}
+                    disabled={disablePreviousButton}
                   >
                     Previous Records
                   </button>
+                  {/* Add Edit button */}
+                  {showEditButton && (
+                    <button
+                      type="button"
+                      className="btn btn-warning"
+                      style={{
+                        marginTop: "5px",
+                        float: "right",
+                        marginRight: "7px",
+                      }}
+                      onClick={handleEditOtherTests}
+                    >
+                      Edit Test Details
+                    </button>
+                  )}
                   <br />
                   <br />
+                  {/* Show previous record date */}
+                  {previousRecordDate && (
+                    <div style={{ marginTop: "15px" }}>
+                      <strong>Previous Record Date: </strong>
+                      <span>{previousRecordDate}</span>
+                    </div>
+                  )}
                   <Row>
                     <Col md={4} className="mb-4">
                       <Form.Group className="mb-3">
@@ -168,41 +493,94 @@ export default function OtherTests() {
                         <Form.Control
                           type="date"
                           name="test_date"
-                          value={formData.test_date}
+                          value={formData.test_date || ""}
                           onChange={handleInputChange}
+                          disabled={isDisabled}
                         />
                       </Form.Group>
                     </Col>
 
+                    {/* Test Type Dropdown with Multiple Checkboxes */}
                     <Col md={4} className="mb-4">
-                      <Form.Group className="mb-3">
+                      <Form.Group controlId="test_type">
                         <Form.Label>Test Type</Form.Label>
-                        <Form.Select
-                          name="test_type"
-                          value={formData.test_type || ""} // Ensure value is never undefined
-                          onChange={handleInputChange}
-                        >
-                          <option value="">Select Test Type</option>
-                          <option value="Test 1">Test 1</option>
-                          <option value="Test 2">Test 2</option>
-                        </Form.Select>
-                        {errors.test_type && (
-                          <small className="text-danger">
-                            {errors.test_type}
-                          </small> // Display validation errors
+                        <Dropdown>
+                          <Dropdown.Toggle
+                            variant="primary"
+                            id="dropdown-basic"
+                            disabled={isDisabled}
+                          >
+                            {selectedOptions.test_type.length === 0
+                              ? "Select test types"
+                              : selectedOptions.test_type.length === 1
+                              ? selectedOptions.test_type[0]
+                              : `${selectedOptions.test_type.length} Tests Selected`}
+                          </Dropdown.Toggle>
+
+                          <Dropdown.Menu
+                            style={{
+                              backgroundColor: "white",
+                              padding: "10px",
+                              maxHeight: "300px",
+                              overflowY: "auto",
+                            }}
+                          >
+                            {[
+                              ...new Set([
+                                ...tests.map((option) => option.test_type),
+                                ...types.map((type) => type.name),
+                              ]),
+                            ].map((test_type, index) => (
+                              <Form.Check
+                                key={index}
+                                type="checkbox"
+                                label={test_type}
+                                value={test_type}
+                                checked={selectedOptions.test_type?.includes(
+                                  test_type
+                                )}
+                                onChange={(e) =>
+                                  handleTestTypeChange(e, test_type)
+                                }
+                              />
+                            ))}
+                          </Dropdown.Menu>
+                        </Dropdown>
+                        {/* Show selected items below only when multiple are selected */}
+                        {selectedOptions.test_type.length > 1 && (
+                          <div
+                            className="mt-2"
+                            style={{ fontSize: "0.9em", color: "#666" }}
+                          ></div>
                         )}
                       </Form.Group>
                     </Col>
 
                     <Col md={4} className="mb-4">
-                      <Form.Group className="mb-3">
+                      <Form.Group controlId="ref_doctor">
                         <Form.Label>Ref. Doctor Name</Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="ref_doctor"
-                          value={formData.ref_doctor}
-                          onChange={handleInputChange}
-                        />
+                        <Form.Select
+                          value={selectedOptions?.ref_doctor || ""}
+                          onChange={(e) =>
+                            setSelectedOptions({
+                              ...selectedOptions,
+                              ref_doctor: e.target.value,
+                            })
+                          }
+                          disabled={isDisabled}
+                        >
+                          <option value="">Assistant Doctor</option>
+                          {[
+                            ...new Set([
+                              ...tests.map((option) => option.ref_doctor),
+                              ...assistants.map((assistant) => assistant.name),
+                            ]),
+                          ].map((ref_doctor, index) => (
+                            <option key={index} value={ref_doctor}>
+                              {ref_doctor}
+                            </option>
+                          ))}
+                        </Form.Select>
                       </Form.Group>
                     </Col>
 
@@ -211,8 +589,9 @@ export default function OtherTests() {
                         <Form.Label>Test Fee</Form.Label>
                         <Form.Select
                           name="fee_status"
-                          value={formData.fee_status}
+                          value={formData.fee_status || ""}
                           onChange={handleInputChange}
+                          disabled={isDisabled}
                         >
                           <option value="">SELECT FEE STATUS</option>
                           <option value="YES">YES</option>
@@ -228,8 +607,9 @@ export default function OtherTests() {
                         <Form.Label>Visit Type</Form.Label>
                         <Form.Select
                           name="visit_type"
-                          value={formData.visit_type}
+                          value={formData.visit_type || ""}
                           onChange={handleInputChange}
+                          disabled={isDisabled}
                         >
                           <option value="">SELECT VISIT TYPE</option>
                           <option value="OPD">OPD</option>
@@ -245,19 +625,53 @@ export default function OtherTests() {
                           <Form.Control
                             as="textarea"
                             name="test_comment"
-                            value={formData.test_comment}
+                            value={formData.test_comment || ""}
                             onChange={handleInputChange}
                             placeholder="Enter Comments"
+                            disabled={isDisabled}
                           />
                         </Form.Group>
                       </Col>
                     </Row>
 
+                    {/* Medical History Table */}
+                    {showMedicalHistory && (
+                      <div className="mb-4">
+                        <h4 className="mb-3">Medical History</h4>
+                        <div className="table-responsive">
+                          <table className="table table-bordered table-striped">
+                            <thead className="table-primary">
+                              <tr>
+                                <th scope="col" style={{ width: "10%" }}>
+                                  Sr. No
+                                </th>
+                                <th scope="col" style={{ width: "45%" }}>
+                                  Name of Test
+                                </th>
+                                <th scope="col" style={{ width: "45%" }}>
+                                  Test Code
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {medicalHistory.map((record, index) => (
+                                <tr key={index}>
+                                  <td>{index + 1}</td>
+                                  <td>{record.test_name}</td>
+                                  <td>{record.test_code}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
                     <button
                       type="button"
                       className="btn btn-primary"
                       style={{ marginTop: "30px" }}
-                      onClick={() => handleSubmit("save")}
+                      onClick={handleSubmit}
                     >
                       Submit
                     </button>
@@ -268,6 +682,6 @@ export default function OtherTests() {
           </Col>
         </Row>
       </Container>
-    </div>
-  );
+ </div>
+);
 }

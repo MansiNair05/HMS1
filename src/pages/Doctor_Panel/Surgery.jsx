@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Card, Button, Form, Row, Col, Container } from "react-bootstrap";
-import PageBreadcrumb from "../../componets/PageBreadcrumb"; // Fixed typo in 'components'
+import NavBarD from "./NavbarD"; // Fixed typo in 'components'
 
 const Surgery = () => {
   const [formData, setFormData] = useState({
@@ -14,31 +14,45 @@ const Surgery = () => {
       SA: false,
       GA: false,
     },
-    surgeryPlan: "",
-    planDiagnosis: "",
-    surgery_remarks: "",
-    additional_comment: "",
     plan: "",
-    additionalPlanDiagnosis: "",
-    additionalCommentsExtra: "",
+    surgery_remarks: "",
+    surgery_note: "",
+    additional_comment: "",
   });
 
-  const [errors, setErrors] = useState({});
   const [surgery, setSurgery] = useState([]);
   const [assistantsDoctor, setAssistantsDoctor] = useState([]);
+  const [anaesthetist, setAnaesthetist] = useState([]);
+  const [selectedOptions, setSelectedOptions] = useState({});
+  const [patientId, setPatientId] = useState(
+    localStorage.getItem("selectedPatientId")
+  );
+  const [isDisabled, setIsDisabled] = useState(false);
+  const [disablePreviousButton, setDisablePreviousButton] = useState(false);
+  const [showEditButton, setShowEditButton] = useState(false);
+  const [previousRecordDate, setPreviousRecordDate] = useState("");
 
-  const [selectedOptions, setSelectedOptions] = useState([]); // Track selected checkboxes
+  const BASE_URL = "http://192.168.90.158:5000/api";
 
-  const BASE_URL = "http://192.168.90.111:5000/api";
-
+  // Update the API endpoints constants
+  const API_ENDPOINTS = {
+    GET_SURGERY: "/V1/surgeryDetails/listSurgeryDetails", // Updated endpoint
+    ADD_SURGERY: "/V1/surgeryDetails/addSurgeryDetails", // Updated endpoint
+    UPDATE_SURGERY: "/V1/surgeryDetails/updateSurgeryDetails",
+  };
+  
   // Fetch options from API
   useEffect(() => {
     const fetchDropdownOptions = async () => {
       try {
         const endpoints = [
           {
-            url: "/V1/patienttabs/assistantDoc_dropdown",
+            url: "/V1/patienttabsdp/assistantDoc_dropdown",
             setter: setAssistantsDoctor,
+          },
+          {
+            url: "/V1/patienttabsdp/anaesthetist_dropdown",
+            setter: setAnaesthetist,
           },
         ];
 
@@ -48,21 +62,243 @@ const Surgery = () => {
           if (response.ok) setter(data.data || []);
         }
       } catch (err) {
-        setErrors("Failed to fetch dropdown data.");
+        console.error("Failed to fetch dropdown data.");
       }
     };
     fetchDropdownOptions();
   }, []);
 
-  const validate = () => {
-    const validationErrors = {};
-    if (!formData.dateAdmission)
-      validationErrors.dateAdmission = "Date of Admission is required";
-    if (!formData.dateSurgery)
-      validationErrors.dateSurgery = "Date of Surgery is required";
-    if (!formData.highRiskConsent)
-      validationErrors.highRiskConsent = "High Risk Consent is required";
-    return validationErrors;
+  // Fetch patient ID from localStorage
+  useEffect(() => {
+    const storedPatientId = localStorage.getItem("selectedPatientId");
+    if (storedPatientId) setPatientId(storedPatientId);
+  }, []);
+
+  // Function to fetch previous records
+  const fetchPreviousRecords = async () => {
+    try {
+      if (!patientId) {
+        alert("Patient ID is missing");
+        return;
+      }
+
+      const url = `${BASE_URL}${API_ENDPOINTS.GET_SURGERY}/${patientId}`;
+      console.log("Fetching from URL:", url);
+
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("API Response:", result);
+
+      if (!result?.data?.surgeryDetails) {
+        alert("No previous records found");
+        return;
+      }
+
+      const surgeryData = result.data.surgeryDetails;
+
+      // Ensure surgeryData and its properties are defined
+      const anesthesiaTypes = surgeryData.anesthesia
+        ? surgeryData.anesthesia.split(", ")
+        : [];
+      const anesthesiaObject = {
+        LA: anesthesiaTypes.includes("LA"),
+        SA: anesthesiaTypes.includes("SA"),
+        GA: anesthesiaTypes.includes("GA"),
+      };
+
+      // Update states
+      setDisablePreviousButton(true);
+      setShowEditButton(true);
+      setIsDisabled(true);
+      setPreviousRecordDate(surgeryData.surgery_date || "");
+
+      // Update form data
+      setFormData({
+        admission_date: surgeryData.admission_date || "",
+        surgery_date: surgeryData.surgery_date || "",
+        risk_consent: surgeryData.risk_consent || "",
+        assistantDoctor: surgeryData.assistantDoctor || "",
+        anaesthetist: surgeryData.anaesthetist || "",
+        anesthesia: anesthesiaObject, // Set the parsed object
+        surgery_remarks: surgeryData.surgery_remarks || "",
+        plan: surgeryData.plan || "",
+        surgery_note: surgeryData.surgery_note || "",
+        additional_comment: surgeryData.additional_comment || "",
+      });
+    } catch (error) {
+      console.error("Error fetching previous records:", error);
+      alert("Failed to fetch previous records");
+    }
+  };
+
+  // Function to handle new record
+  const handleNewRecord = () => {
+    setFormData({
+      admission_date: "",
+      surgery_date: "",
+      risk_consent: "",
+      assistantDoctor: "",
+      anaesthetist: "",
+      anesthesia: {
+        LA: false,
+        SA: false,
+        GA: false,
+      },
+      surgery_remarks: "",
+      plan: "",
+      surgery_note: "",
+      additional_comment: "",
+    });
+
+    // Reset states
+    setDisablePreviousButton(false);
+    setShowEditButton(false);
+    setIsDisabled(false);
+    setPreviousRecordDate("");
+
+    alert("New Record: You can now enter new data.");
+  };
+
+  // Function to handle edit
+  const handleEditSurgery = () => {
+    setIsDisabled(false);
+    alert("You can now edit the surgery details.");
+  };
+
+  // Function to handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      console.log("Submitting surgery details for patientId:", patientId);
+
+      // Convert anesthesia object to string
+      const selectedAnesthesia = Object.entries(formData.anesthesia)
+        .filter(([_, value]) => value === true)
+        .map(([key]) => key)
+        .join(", ");
+
+      const requestBody = {
+        patientId: patientId,
+        admission_date: formData.admission_date,
+        surgery_date: formData.surgery_date,
+        risk_consent: formData.risk_consent,
+        assistantDoctor: selectedOptions.assistantsDoctorName || "",
+        anaesthetist: selectedOptions.anaesthetist || "",
+        anesthesia: selectedAnesthesia, // Send as string instead of object
+        surgery_remarks: formData.surgery_remarks,
+        plan: formData.plan,
+        surgery_note: formData.surgery_note,
+        additional_comment: formData.additional_comment,
+        is_deleted: 0,
+        doctor_id: localStorage.getItem("doctor_id") || "",
+        creation_timestamp: new Date().toISOString(),
+      };
+
+      console.log("Request body:", requestBody);
+
+      const response = await fetch(
+        `${BASE_URL}${API_ENDPOINTS.ADD_SURGERY}/${patientId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
+        throw new Error(`Server responded with status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Response data:", data);
+
+      if (data.statusCode === 200) {
+        alert("Surgery details saved successfully!");
+        setIsDisabled(true);
+        setShowEditButton(true);
+        setPreviousRecordDate(formData.surgery_date);
+        setDisablePreviousButton(true);
+      } else {
+        throw new Error(data.message || "Failed to save surgery details");
+      }
+    } catch (error) {
+      console.error("Error saving surgery details:", error);
+      alert(`Failed to save surgery details: ${error.message}`);
+    }
+  };
+
+  const handleUpdateSurgery = async () => {
+    try {
+      console.log("Updating surgery details for patientId:", patientId);
+
+      // Convert anesthesia object to string
+      const selectedAnesthesia = Object.entries(formData.anesthesia)
+        .filter(([_, value]) => value === true)
+        .map(([key]) => key)
+        .join(", ");
+
+      const requestBody = {
+        patientId: patientId,
+        admission_date: formData.admission_date,
+        surgery_date: formData.surgery_date,
+        risk_consent: formData.risk_consent,
+        assistantDoctor: selectedOptions.assistantsDoctorName || "",
+        anaesthetist: selectedOptions.anaesthetist || "",
+        anesthesia: selectedAnesthesia,
+        surgery_remarks: formData.surgery_remarks,
+        plan: formData.plan,
+        surgery_note: formData.surgery_note,
+        additional_comment: formData.additional_comment,
+        is_deleted: 0,
+        doctor_id: localStorage.getItem("doctor_id") || "",
+        creation_timestamp: new Date().toISOString(),
+      };
+
+      console.log("Request body:", requestBody);
+
+      const response = await fetch(
+        `${BASE_URL}${API_ENDPOINTS.UPDATE_SURGERY}/${patientId}`,
+        {
+          method: "PUT", // Use PUT method for update
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
+        throw new Error(`Server responded with status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Response data:", data);
+
+      if (data.statusCode === 200) {
+        alert("Surgery details updated successfully!");
+        setIsDisabled(true);
+        setShowEditButton(true);
+        setPreviousRecordDate(formData.surgery_date);
+        setDisablePreviousButton(true);
+      } else {
+        throw new Error(data.message || "Failed to update surgery details");
+      }
+    } catch (error) {
+      console.error("Error updating surgery details:", error);
+      alert(`Failed to update surgery details: ${error.message}`);
+    }
   };
 
   const handleInputChange = (e) => {
@@ -81,33 +317,6 @@ const Surgery = () => {
     });
   };
 
-  const handleSubmit = async (saveType) => {
-    const validationErrors = validate();
-    setErrors(validationErrors);
-
-    if (Object.keys(validationErrors).length === 0) {
-      try {
-        const response = await fetch(
-          "https://your-api-url.com/V1/appointment/addAppointment",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...formData, saveType }),
-          }
-        );
-
-        if (response.ok) {
-          alert("Appointment added successfully");
-        } else {
-          alert("Failed to add appointment. Please try again.");
-        }
-      } catch (error) {
-        console.error("Error while adding appointment:", error);
-        alert("An error occurred. Please try again later.");
-      }
-    }
-  };
-
   return (
     <div
       className="themebody-wrap"
@@ -118,7 +327,7 @@ const Surgery = () => {
         fontFamily: "'Poppins', Arial, sans-serif",
       }}
     >
-      <PageBreadcrumb pagename="Surgery Details" />
+      <NavBarD pagename="Surgery Details" />
       <Container fluid>
         <Row>
           <Col>
@@ -133,6 +342,44 @@ const Surgery = () => {
             >
               <Card.Body>
                 <Form>
+                  <div>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      style={{ marginRight: "20px" }}
+                      onClick={handleNewRecord}
+                    >
+                      New Record
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      style={{ float: "right", marginRight: "7px" }}
+                      onClick={fetchPreviousRecords}
+                      disabled={disablePreviousButton}
+                    >
+                      Previous Records
+                    </button>
+                    {showEditButton && (
+                      <button
+                        type="button"
+                        className="btn btn-warning"
+                        style={{ float: "right", marginRight: "7px" }}
+                        onClick={handleEditSurgery}
+                      >
+                        Edit Surgery
+                      </button>
+                    )}
+                  </div>
+
+                  {previousRecordDate && (
+                    <div style={{ marginTop: "15px" }}>
+                      <strong>Previous Record Date: </strong>
+                      <span>{previousRecordDate}</span>
+                    </div>
+                  )}
+
+                  <br />
                   {/* Row 1 */}
                   <Row className="mb-3">
                     <Col>
@@ -141,16 +388,10 @@ const Surgery = () => {
                         <Form.Control
                           type="date"
                           name="admission_date"
-                          value={
-                            formData.admission_date ||
-                            new Date().toISOString().split("T")[0]
-                          }
+                          value={formData.admission_date}
                           onChange={handleInputChange}
-                          isInvalid={!!errors.dateAdmission}
+                          disabled={isDisabled}
                         />
-                        <Form.Control.Feedback type="invalid">
-                          {errors.dateAdmission}
-                        </Form.Control.Feedback>
                       </Form.Group>
                     </Col>
                     <Col>
@@ -159,16 +400,10 @@ const Surgery = () => {
                         <Form.Control
                           type="date"
                           name="surgery_date"
-                          value={
-                            formData.surgery_date ||
-                            new Date().toISOString().split("T")[0]
-                          }
+                          value={formData.surgery_date}
                           onChange={handleInputChange}
-                          isInvalid={!!errors.dateSurgery}
+                          disabled={isDisabled}
                         />
-                        <Form.Control.Feedback type="invalid">
-                          {errors.dateSurgery}
-                        </Form.Control.Feedback>
                       </Form.Group>
                     </Col>
                     <Col>
@@ -183,21 +418,23 @@ const Surgery = () => {
                             value="Yes"
                             checked={formData.risk_consent === "Yes"}
                             onChange={handleInputChange}
+                            disabled={isDisabled}
                           />
                           <Form.Check
                             inline
                             type="radio"
                             label="No"
-                            name="highRiskConsent"
+                            name="risk_consent"
                             value="No"
-                            checked={formData.highRiskConsent === "No"}
+                            checked={formData.risk_consent === "No"}
                             onChange={handleInputChange}
+                            disabled={isDisabled}
                           />
                         </div>
                       </Form.Group>
                     </Col>
                   </Row>
-
+                  <br />
                   {/* Row 2 */}
                   <Row className="mb-3">
                     <Col>
@@ -211,6 +448,7 @@ const Surgery = () => {
                               assistantsDoctorName: e.target.value,
                             })
                           }
+                          disabled={isDisabled}
                         >
                           <option value="">Select Assistant</option>
                           {[
@@ -231,17 +469,31 @@ const Surgery = () => {
                       </Form.Group>
                     </Col>
                     <Col>
-                      <Form.Group>
+                      <Form.Group controlId="anaesthetist">
                         <Form.Label>Anaesthetist:</Form.Label>
                         <Form.Select
-                          name="anaesthetist"
-                          value={formData.anaesthetist}
-                          onChange={handleInputChange}
+                          value={selectedOptions.anaesthetist || ""}
+                          onChange={(e) =>
+                            setSelectedOptions({
+                              ...selectedOptions,
+                              anaesthetist: e.target.value,
+                            })
+                          }
+                          disabled={isDisabled}
                         >
-                          <option value="">Select an option</option>
-                          <option value="Dr. Brown">Dr. Brown</option>
-                          <option value="Dr. Davis">Dr. Davis</option>
-                          <option value="Dr. Wilson">Dr. Wilson</option>
+                          <option value="">Select Anaesthetist</option>
+                          {[
+                            ...new Set([
+                              ...surgery.map((option) => option.anaesthetist),
+                              ...anaesthetist.map(
+                                (anaesthetist) => anaesthetist.name
+                              ),
+                            ]),
+                          ].map((anaesthetist, index) => (
+                            <option key={index} value={anaesthetist}>
+                              {anaesthetist}
+                            </option>
+                          ))}
                         </Form.Select>
                       </Form.Group>
                     </Col>
@@ -258,6 +510,7 @@ const Surgery = () => {
                                 name="LA"
                                 checked={formData.anesthesia.LA}
                                 onChange={handleCheckboxChange}
+                                disabled={isDisabled}
                               />
                               <Form.Check
                                 inline
@@ -266,6 +519,7 @@ const Surgery = () => {
                                 name="SA"
                                 checked={formData.anesthesia.SA}
                                 onChange={handleCheckboxChange}
+                                disabled={isDisabled}
                               />
                               <Form.Check
                                 inline
@@ -274,6 +528,7 @@ const Surgery = () => {
                                 name="GA"
                                 checked={formData.anesthesia.GA}
                                 onChange={handleCheckboxChange}
+                                disabled={isDisabled}
                               />
                             </div>
                           </Col>
@@ -284,6 +539,7 @@ const Surgery = () => {
                               name="anesthesiaDetails"
                               value={formData.anesthesiaDetails || ""}
                               onChange={handleInputChange}
+                              disabled={isDisabled}
                             />
                           </Col>
                         </Row>
@@ -297,61 +553,44 @@ const Surgery = () => {
                       <Form.Group>
                         <Form.Label>Surgery Plan:</Form.Label>
                         <Form.Control
-                          type="text"
-                          name="surgeryPlan"
-                          value={formData.surgeryPlan}
-                          onChange={handleInputChange}
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col>
-                      <Form.Group>
-                        <Form.Label>Plan Diagnosis:</Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="planDiagnosis"
-                          value={formData.planDiagnosis}
-                          onChange={handleInputChange}
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col>
-                      <Form.Group>
-                        <Form.Label>Surgery Notes:</Form.Label>
-                        <Form.Control
                           as="textarea"
                           name="surgery_remarks"
                           value={formData.surgery_remarks}
                           onChange={handleInputChange}
+                          disabled={isDisabled}
                         />
                       </Form.Group>
                     </Col>
-                  </Row>
 
-                  {/* Row 4 - Additional Fields */}
-                  <Row className="mb-3">
                     <Col>
                       <Form.Group>
-                        <Form.Label>Additional Surgery Plan:</Form.Label>
+                        <Form.Label>Plan Diagnosis:</Form.Label>
                         <Form.Control
                           as="textarea"
                           name="plan"
                           value={formData.plan}
                           onChange={handleInputChange}
+                          disabled={isDisabled}
                         />
                       </Form.Group>
                     </Col>
+                  </Row>
+                  <br />
+                  {/* Row 4 - Additional Fields */}
+                  <Row className="mb-3">
                     <Col>
                       <Form.Group>
-                        <Form.Label>Additional Plan Diagnosis:</Form.Label>
+                        <Form.Label>Surgery Notes:</Form.Label>
                         <Form.Control
                           as="textarea"
-                          name="additionalPlanDiagnosis"
-                          value={formData.additionalPlanDiagnosis}
+                          name="surgery_note"
+                          value={formData.surgery_note}
                           onChange={handleInputChange}
+                          disabled={isDisabled}
                         />
                       </Form.Group>
                     </Col>
+
                     <Col>
                       <Form.Group>
                         <Form.Label>Additional Comments:</Form.Label>
@@ -360,12 +599,27 @@ const Surgery = () => {
                           name="additional_comment"
                           value={formData.additional_comment}
                           onChange={handleInputChange}
+                          disabled={isDisabled}
                         />
                       </Form.Group>
                     </Col>
                   </Row>
-
-                  <Button className="mt-4" onClick={() => handleSubmit("save")}>
+                  <br />
+                  {!isDisabled && (
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={handleUpdateSurgery}
+                    >
+                      Update Surgery Details
+                    </button>
+                  )}
+                  <br />
+                  <Button
+                    className="mt-4"
+                    onClick={handleSubmit}
+                    disabled={isDisabled}
+                  >
                     Save
                   </Button>
                 </Form>

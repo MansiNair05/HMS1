@@ -13,7 +13,7 @@ import {
 } from "react-bootstrap";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
 
-const BASE_URL = "http://192.168.90.206:5000/api";
+const BASE_URL = "http://192.168.90.158:5000/api";
 
 export default function EnquiryList() {
   const [enquiries, setEnquiries] = useState([]);

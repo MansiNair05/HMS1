@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   Button,
@@ -6,16 +6,14 @@ import {
   Row,
   Col,
   Container,
-  Table,
-  Tab,
-  Tabs,
   Dropdown,
-  DropdownButton,
+  Nav,
 } from "react-bootstrap";
-import PageBreadcrumb from "../../componets/PageBreadcrumb";
-import { Link } from "react-router-dom";
+import NavBarD from "./NavbarD";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.193:5000/api"; // Replace with your actual backend URL
+const BASE_URL = "http://192.168.90.158:5000/apii"; // Replace with your actual backend URL
 
 const DiagnosisTabs = () => {
   const [key, setKey] = useState("piles");
@@ -24,176 +22,227 @@ const DiagnosisTabs = () => {
     {
       id: "piles",
       title: "Piles",
-      checkboxes: ["GRADE 1", "GRADE 2", "GRADE 3", "GRADE 4"],
+      checkboxes: [
+        "PR Bleeding: Painless",
+        "PR Bleeding: Painful",
+        "Burning",
+        "Pricking",
+        "Itching",
+        "Incomplete Evacuation",
+        "Prolapse",
+        "Swelling",
+        "Pain at Anal Region",
+        "Mucus Mixed Blood",
+      ],
+      textarea: "piles_duration",
     },
     {
       id: "fistula",
       title: "Fistula",
       checkboxes: [
-        "GLUTEAL",
-        "HIGH",
-        "HORSESHOE",
-        "NIDAL",
-        "SCROTAL",
-        "SUPRALEVATOR",
-        "TRANSPHINCTERIC",
-        "INTERSPHINCTERIC",
-        "VAGINAL",
-        "VULVAL",
-        "COMPLEX",
-        "RECURRENT",
+        "Pus Discharge",
+        "Boil",
+        "Watery Discharge",
+        "Swelling near anal region",
+        "Discharge from vagina gases/ stool",
       ],
+      textarea: "fistula_duration",
     },
     {
       id: "hernia",
       title: "Hernia",
       checkboxes: [
-        "VENTRAL",
-        "INCISIONAL",
-        "EPIGASTRIC",
-        "RIGHT INGUINAL",
-        "LEFT INGUINAL",
-        "BILATERAL INGUINAL",
-        "SUPRA UMBILICAL",
-        "PARA UMBILICAL",
-        "MULTIPLE DEFECTS UMBILICAL",
-        "INFRA UMBILICAL",
+        "Swelling:Umbilical",
+        "Right Inguinal",
+        "Left Inguinal",
+        "Swelling:Abdominal",
+        "Reducible",
+        "Nonreducible",
+        "Past Sx",
       ],
+      textarea: "hernia_duration",
     },
     {
-      id: "varicose",
-      title: "Varicose",
-      checkboxes: ["RIGHT", "LEFT", "BILATERAL"],
+      id: "varicoseVeins",
+      title: "Varicose Veins",
+      checkboxes: ["Varicose Veins"],
+      textarea: "varicose_duration",
     },
     {
-      id: "prolapse",
-      title: "Prolapse",
-      checkboxes: ["MUCOSAL", "INCOMPLETE", "PROCIDENTIA"],
+      id: "incontinence",
+      title: "Urinary Incontinence",
+      checkboxes: ["Urinary Incontinence"],
+      textarea: "urinary_incontinence_duration",
     },
     {
-      id: "circumcision",
-      title: "Circumcision",
-      circumcisionTextarea: "circumcisionTextarea", // Only a textarea
-    },
-    {
-      id: "abscess",
-      title: "Abscess",
-      abscessTextarea: "abscessTextarea", // Only a textarea
-    },
-    {
-      id: "fissure",
-      title: "Fissure",
-      fissureTextarea: "fissureTextarea", // Only a textarea
-    },
-    {
-      id: "ibs",
-      title: "IBS",
-      ibsTextarea: "ibsTextarea", // Only a textarea
+      id: "fecalIncontinence",
+      title: "Fecal Incontinence",
+      checkboxes: ["Fecal Incontinence"],
+      textarea: "fecal_incontinence_duration",
     },
     {
       id: "urology",
       title: "Urology",
-      urologyTextarea: "urologyTextarea", // Only a textarea
+      checkboxes: [
+        "Pain",
+        "Burning urination",
+        "Nausea",
+        "Vomiting",
+        "LUTS",
+        "Urgency of urination",
+        "Incomplete evacuation",
+        "Stream of urine",
+        "Nocturia",
+      ],
+      textarea: "urology_duration",
+    },
+    {
+      id: "ods",
+      title: "ODS",
+      checkboxes: [
+        "Excessive Straining",
+        "Digitation",
+        "Hard Stools",
+        "Enema/laxative",
+        "Fragmented Defecation",
+      ],
+      textarea: "ods_duration",
+    },
+    {
+      id: "sinus",
+      title: "Pilonidal Sinus",
+      checkboxes: [],
+      textarea: "pilonidalsinus",
+    },
+    {
+      id: "circumcision",
+      title: "Circumcision",
+      checkboxes: [],
+      textarea: "circumcision",
     },
   ];
-return (
-  <div className="box">
-    <div className="box-header">
-      <Tabs activeKey={key} onSelect={(k) => setKey(k)}>
-        {tabData.map((tab) => (
-          <Tab eventKey={tab.id} title={tab.title} key={tab.id}>
-            <div className="tab-content p-3">
-              <ul className="checkbox-grid">
-                {/* Render checkboxes only if they exist */}
-                {tab.checkboxes &&
-                  tab.checkboxes.length > 0 &&
-                  tab.checkboxes.map((item, index) => (
-                    <li key={index}>
-                      <input
-                        type="checkbox"
-                        name={`${tab.id}[]`}
-                        value={item}
+
+  return (
+    <div className="box">
+      <div className="box-header">
+        <Nav variant="tabs" className="nav-tabs-left">
+          {tabData.map((tab) => (
+            <Nav.Item key={tab.id}>
+              <Nav.Link
+                eventKey={tab.id}
+                active={key === tab.id}
+                onClick={() => setKey(tab.id)}
+                style={{
+                  padding: "10px 15px",
+                  margin: "0 2px",
+                  borderRadius: "4px 4px 0 0",
+                  backgroundColor: key === tab.id ? "#fff" : "#f8f9fa",
+                  borderBottom: key === tab.id ? "2px solid #007bff" : "none",
+                }}
+              >
+                <i className="icon-plus"></i>
+                {tab.title}
+              </Nav.Link>
+            </Nav.Item>
+          ))}
+        </Nav>
+      </div>
+
+      <div className="box-content padded">
+        <div className="tab-content">
+          {tabData.map((tab) => (
+            <div
+              key={tab.id}
+              className={`tab-pane ${key === tab.id ? "active" : ""}`}
+              style={{ padding: "15px" }}
+            >
+              <div className="box-content">
+                <Row>
+                  <Col>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: "15px",
+                        marginBottom: "20px",
+                      }}
+                    >
+                      {tab.checkboxes.map((checkbox, index) => (
+                        <Form.Check
+                          key={index}
+                          type="checkbox"
+                          label={checkbox}
+                          style={{
+                            flex: "0 0 auto",
+                            minWidth: "200px",
+                            margin: "5px 15px",
+                            fontWeight: "400",
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </Col>
+                </Row>
+                {tab.textarea && (
+                  <Row>
+                    <Col>
+                      <Form.Control
+                        as="textarea"
+                        placeholder="Duration"
+                        style={{
+                          width: "100%",
+                          marginTop: "10px",
+                          padding: "10px",
+                          borderRadius: "4px",
+                          border: "1px solid #ced4da",
+                        }}
                       />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                {/* Render textarea only if it exists and is not empty */}
-                {tab.circumcisionTextarea && (
-                  <li>
-                    <textarea
-                      name={tab.circumcisionTextarea}
-                      placeholder="Circumcision Details"
-                      style={{ width: "100%" }}
-                    />
-                  </li>
+                    </Col>
+                  </Row>
                 )}
-                {tab.abscessTextarea && (
-                  <li>
-                    <textarea
-                      name={tab.abscessTextarea}
-                      placeholder="Abscess Details"
-                      style={{ width: "100%" }}
-                    />
-                  </li>
-                )}
-                {tab.fissureTextarea && (
-                  <li>
-                    <textarea
-                      name={tab.fissureTextarea}
-                      placeholder="Fissure Details"
-                      style={{ width: "100%" }}
-                    />
-                  </li>
-                )}
-                {tab.ibsTextarea && (
-                  <li>
-                    <textarea
-                      name={tab.ibsTextarea}
-                      placeholder="IBS Details"
-                      style={{ width: "100%" }}
-                    />
-                  </li>
-                )}
-                {tab.urologyTextarea && (
-                  <li>
-                    <textarea
-                      name={tab.urologyTextarea}
-                      placeholder="Urology Details"
-                      style={{ width: "100%" }}
-                    />
-                  </li>
-                )}
-              </ul>
+              </div>
             </div>
-          </Tab>
-        ))}
-      </Tabs>
+          ))}
+        </div>
+      </div>
     </div>
-  </div>
-);
-}
-const Diagnosis = () => {
+  );
+};
+
+export default function Diagnosis() {
+  const [patientId, setPatientId] = useState(
+    localStorage.getItem("selectedPatientId")
+  );
   const [formData, setFormData] = useState({
+    diagnosis: "",
     date_diagnosis: "",
     provisionaldiagnosis: "",
     investigationorders: "",
-    diagnosis: "",
-    adviceType: {
+    diagnosisAdvice: {
       medication: false,
       surgery: false,
       test: false,
     },
-    medicinesPrescribed: false,
+    // medicinesPrescribed: false,
+      medicinesPrescribed: {
+    AAC: false,
+    ANTACID: false,
+    PROBIOTICS: false,
+    NSAIDS: false,
+    ANTIBIOTICS: false,
+    other: "", // Add an "other" field for the textarea
+  },
     medicineDetails: "",
-    surgicalAdvice: "",
+    surgicalAdvice: [],
     comment: "",
+    adviceComment: "",
     SurgicalDate: "",
-    RF: "",
-    Laser: "",
-    MW: "",
+    RF: [],
+    Laser: [],
+    MW: [],
     categoryComment: "",
     advice: {
-      mcapa: false,
+      mcdpa: false,
       manometry: false,
       diet: false,
       echo: false,
@@ -220,24 +269,93 @@ const Diagnosis = () => {
     assistantDoctor: "",
   });
 
+  const surgicalAdviceOptions = [
+    "ALISKLAMP",
+    "EUA",
+    "EVLA",
+    "FILAC",
+    "I & D",
+    "HERNIA",
+    "LHP",
+    "LPP",
+    "MIPH",
+    "STARR",
+    "OTHER",
+  ];
+
   const [errors, setErrors] = useState({});
   const [diagnosis, setDiagnosis] = useState([]);
   const [consultants, setConsultants] = useState([]);
   const [assistantsDoctor, setAssistantsDoctor] = useState([]);
+  const [selectedOptions, setSelectedOptions] = useState([]);
+  const [showEditButton, setShowEditButton] = useState(false); // Controls visibility of "Edit Diagnosis"
+  const [isDisabled, setIsDisabled] = useState(false); // Controls edit mode
+  const [disablePreviousButton, setDisablePreviousButton] = useState(false); // Disables "Previous Records" after clicking
+const [showSurgicalDate, setShowSurgicalDate] = useState(false);
 
-  const [selectedOptions, setSelectedOptions] = useState([]); // Track selected checkboxes
-  
- // Fetch options from API
+  // Add state for previous records
+  const [selectedRecord, setSelectedRecord] = useState(null);
+
+  useEffect(() => {
+    const storedPatientId = localStorage.getItem("selectedPatientId");
+    console.log("Retrieved from localStorage:", storedPatientId);
+    if (storedPatientId) setPatientId(storedPatientId);
+  }, []);
+
+  useEffect(() => {
+    if (!patientId) {
+      console.warn("No patientId found, skipping fetch");
+      return;
+    }
+    const fetchPatientData = async () => {
+      console.log(`Fetching data for patient ID: ${patientId}`);
+      try {
+        const response = await fetch(
+          `${BASE_URL}/V1/diagnosis/listDiagnosis/${patientId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          console.error(
+            "API Response Error:",
+            response.status,
+            await response.text()
+          );
+          return;
+        }
+
+        const data = await response.json();
+        console.log("Fetched Data:", data.data.diagnosisData);
+
+        if (data?.data?.diagnosisData) {
+          setFormData(data.data.diagnosisData);
+        } else {
+          console.warn("No patient data found in API response");
+          setFormData({});
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+    fetchPatientData();
+  }, [patientId]);
+
+  // Fetch options from API
   useEffect(() => {
     const fetchDropdownOptions = async () => {
       try {
         const endpoints = [
           {
-            url: "/V1/patienttabs/consultant_dropdown",
+            url: "/V1/patienttabsdp/consultant_dropdown",
             setter: setConsultants,
           },
           {
-            url: "/V1/patienttabs/assistantDoc_dropdown",
+            url: "/V1/patienttabsdp/assistantDoc_dropdown",
             setter: setAssistantsDoctor,
           },
         ];
@@ -253,78 +371,358 @@ const Diagnosis = () => {
     };
     fetchDropdownOptions();
   }, []);
-  
-const categoryOptions = {
-  RF: ["A", "A+", "A-", "B", "B+", "C", "C+", "C-", "C++", "D", "D+", "E"],
-  Laser: ["A", "A+", "A-", "B", "B+", "C", "C+", "C-", "C++", "D", "D+", "E"],
-  MW: ["A", "A+", "A-", "B", "B+", "C", "C+", "C-", "C++", "D", "D+", "E"],
-};
 
-const handleCategoryChange = (category, e) => {
-  const { value, checked } = e.target;
-  setFormData((prevData) => {
-    const updatedCategory = checked
-      ? [...prevData[category], value]
-      : prevData[category].filter((item) => item !== value);
-    return { ...prevData, [category]: updatedCategory };
-  });
-};
+  const categoryOptions = {
+    RF: ["A", "A+", "A-", "B", "B+", "C", "C+", "C-", "C++", "D", "D+", "E"],
+    Laser: ["A", "A+", "A-", "B", "B+", "C", "C+", "C-", "C++", "D", "D+", "E"],
+    MW: ["A", "A+", "A-", "B", "B+", "C", "C+", "C-", "C++", "D", "D+", "E"],
+  };
+
+  const handleCategoryChange = (category, e) => {
+    const { value, checked } = e.target;
+    setFormData((prevData) => {
+      // Ensure the category is an array
+      const currentCategory = Array.isArray(prevData[category])
+        ? prevData[category]
+        : [];
+      const updatedCategory = checked
+        ? [...currentCategory, value]
+        : currentCategory.filter((item) => item !== value);
+
+      return {
+        ...prevData,
+        [category]: updatedCategory,
+      };
+    });
+  };
+
+  const handleSurgicalAdviceChange = (e) => {
+    const { value, checked } = e.target;
+    setFormData((prevData) => {
+      const updatedSurgicalAdvice = checked
+        ? [...prevData.surgicalAdvice, value]
+        : prevData.surgicalAdvice.filter((item) => item !== value);
+      return { ...prevData, surgicalAdvice: updatedSurgicalAdvice };
+    });
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleCheckboxChange = (e) => {
-    const { name, checked } = e.target;
-    const [parent, child] = name.split(".");
-
-    if (child) {
-      setFormData({
-        ...formData,
-        [parent]: { ...formData[parent], [child]: checked },
-      });
+    if (name === "medicinesPrescribed") {
+      // If the input is for "Other" medicines, update the "other" key in the medicinesPrescribed object
+      setFormData((prevData) => ({
+        ...prevData,
+        medicinesPrescribed: {
+          ...prevData.medicinesPrescribed,
+          other: value, // Update the "other" field in the medicinesPrescribed object
+        },
+      }));
     } else {
-      setFormData({ ...formData, [name]: checked });
+      setFormData({ ...formData, [name]: value });
     }
-  };
+    };
 
-  const validate = () => {
-    const errors = {};
-    // Add validation logic here
-    return errors;
-  };
+    const handleCheckboxChange = (e) => {
+      const { name, checked } = e.target;
+      // Check if the surgical date checkbox is clicked
+      if (name === "checkSurgicalDate") {
+        setShowSurgicalDate(checked);
+      }
+      const [parent, child] = name.split(".");
 
-  const handleSubmit = async (saveType) => {
-    const validationErrors = validate();
-    console.log("Form Data:", formData);
-    setErrors(validationErrors);
+      if (parent === "medicinesPrescribed") {
+        // Handle medicinesPrescribed checkboxes
+        setFormData((prevData) => ({
+          ...prevData,
+          medicinesPrescribed: {
+            ...prevData.medicinesPrescribed,
+            [child]: checked, // Update the specific medicine checkbox
+          },
+        }));
+      } else if (child) {
+        setFormData({
+          ...formData,
+          [parent]: { ...formData[parent], [child]: checked },
+        });
+      } else {
+        setFormData({ ...formData, [name]: checked });
+      }
+    };
 
-    if (Object.keys(validationErrors).length === 0) {
+    const validate = () => {
+      const errors = {};
+      // Add validation logic here
+      return errors;
+    };
+
+    // Update the date formatting utility functions
+    const formatDateForDisplay = (dateString) => {
+      if (!dateString || dateString === "0000-00-00" || dateString === "")
+        return "";
+
       try {
-        console.log("Sending request to backend...");
+        // Handle different date formats
+        let date;
+        if (dateString.includes("/")) {
+          const [day, month, year] = dateString.split("/");
+          date = new Date(year, month - 1, day);
+        } else if (dateString.includes("-")) {
+          date = new Date(dateString);
+        } else {
+          date = new Date(dateString);
+        }
+
+        if (isNaN(date.getTime())) return ""; // Return empty string if invalid date
+
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const year = date.getFullYear();
+
+        return `${day}/${month}/${year}`;
+      } catch (error) {
+        console.warn("Invalid date format:", dateString);
+        return "";
+      }
+    };
+
+    const formatDateForAPI = (dateString) => {
+      if (!dateString || dateString === "0000-00-00" || dateString === "")
+        return null;
+
+      try {
+        // If the date is already in YYYY-MM-DD format
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+          return dateString;
+        }
+
+        // If the date is in DD/MM/YYYY format
+        if (dateString.includes("/")) {
+          const [day, month, year] = dateString.split("/");
+          return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+        }
+
+        // If it's a Date object or timestamp
+        const date = new Date(dateString);
+        if (!isNaN(date.getTime())) {
+          return date.toISOString().split("T")[0];
+        }
+
+        return null;
+      } catch (error) {
+        console.warn("Invalid date format:", dateString);
+        return null;
+      }
+    };
+
+    const handleSubmit = async (e, isEdit = false) => {
+      e.preventDefault();
+
+      try {
+        // Basic validation
+        if (!formData.diagnosis || formData.diagnosis.trim() === "") {
+          alert("Please enter a diagnosis");
+          return;
+        }
+
+        if (!patientId) {
+          alert("Patient ID is required");
+          return;
+        }
+
+        const requestBody = {
+          patientId: patientId.toString(),
+          diagnosis: formData.diagnosis.trim(),
+          date_diagnosis: formData.date_diagnosis || null,
+          provisionaldiagnosis: formData.provisionaldiagnosis || "",
+          investigationorders: formData.investigationorders || "",
+          diagnosisAdvice: {
+            medication: Boolean(formData.diagnosisAdvice?.medication),
+            surgery: Boolean(formData.diagnosisAdvice?.surgery),
+            test: Boolean(formData.diagnosisAdvice?.test),
+          },
+          medicinesPrescribed: Boolean(formData.medicinesPrescribed),
+          medicineDetails: formData.medicineDetails || "",
+          surgicalAdvice: Array.isArray(formData.surgicalAdvice)
+            ? formData.surgicalAdvice
+            : [],
+          comment: formData.comment || "",
+          adviceComment: formData.adviceComment || "",
+          SurgicalDate: formData.SurgicalDate || null,
+          RF: Array.isArray(formData.RF) ? formData.RF : [],
+          Laser: Array.isArray(formData.Laser) ? formData.Laser : [],
+          MW: Array.isArray(formData.MW) ? formData.MW : [],
+          categoryComment: formData.categoryComment || "",
+          advice: {
+            mcdpa: Boolean(formData.advice?.mcdpa),
+            manometry: Boolean(formData.advice?.manometry),
+            diet: Boolean(formData.advice?.diet),
+            echo: Boolean(formData.advice?.echo),
+            uroflowmetry: Boolean(formData.advice?.uroflowmetry),
+            colo: Boolean(formData.advice?.colo),
+            xray: Boolean(formData.advice?.xray),
+            mri: Boolean(formData.advice?.mri),
+            cht: Boolean(formData.advice?.cht),
+            gastro: Boolean(formData.advice?.gastro),
+            ct: Boolean(formData.advice?.ct),
+            doppler: Boolean(formData.advice?.doppler),
+            biofeedback: Boolean(formData.advice?.biofeedback),
+            labInvestigation: Boolean(formData.advice?.labInvestigation),
+            ultrasonography: Boolean(formData.advice?.ultrasonography),
+            EchoAnalImaging: Boolean(formData.advice?.EchoAnalImaging),
+          },
+          other: {
+            insurance: Boolean(formData.other?.insurance),
+            reimbursement: Boolean(formData.other?.reimbursement),
+            workshop: Boolean(formData.other?.workshop),
+            pdc: Boolean(formData.other?.pdc),
+          },
+          consultantDoctor: formData.consultantDoctor || "",
+          assistantDoctor: formData.assistantDoctor || "",
+        };
+
+        // Determine URL and method based on the button clicked
+        const url = isEdit
+          ? `${BASE_URL}/V1/diagnosis/updateDiagnosis/${patientId}`
+          : `${BASE_URL}/V1/diagnosis/addDiagnosis/${patientId}`;
+        const method = isEdit ? "PUT" : "POST";
+
+        console.log(`Making ${method} request to ${url}`);
+
+        const response = await fetch(url, {
+          method: method,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        });
+
+        const responseData = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            responseData.message ||
+            responseData.error ||
+            "Failed to save diagnosis"
+          );
+        }
+
+        alert(
+          isEdit
+            ? "Diagnosis updated successfully!"
+            : "Diagnosis submitted successfully!"
+        );
+
+        if (isEdit) {
+          setIsDisabled(true);
+        }
+      } catch (error) {
+        console.error("Submission Error:", error);
+        alert(
+          `Error: ${error.message || "An error occurred while submitting the diagnosis"
+          }`
+        );
+      }
+    };
+    const [previousRecordDate, setPreviousRecordDate] = useState(""); // Store the previous record date
+    const fetchPreviousRecords = async () => {
+      try {
+        if (!patientId) {
+          console.error("No patient ID available");
+          return;
+        }
+
+        console.log("Fetching records for patient:", patientId);
+
         const response = await fetch(
-          `${BASE_URL}/V1/appointment/addAppointment`,
+          `${BASE_URL}/V1/diagnosis/listDiagnosis/${patientId}`,
           {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...formData, saveType }),
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
           }
         );
 
+        const result = await response.json();
+        console.log("Fetched data:", result);
+
         if (!response.ok) {
-          throw new Error("Failed to submit form");
+          throw new Error("Failed to fetch previous records");
         }
 
-        const responseData = await response.json();
-        console.log("Response Data:", responseData);
-        alert("Form submitted successfully!");
+        const enrichedDiagnosisData = result.data.enrichedDiagnosisData;
+
+        // Update formData with all the fields from the API
+        setFormData((prevData) => ({
+          ...prevData,
+          ...enrichedDiagnosisData,
+        }));
+
+        // Show the "Edit Diagnosis" button
+        setShowEditButton(true);
+        // Disable "Previous Records" button after clicking it
+        setDisablePreviousButton(true);
+        // Disable form fields
+        setIsDisabled(true);
+
+        console.log("Form data updated with previous records");
       } catch (error) {
-        console.error("Error submitting form:", error);
-        alert("Failed to submit form. Please try again later.");
+        console.error("Error fetching previous records:", error);
+        alert("Failed to fetch previous records.");
       }
-    }
-  };
+    };
+
+    // Add function to handle record selection
+    const handleRecordSelect = (record) => {
+      setFormData((prevData) => ({
+        ...prevData,
+        ...record,
+      }));
+      setSelectedRecord(record);
+      setIsDisabled(true);
+    };
+
+    // Enable form editing when "Edit Diagnosis" is clicked
+    const handleEditDiagnosis = () => {
+      setIsDisabled(false); // Enable form editing
+      setShowEditButton(false); // Hide the "Edit Diagnosis" button while in edit mode
+      // This will enable "Save Edit Diagnosis" and disable "Save New Record"
+    };
+
+    const handleNewRecord = () => {
+      setFormData({
+        date_diagnosis: "",
+        provisionaldiagnosis: "",
+        investigationorders: "",
+        diagnosis: "",
+        comment: "",
+        adviceComment: "",
+        SurgicalDate: "",
+        RF: [],
+        Laser: [],
+        MW: [],
+        categoryComment: "",
+        consultantDoctor: "",
+        assistantDoctor: "",
+      });
+
+      // Hide "Edit Diagnosis" button when creating a new record
+      setShowEditButton(false);
+      // Enable the "Previous Records" button when creating a new record
+      setDisablePreviousButton(false);
+      setIsDisabled(false); // Allow editing for a new record
+      alert("New Record: You can now enter new data.");
+    };
+
+    const handlePrint = () => {
+      window.print();
+    };
+
+    // Add a useEffect to log form data changes
+    useEffect(() => {
+      console.log("Current Form Data:", formData);
+    }, [formData]);
+  
 
   return (
     <div
@@ -336,7 +734,7 @@ const handleCategoryChange = (category, e) => {
         fontFamily: "'Poppins', Arial, sans-serif",
       }}
     >
-      <PageBreadcrumb pagename="Diagnosis" />
+      <NavBarD pagename="Diagnosis" />
       <Container fluid>
         <Row>
           <Col>
@@ -350,20 +748,96 @@ const handleCategoryChange = (category, e) => {
               }}
             >
               <Card.Body>
-                <Form>
+                <Form onSubmit={(e) => handleSubmit(e, isDisabled)}>
+                  <div>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      style={{ marginRight: "20px" }}
+                      onClick={handleNewRecord}
+                    >
+                      New Record
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      style={{
+                        float: "right",
+                      }}
+                      onClick={handlePrint}
+                    >
+                      Print
+                    </button>
+                    <br />
+                    <br />
+                    <div>
+                      {/* Previous Records Button */}
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        style={{ float: "right", marginRight: "7px" }}
+                        onClick={fetchPreviousRecords}
+                        disabled={disablePreviousButton}
+                      >
+                        Previous Records
+                      </button>
+
+                      {/* Show Edit Diagnosis Button only after clicking "Previous Records" */}
+                      {showEditButton && (
+                        <button
+                          type="button"
+                          className="btn btn-warning"
+                          style={{ float: "right", marginRight: "7px" }}
+                          onClick={handleEditDiagnosis}
+                        >
+                          Edit Diagnosis
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  {/* Show the previous record date when available */}
+                  {previousRecordDate && (
+                    <div style={{ marginTop: "15px" }}>
+                      <strong>Previous Record Date: </strong>
+                      <span>{previousRecordDate}</span>
+                    </div>
+                  )}
+                  <br />
                   <Row className="mb-3">
-                    <Col md={4}>
-                      <Form.Group>
+                    <Col md={3} className="mb-4">
+                      <Form.Group className="mb-3">
                         <Form.Label>Diagnosis Date:</Form.Label>
-                        <Form.Control
-                          type="date"
-                          name="date_diagnosis"
-                          value={formData.date_diagnosis|| new Date().toISOString().split("T")[0]}
-                          onChange={handleInputChange}
+                        <DatePicker
+                          selected={
+                            formData?.date_diagnosis
+                              ? new Date(formData.date_diagnosis)
+                              : null
+                          }
+                          onChange={(date) => {
+                            handleInputChange({
+                              target: {
+                                name: "date_diagnosis",
+                                value: date
+                                  ? date.toISOString().split("T")[0]
+                                  : "",
+                              },
+                            });
+                          }}
+                          dateFormat="yyyy-MM-dd"
+                          className="form-control"
+                          placeholderText="Select Diagnosis Date"
+                          maxDate={new Date()} // Prevent selecting future dates
+                          showMonthDropdown
+                          showYearDropdown
+                          dropdownMode="select"
+                          style={{
+                            height: "38px",
+                            width: "100%",
+                          }}
                         />
                       </Form.Group>
                     </Col>
-                    <Col md={4}>
+                    <Col md={6}>
                       <Form.Group>
                         <Form.Label>Provisional Diagnosis:</Form.Label>
                         <Form.Control
@@ -371,35 +845,42 @@ const handleCategoryChange = (category, e) => {
                           name="provisionaldiagnosis"
                           value={formData.provisionaldiagnosis}
                           onChange={handleInputChange}
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={4}>
-                      <Form.Group>
-                        <Form.Label>Investigation Orders:</Form.Label>
-                        <Form.Control
-                          as="textarea"
-                          name="investigationorders" // Fixed the name
-                          value={formData.investigationorders}
-                          onChange={handleInputChange}
+                          disabled={isDisabled} // Disable until Edit is clicked
                         />
                       </Form.Group>
                     </Col>
                   </Row>
-
+                  <br />
                   <Row className="mb-3">
-                    <Col md={4}>
+                    <Col md={5}>
                       <Form.Group>
-                        <Form.Label>Diagnosis:</Form.Label>
+                        <Form.Label>Investigation Orders:</Form.Label>
                         <Form.Control
-                          as="textarea"
-                          name="diagnosis"
-                          value={formData.diagnosis}
+                          as="textarea" // Fixed the name
+                          name="investigationorders"
+                          value={formData.investigationorders}
                           onChange={handleInputChange}
+                          disabled={isDisabled} // Disable until Edit is clicked
                         />
                       </Form.Group>
                     </Col>
-
+                    <Col md={5}>
+                      <Form.Group>
+                        <Form.Label>
+                          Diagnosis: <span className="text-danger">*</span>
+                        </Form.Label>
+                        <Form.Control
+                          as="textarea"
+                          name="diagnosis"
+                          value={formData.diagnosis || ""}
+                          onChange={handleInputChange}
+                          disabled={isDisabled}
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  <br />
+                  <Row className="mb-3">
                     <Col md={8}>
                       <Form.Label>Advice Type:</Form.Label>
                       <Row>
@@ -408,26 +889,36 @@ const handleCategoryChange = (category, e) => {
                             inline
                             type="checkbox"
                             label="Medication"
-                            name="adviceType.medication"
-                            checked={formData.adviceType.medication}
+                            name="diagnosisAdvice.medication"
+                            checked={formData.diagnosisAdvice?.medication}
                             onChange={handleCheckboxChange}
+                            disabled={isDisabled}
                           />
                           <Form.Check
                             inline
                             type="checkbox"
                             label="Surgery"
-                            name="adviceType.surgery"
-                            checked={formData.adviceType.surgery}
+                            name="diagnosisAdvice.surgery"
+                            checked={formData.diagnosisAdvice?.surgery}
                             onChange={handleCheckboxChange}
+                            disabled={isDisabled}
                           />
                           <Form.Check
                             inline
                             type="checkbox"
                             label="Test"
-                            name="adviceType.test"
-                            checked={formData.adviceType.test}
+                            name="diagnosisAdvice.test"
+                            checked={formData.diagnosisAdvice?.test}
                             onChange={handleCheckboxChange}
+                            disabled={isDisabled}
                           />
+                          {/* Show textarea only when "Test" is checked */}
+                          {formData.diagnosisAdvice?.test && (
+                            <Form.Control
+                              as="textarea"
+                              placeholder="Enter test details"
+                            />
+                          )}
                         </Col>
                       </Row>
                     </Col>
@@ -437,7 +928,7 @@ const handleCategoryChange = (category, e) => {
                   <br />
 
                   <Row className="mb-3">
-                    <Col md={4}>
+                    <Col md={10}>
                       <Form.Label>Medicines Prescribed:</Form.Label>
                       <Row>
                         <Col>
@@ -446,77 +937,96 @@ const handleCategoryChange = (category, e) => {
                             type="checkbox"
                             label="AAC"
                             name="medicinesPrescribed.AAC"
-                            checked={formData.medicinesPrescribed.AAC}
+                            checked={formData.medicinesPrescribed?.AAC}
                             onChange={handleCheckboxChange}
+                            disabled={isDisabled}
                           />
                           <Form.Check
                             inline
                             type="checkbox"
                             label="ANTACID"
                             name="medicinesPrescribed.ANTACID"
-                            checked={formData.medicinesPrescribed.ANTACID}
+                            checked={formData.medicinesPrescribed?.ANTACID}
                             onChange={handleCheckboxChange}
+                            disabled={isDisabled}
                           />
                           <Form.Check
                             inline
                             type="checkbox"
                             label="PROBIOTICS"
                             name="medicinesPrescribed.PROBIOTICS"
-                            checked={formData.medicinesPrescribed.PROBIOTICS}
+                            checked={formData.medicinesPrescribed?.PROBIOTICS}
                             onChange={handleCheckboxChange}
+                            disabled={isDisabled}
                           />
                           <Form.Check
                             inline
                             type="checkbox"
                             label="NSAIDS"
                             name="medicinesPrescribed.NSAIDS"
-                            checked={formData.medicinesPrescribed.NSAIDS}
+                            checked={formData.medicinesPrescribed?.NSAIDS}
                             onChange={handleCheckboxChange}
+                            disabled={isDisabled}
                           />
                           <Form.Check
                             inline
                             type="checkbox"
                             label="ANTIBIOTICS"
                             name="medicinesPrescribed.ANTIBIOTICS"
-                            checked={formData.medicinesPrescribed.ANTIBIOTICS}
+                            checked={formData.medicinesPrescribed?.ANTIBIOTICS}
                             onChange={handleCheckboxChange}
+                            disabled={isDisabled}
                           />
-                        </Col>
-                        <Col xs={7}>
+
                           <Form.Control
                             as="textarea"
-                            placeholder="Enter Medicines Prescribed"
+                            placeholder="Other"
                             name="medicinesPrescribed"
-                            value={formData.medicinesPrescribed || ""}
+                            value={formData.medicinesPrescribed?.other || ""}
                             onChange={handleInputChange}
+                            disabled={isDisabled}
                           />
                         </Col>
                       </Row>
                     </Col>
+                  </Row>
+                  <br />
+                  <Row>
                     <Col md={4}>
                       <Form.Group>
                         <Form.Label>Surgical Advice:</Form.Label>
-                        <Form.Select
-                          name="surgicalAdvice"
-                          value={formData.surgicalAdvice}
-                          onChange={handleInputChange}
-                        >
-                          <option value="">Select</option>
-                          <option value="Advice 1">Advice 1</option>
-                          <option value="Advice 2">Advice 2</option>
-                        </Form.Select>
+                        <Dropdown>
+                          <Dropdown.Toggle variant="primary" as={Button}>
+                            {formData.surgicalAdvice?.length > 0
+                              ? formData.surgicalAdvice.join(", ")
+                              : "Select Surgical Advice"}
+                          </Dropdown.Toggle>
+
+                          <Dropdown.Menu
+                            style={{
+                              maxHeight: "200px",
+                              overflowY: "auto",
+                              width: "100%",
+                            }}
+                          >
+                            {surgicalAdviceOptions.map((option) => (
+                              <Dropdown.Item key={option} as="div">
+                                <Form.Check
+                                  type="checkbox"
+                                  label={option}
+                                  value={option}
+                                  checked={formData.surgicalAdvice?.includes(
+                                    option
+                                  )}
+                                  onChange={handleSurgicalAdviceChange}
+                                />
+                              </Dropdown.Item>
+                            ))}
+                          </Dropdown.Menu>
+                        </Dropdown>
                       </Form.Group>
                     </Col>
-                    <Col xs={4}>
-                      <Form.Label></Form.Label>
-                      <Form.Control
-                        as="textarea"
-                        placeholder="Advice Comment"
-                        name="surgicalAdvice"
-                        value={formData.surgicalAdvice || ""}
-                        onChange={handleInputChange}
-                      />
-                    </Col>
+
                     <Col md={4}>
                       <Form.Group>
                         <Form.Label>Comment:</Form.Label>
@@ -525,75 +1035,122 @@ const handleCategoryChange = (category, e) => {
                           name="comment"
                           value={formData.comment}
                           onChange={handleInputChange}
+                          disabled={isDisabled}
                         />
                       </Form.Group>
                     </Col>
+
                     <Col md={4}>
                       <Form.Group>
-                        <Form.Label>Check Surgical Date:</Form.Label>
+                        <Form.Label>Advice Comment:</Form.Label>
                         <Form.Control
-                          type="date"
-                          name="SurgicalDate"
-                          value={formData.SurgicalDate}
+                          as="textarea"
+                          name="adviceComment"
+                          value={formData.adviceComment || ""}
                           onChange={handleInputChange}
+                          disabled={isDisabled}
                         />
                       </Form.Group>
                     </Col>
-                    <Row className="mb-3">
-                      <Col md={12}>
-                        <Form.Group>
-                          <Form.Label>Category:</Form.Label>
-                          <Row className="mt-2">
-                            {Object.keys(categoryOptions).map((category) => (
-                              <Col md={4} key={category}>
-                                <Form.Group>
-                                  <Form.Label>{category}:</Form.Label>
-                                  <Dropdown>
-                                    <Dropdown.Toggle
-                                      variant="primary"
-                                      as={Button}
-                                    >
-                                      {formData[category].length > 0
-                                        ? formData[category].join(", ")
-                                        : `Select ${category}`}
-                                    </Dropdown.Toggle>
-
-                                    <Dropdown.Menu
-                                      style={{
-                                        maxHeight: "200px",
-                                        overflowY: "auto",
-                                      }}
-                                    >
-                                      {categoryOptions[category].map(
-                                        (option) => (
-                                          <Dropdown.Item key={option} as="div">
-                                            <Form.Check
-                                              type="checkbox"
-                                              label={option}
-                                              value={option}
-                                              checked={formData[
-                                                category
-                                              ].includes(option)}
-                                              onChange={(e) =>
-                                                handleCategoryChange(
-                                                  category,
-                                                  e
-                                                )
-                                              }
-                                            />
-                                          </Dropdown.Item>
-                                        )
-                                      )}
-                                    </Dropdown.Menu>
-                                  </Dropdown>
-                                </Form.Group>
-                              </Col>
-                            ))}
-                          </Row>
+                  </Row>
+                  <br />
+                  <Row>
+                    <Col md={2} className="mb-4">
+                      <Form.Group className="mb-3">
+                        {/* <Form.Label>Check Surgical Date:</Form.Label> */}
+                        <Form.Check
+                          type="checkbox"
+                          label="Surgical Date"
+                          name="checkSurgicalDate"
+                          checked={showSurgicalDate}
+                          onChange={handleCheckboxChange}
+                        />
+                      </Form.Group>
+                    </Col>
+                    {/* Only show DatePicker when checkbox is checked */}
+                    {showSurgicalDate && (
+                      <Col md={4} className="mb-4">
+                        <Form.Group className="mb-3">
+                          {/* <Form.Label>Surgical Date:</Form.Label> */}
+                          <DatePicker
+                            selected={
+                              formData?.SurgicalDate
+                                ? new Date(formData.SurgicalDate)
+                                : null
+                            }
+                            onChange={(date) => {
+                              handleInputChange({
+                                target: {
+                                  name: "SurgicalDate",
+                                  value: date
+                                    ? date.toISOString().split("T")[0]
+                                    : "",
+                                },
+                              });
+                            }}
+                            dateFormat="yyyy-MM-dd"
+                            className="form-control"
+                            placeholderText="Select Surgical Date"
+                            maxDate={new Date()}
+                            showMonthDropdown
+                            showYearDropdown
+                            dropdownMode="select"
+                          />
                         </Form.Group>
                       </Col>
-                    </Row>
-                    ;
+                    )}
+                  </Row>
+                  <br />
+                  <Row>
+                    <Col md={6}>
+                      <Form.Group>
+                        <Form.Label>Category:</Form.Label>
+                        <Row className="mt-2">
+                          {Object.keys(categoryOptions).map((category) => (
+                            <Col md={4} key={category}>
+                              <Form.Group>
+                                <Form.Label>{category}:</Form.Label>
+                                <Dropdown>
+                                  <Dropdown.Toggle
+                                    variant="primary"
+                                    as={Button}
+                                  >
+                                    {Array.isArray(formData[category]) &&
+                                    formData[category].length > 0
+                                      ? formData[category].join(", ")
+                                      : `Select ${category}`}
+                                  </Dropdown.Toggle>
+
+                                  <Dropdown.Menu
+                                    style={{
+                                      maxHeight: "200px",
+                                      overflowY: "auto",
+                                    }}
+                                  >
+                                    {categoryOptions[category].map((option) => (
+                                      <Dropdown.Item key={option} as="div">
+                                        <Form.Check
+                                          type="checkbox"
+                                          label={option}
+                                          value={option}
+                                          checked={
+                                            Array.isArray(formData[category]) &&
+                                            formData[category].includes(option)
+                                          }
+                                          onChange={(e) =>
+                                            handleCategoryChange(category, e)
+                                          }
+                                        />
+                                      </Dropdown.Item>
+                                    ))}
+                                  </Dropdown.Menu>
+                                </Dropdown>
+                              </Form.Group>
+                            </Col>
+                          ))}
+                        </Row>
+                      </Form.Group>
+                    </Col>
                     <Col md={4}>
                       <Form.Group>
                         <Form.Label>Category Comment:</Form.Label>
@@ -602,179 +1159,205 @@ const handleCategoryChange = (category, e) => {
                           name="categoryComment"
                           value={formData.categoryComment}
                           onChange={handleInputChange}
+                          disabled={isDisabled}
                         />
                       </Form.Group>
                     </Col>
-                    <Row className="mb-3">
-                      <Col md={12}>
-                        <Form.Group>
-                          <Form.Label>Advice</Form.Label>
-                          <Row>
-                            <Col md={4}>
-                              <Form.Check
-                                type="checkbox"
-                                label="MCDPA"
-                                name="advice.MCDPA"
-                                checked={formData.advice.MCDPA}
-                                onChange={handleCheckboxChange}
-                              />
-                              <Form.Check
-                                type="checkbox"
-                                label="MANOMETRY"
-                                name="advice.MANOMETRY"
-                                checked={formData.advice.MANOMETRY}
-                                onChange={handleCheckboxChange}
-                              />
-                              <Form.Check
-                                type="checkbox"
-                                label="DIET"
-                                name="advice.DIET"
-                                checked={formData.advice.DIET}
-                                onChange={handleCheckboxChange}
-                              />
-                              <Form.Check
-                                type="checkbox"
-                                label="ECHO"
-                                name="advice.ECHO"
-                                checked={formData.advice.ECHO}
-                                onChange={handleCheckboxChange}
-                              />
-                              <Form.Check
-                                type="checkbox"
-                                label="UROFLOWMETRY"
-                                name="advice.UROFLOWMETRY"
-                                checked={formData.advice.UROFLOWMETRY}
-                                onChange={handleCheckboxChange}
-                              />
-                            </Col>
-                            <Col md={4}>
-                              <Form.Check
-                                type="checkbox"
-                                label="COLO"
-                                name="advice.COLO"
-                                checked={formData.advice.COLO}
-                                onChange={handleCheckboxChange}
-                              />
-                              <Form.Check
-                                type="checkbox"
-                                label="X-RAY"
-                                name="advice.xray"
-                                checked={formData.advice.xray}
-                                onChange={handleCheckboxChange}
-                              />
-                              <Form.Check
-                                type="checkbox"
-                                label="MRI"
-                                name="advice.MRI"
-                                checked={formData.advice.MRI}
-                                onChange={handleCheckboxChange}
-                              />
-                              <Form.Check
-                                type="checkbox"
-                                label="CHT"
-                                name="advice.CHT"
-                                checked={formData.advice.CHT}
-                                onChange={handleCheckboxChange}
-                              />
-                              <Form.Check
-                                type="checkbox"
-                                label="GASTRO"
-                                name="advice.GASTRO"
-                                checked={formData.advice.GASTRO}
-                                onChange={handleCheckboxChange}
-                              />
-                            </Col>
-                            <Col md={4}>
-                              <Form.Check
-                                type="checkbox"
-                                label="CT"
-                                name="advice.CT"
-                                checked={formData.advice.CT}
-                                onChange={handleCheckboxChange}
-                              />
-                              <Form.Check
-                                type="checkbox"
-                                label="DOPPLER"
-                                name="advice.DOPPLER"
-                                checked={formData.advice.DOPPLER}
-                                onChange={handleCheckboxChange}
-                              />
-                              <Form.Check
-                                type="checkbox"
-                                label="BIOFEEDBACK"
-                                name="advice.BIOFEEDBACK"
-                                checked={formData.advice.BIOFEEDBACK}
-                                onChange={handleCheckboxChange}
-                              />
-                              <Form.Check
-                                type="checkbox"
-                                label="LAB INVESTIGATION"
-                                name="advice.labInvestigation"
-                                checked={formData.advice.labInvestigation}
-                                onChange={handleCheckboxChange}
-                              />
-                              <Form.Check
-                                type="checkbox"
-                                label="ULTRASONOGRAPHY"
-                                name="advice.ULTRASONOGRAPHY"
-                                checked={formData.advice.ULTRASONOGRAPHY}
-                                onChange={handleCheckboxChange}
-                              />
-                              <Form.Check
-                                type="checkbox"
-                                label="3D ENDO ANAL IMAGING"
-                                name="advice.echoAnalImaging"
-                                checked={formData.advice.echoAnalImaging}
-                                onChange={handleCheckboxChange}
-                              />
-                            </Col>
-                          </Row>
-                        </Form.Group>
-                      </Col>
-                    </Row>
-                    <Row className="mb-3">
-                      <Col md={4}>
-                        <Form.Group>
-                          <Form.Label>Other:</Form.Label>
-                          <Row>
-                            <Col>
-                              <Form.Check
-                                inline
-                                type="checkbox"
-                                label="Insurance"
-                                name="other.insurance"
-                                checked={formData.other.insurance}
-                                onChange={handleCheckboxChange}
-                              />
-                              <Form.Check
-                                inline
-                                type="checkbox"
-                                label="Reimbursement"
-                                name="other.reimbursement"
-                                checked={formData.other.reimbursement}
-                                onChange={handleCheckboxChange}
-                              />
-                              <Form.Check
-                                inline
-                                type="checkbox"
-                                label="Workshop"
-                                name="other.workshop"
-                                checked={formData.other.workshop}
-                                onChange={handleCheckboxChange}
-                              />
-                              <Form.Check
-                                inline
-                                type="checkbox"
-                                label="PDC"
-                                name="other.pdc"
-                                checked={formData.other.pdc}
-                                onChange={handleCheckboxChange}
-                              />
-                            </Col>
-                          </Row>
-                        </Form.Group>
-                      </Col>
-                    </Row>
+                  </Row>
+                  <br />
+                  <Row className="mb-3">
+                    <Col md={12}>
+                      <Form.Group>
+                        <Form.Label>Advice</Form.Label>
+                        <Row>
+                          <Col md={4}>
+                            <Form.Check
+                              type="checkbox"
+                              label="MCDPA"
+                              name="advice.mcdpa"
+                              checked={formData.advice?.mcdpa}
+                              onChange={handleCheckboxChange}
+                              disabled={isDisabled}
+                            />
+                            <Form.Check
+                              type="checkbox"
+                              label="MANOMETRY"
+                              name="advice.MANOMETRY"
+                              checked={formData.advice?.manometry}
+                              onChange={handleCheckboxChange}
+                              disabled={isDisabled}
+                            />
+                            <Form.Check
+                              type="checkbox"
+                              label="DIET"
+                              name="advice.DIET"
+                              checked={formData.advice?.diet}
+                              onChange={handleCheckboxChange}
+                              disabled={isDisabled}
+                            />
+                            <Form.Check
+                              type="checkbox"
+                              label="ECHO"
+                              name="advice.ECHO"
+                              checked={formData.advice?.echo}
+                              onChange={handleCheckboxChange}
+                              disabled={isDisabled}
+                            />
+                            <Form.Check
+                              type="checkbox"
+                              label="UROFLOWMETRY"
+                              name="advice.UROFLOWMETRY"
+                              checked={formData.advice?.uroflowmetry}
+                              onChange={handleCheckboxChange}
+                              disabled={isDisabled}
+                            />
+                          </Col>
+                          <Col md={4}>
+                            <Form.Check
+                              type="checkbox"
+                              label="COLO"
+                              name="advice.COLO"
+                              checked={formData.advice?.colo}
+                              onChange={handleCheckboxChange}
+                              disabled={isDisabled}
+                            />
+                            <Form.Check
+                              type="checkbox"
+                              label="X-RAY"
+                              name="advice.xray"
+                              checked={formData.advice?.xray}
+                              onChange={handleCheckboxChange}
+                              disabled={isDisabled}
+                            />
+                            <Form.Check
+                              type="checkbox"
+                              label="MRI"
+                              name="advice.MRI"
+                              checked={formData.advice?.mri}
+                              onChange={handleCheckboxChange}
+                              disabled={isDisabled}
+                            />
+                            <Form.Check
+                              type="checkbox"
+                              label="CHT"
+                              name="advice.CHT"
+                              checked={formData.advice?.cht}
+                              onChange={handleCheckboxChange}
+                              disabled={isDisabled}
+                            />
+                            <Form.Check
+                              type="checkbox"
+                              label="GASTRO"
+                              name="advice.GASTRO"
+                              checked={formData.advice?.gastro}
+                              onChange={handleCheckboxChange}
+                              disabled={isDisabled}
+                            />
+                          </Col>
+                          <Col md={4}>
+                            <Form.Check
+                              type="checkbox"
+                              label="CT"
+                              name="advice.CT"
+                              checked={formData.advice?.ct}
+                              onChange={handleCheckboxChange}
+                              disabled={isDisabled}
+                            />
+                            <Form.Check
+                              type="checkbox"
+                              label="DOPPLER"
+                              name="advice.DOPPLER"
+                              checked={formData.advice?.doppler}
+                              onChange={handleCheckboxChange}
+                              disabled={isDisabled}
+                            />
+                            <Form.Check
+                              type="checkbox"
+                              label="BIOFEEDBACK"
+                              name="advice.BIOFEEDBACK"
+                              checked={formData.advice?.biofeedback}
+                              onChange={handleCheckboxChange}
+                              disabled={isDisabled}
+                            />
+                            <Form.Check
+                              type="checkbox"
+                              label="LAB INVESTIGATION"
+                              name="advice.labInvestigation"
+                              checked={formData.advice?.labInvestigation}
+                              onChange={handleCheckboxChange}
+                              disabled={isDisabled}
+                            />
+                            <Form.Check
+                              type="checkbox"
+                              label="ULTRASONOGRAPHY"
+                              name="advice.ULTRASONOGRAPHY"
+                              checked={formData.advice?.ultrasonography}
+                              onChange={handleCheckboxChange}
+                              disabled={isDisabled}
+                            />
+                            <Form.Check
+                              type="checkbox"
+                              label="3D ENDO ANAL IMAGING"
+                              name="advice.echoAnalImaging"
+                              checked={formData.advice?.EchoAnalImaging}
+                              onChange={handleCheckboxChange}
+                              disabled={isDisabled}
+                            />
+                          </Col>
+                        </Row>
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  <br />
+                  <Row className="mb-3">
+                    <Col md={10}>
+                      <Form.Group>
+                        <Form.Label>Other:</Form.Label>
+                        <Row>
+                          <Col>
+                            <Form.Check
+                              inline
+                              type="checkbox"
+                              label="Insurance"
+                              name="other.insurance"
+                              checked={formData.other?.insurance}
+                              onChange={handleCheckboxChange}
+                              disabled={isDisabled}
+                            />
+                            <Form.Check
+                              inline
+                              type="checkbox"
+                              label="Reimbursement"
+                              name="other.reimbursement"
+                              checked={formData.other?.reimbursement}
+                              onChange={handleCheckboxChange}
+                              disabled={isDisabled}
+                            />
+                            <Form.Check
+                              inline
+                              type="checkbox"
+                              label="Workshop"
+                              name="other.workshop"
+                              checked={formData.other?.workshop}
+                              onChange={handleCheckboxChange}
+                              disabled={isDisabled}
+                            />
+                            <Form.Check
+                              inline
+                              type="checkbox"
+                              label="PDC"
+                              name="other.pdc"
+                              checked={formData.other?.pdc}
+                              onChange={handleCheckboxChange}
+                              disabled={isDisabled}
+                            />
+                          </Col>
+                        </Row>
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  <br />
+                  <Row>
                     <Col md={4}>
                       <Form.Group>
                         <Form.Label>Consultant Name:</Form.Label>
@@ -836,14 +1419,26 @@ const handleCategoryChange = (category, e) => {
                       </Form.Group>
                     </Col>
                   </Row>
+                  <br />
+                  <div style={{ marginTop: "20px" }}>
+                    <Button
+                      type="button"
+                      variant="primary"
+                      disabled={isDisabled}
+                      style={{ marginRight: "10px" }}
+                      onClick={(e) => handleSubmit(e, true)}
+                    >
+                      Save Edit Diagnosis
+                    </Button>
 
-                  <Button
-                    variant="success"
-                    onClick={() => handleSubmit("save")}
-                    className="mt-4"
-                  >
-                    Save
-                  </Button>
+                    <Button
+                      type="button"
+                      variant="primary"
+                      onClick={(e) => handleSubmit(e, false)}
+                    >
+                      Save New Record
+                    </Button>
+                  </div>
                 </Form>
               </Card.Body>
             </Card>
@@ -852,10 +1447,4 @@ const handleCategoryChange = (category, e) => {
       </Container>
     </div>
   );
-};
-
-export default Diagnosis;
-
-
-
-
+}

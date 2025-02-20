@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-chartjs-2";
+import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,

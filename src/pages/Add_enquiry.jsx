@@ -10,7 +10,7 @@ import {
 } from "react-bootstrap";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
 
-const BASE_URL = "http://192.168.90.191 :5000/api";
+const BASE_URL = "http://192.168.90.126:5000/api";
 
 const Add_Enquiry = () => {
   const [formData, setFormData] = useState({
@@ -181,6 +181,8 @@ const Add_Enquiry = () => {
                           )}
                         </Form.Group>
                       </Col>
+
+
                       {/* Doctor Name Dropdown */}
                       <Col md={4} className="mb-4">
                         <Form.Group className="mb-3">
@@ -212,6 +214,8 @@ const Add_Enquiry = () => {
                           </Form.Select>
                         </Form.Group>
                       </Col>
+
+                      
                       <Col md={4}>
                         {/* Enquiry Type */}
                         <Form.Group controlId="enquirytype">

@@ -17,7 +17,7 @@ import {
 } from "react-bootstrap";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
 
-const BASE_URL = "http://192.168.90.121:5000/api"; // Update your API base URL here
+const BASE_URL = "http://192.168.90.215:5000/api"; // Update your API base URL here
 
 export default function All_patient() {
   const [patients, setPatients] = useState([]);
@@ -49,7 +49,7 @@ export default function All_patient() {
   const fetchPatientsData = async () => {
     setLoading(true);
     try {
-      const url = new URL(`${BASE_URL}/V1/patient/listPatient`);
+      const url = new URL(`${BASE_URL}/V1/patients/listPatient`);
       const params = {
         from: formatToApiDate(fromDate), // Format the from date
         to: formatToApiDate(toDate), // Format the to date
@@ -119,7 +119,7 @@ export default function All_patient() {
             patient.uid === updatedPatient.uid ? updatedPatient : patient
           );
           setPatients(updatedPatients);
- 
+
           // Close the modal
           setShowEditPatientModal(false);
         })
@@ -143,7 +143,7 @@ export default function All_patient() {
     </span>
   );
 
- // Actions template for the DataTable
+  // Actions template for the DataTable
   const actionBodyTemplate = (rowData) => (
     <div
       className="cart-action"
@@ -581,8 +581,7 @@ export default function All_patient() {
                   background: "white",
                   border: "1px solid #00bcd4",
                 }}
-                >
-                  
+              >
                 <Card.Body>
                   {loading ? ( // Show loader if data is being fetched
                     <div

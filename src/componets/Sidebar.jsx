@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from "react-router-dom";
 import SimpleBar from 'simplebar-react';
+import "simplebar/dist/simplebar.min.css"
 import FeatherIcon from 'feather-icons-react';
 import { useSidebarContext } from '../pages/api/useSidebarContext';
 import logo from '/src/assets/images/logo/icon-logo.png'
@@ -151,70 +152,29 @@ export default function Sidebar() {
                 </li>
               </ul>
             </li>
-
             <li
-              onClick={() => handleMenuClick(13)}
-              className={`menu-item ${activeIndex === 13 ? "active" : ""}`}
+              onClick={() => handleMenuClick(2)}
+              className={`menu-item ${activeIndex === 2 ? "active" : ""}`}
             >
               <Link>
                 <div className="icon-item">
-                  <FeatherIcon icon="men" />
+                  <i className="fa fa-wheelchair" aria-hidden="true"></i>
                 </div>
-                <span>Patient</span>
+                <span>patients</span>
                 <i className="fa fa-angle-down"></i>
               </Link>
               <ul className="submenu-list">
                 <li>
-                  <Link to="/navbar">Navbar</Link>
+                  <Link to="/all-patients">all patients</Link>
                 </li>
-              </ul>
-              <ul className="submenu-list">
                 <li>
-                  <Link to="/patient">Patient</Link>
+                  <Link to="/add-patient">add patient</Link>
                 </li>
-              </ul>
-              <ul className="submenu-list">
-                <li>
-                  <Link to="/personal">Personal</Link>
-                </li>
-              </ul>
-              <ul className="submenu-list">
-                <li>
-                  <Link to="/patientHistory">Patient History</Link>
-                </li>
-              </ul>
-              <ul className="submenu-list">
-                <li>
-                  <Link to="/diagnosis">Diagnosis</Link>
-                </li>
-              </ul>
-              <ul className="submenu-list">
-                <li>
-                  <Link to="/followUp">Follow Up</Link>
-                </li>
-              </ul>
-              <ul className="submenu-list">
-                <li>
-                  <Link to="/otherTests">Other Tests</Link>
-                </li>
-              </ul>
-              <ul className="submenu-list">
-                <li>
-                  <Link to="/opdPrescription">OPD Prescription</Link>
-                </li>
-              </ul>
-              <ul className="submenu-list">
-                <li>
-                  <Link to="/surgery">Surgery Details</Link>
-                </li>
-              </ul>
-              <ul className="submenu-list">
-                <li>
-                  <Link to="/dischargeCard">Discharge Card</Link>
-                </li>
+                {/* <li>
+                  <Link to="/edit-patient">edit patient</Link>
+                </li> */}
               </ul>
             </li>
-
 
             <li
               onClick={() => handleMenuClick(3)}
@@ -518,12 +478,75 @@ export default function Sidebar() {
               </Link>
               <ul className="submenu-list">
                 <li>
+                  <Link to="/navbar">Navbar</Link>
+                </li>
+              </ul>
+              <ul className="submenu-list">
+                <li>
                   <Link to="/patient">Patient</Link>
                 </li>
-              </ul>{" "}
+              </ul>
               <ul className="submenu-list">
                 <li>
                   <Link to="/personal">Personal</Link>
+                </li>
+              </ul>
+              <ul className="submenu-list">
+                <li>
+                  <Link to="/patientHistory">Patient History</Link>
+                </li>
+              </ul>
+              <ul className="submenu-list">
+                <li>
+                  <Link to="/diagnosis">Diagnosis</Link>
+                </li>
+              </ul>
+              <ul className="submenu-list">
+                <li>
+                  <Link to="/followUp">Follow Up</Link>
+                </li>
+              </ul>
+              <ul className="submenu-list">
+                <li>
+                  <Link to="/otherTests">Other Tests</Link>
+                </li>
+              </ul>
+              <ul className="submenu-list">
+                <li>
+                  <Link to="/opdPrescription">OPD Prescription</Link>
+                </li>
+              </ul>
+              <ul className="submenu-list">
+                <li>
+                  <Link to="/surgery">Surgery Details</Link>
+                </li>
+              </ul>
+              <ul className="submenu-list">
+                <li>
+                  <Link to="/dischargeCard">Discharge Card</Link>
+                </li>
+              </ul>
+            </li>
+            <li
+              onClick={() => handleMenuClick(14)}
+              className={`menu-item ${activeIndex === 14 ? "active" : ""}`}
+            >
+              <Link>
+                <div className="icon-item">
+                  <FeatherIcon icon="file-text" />
+                </div>
+                <span>Dr manage reports</span>
+                <i className="fa fa-angle-down"></i>
+              </Link>
+              <ul className="submenu-list">
+                <li>
+                  <Link to="/diagnosisReport">Diagnosis Report</Link>
+                </li>
+                <li>
+                  <Link to="/opdSurgeryReport">OPD Surgery Report</Link>
+                </li>
+                <li>
+                  <Link to="/labReport">Lab Report</Link>
                 </li>
               </ul>
             </li>
