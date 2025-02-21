@@ -18,7 +18,7 @@ const BASE_URL = "http://192.168.90.158:5000/api";
 
 export default function DiagnosisReport() {
   const [showModal, setShowModal] = useState(false);
-  const [currentDoctor, setCurrentDoctor] = useState(null);
+  const [currentPatientId, setCurrentPatientId] = useState(null);
   const [comments, setComments] = useState(["", "", "", "", ""]); // Array for 5 comments
   const [reports, setReports] = useState([]);
   const [filteredReports, setFilteredReports] = useState([]);
@@ -38,8 +38,10 @@ export default function DiagnosisReport() {
       });
 
       const data = await response.json();
+      console.log("Fetched Data:", data); // Log the fetched data
+
       if (response.ok) {
-        console.log("Fetched Data:", data.data);
+      console.log("Fetched Data:", data.data);
 
         const result = Array.isArray(data.data)
           ? data.data.map((item, index) => ({
@@ -52,6 +54,7 @@ export default function DiagnosisReport() {
 
         setReports(result);
         setFilteredReports(result); // Initially, show all data
+        console.log(response);
       } else {
         console.error(
           "Error fetching reports:",
@@ -65,9 +68,12 @@ export default function DiagnosisReport() {
     }
   };
 
-  // Function to open the modal and set the current doctor
-  const handleOpenModal = (doctor) => {
-    setCurrentDoctor(doctor);
+  const feedbackBodyTemplate = (rowData) => {
+    return rowData.feedback ? rowData.feedback : "No comments";
+  };
+
+  const handleOpenModal = (patientId) => {
+    setCurrentPatientId(patientId);
     setShowModal(true);
   };
 
@@ -78,10 +84,47 @@ export default function DiagnosisReport() {
     setComments(updatedComments);
   };
 
-  // Function to save comments
-  const handleSaveComments = () => {
-    console.log(`Comments for ${currentDoctor}:`, comments);
-    setShowModal(false);
+  const handleSaveComments = async (event) => {
+    event.preventDefault();
+
+    const combinedFeedback = comments
+      .map((comment, index) => `Comment ${index + 1}: ${comment}`)
+      .join(", ");
+
+    const payload = {
+      feedback: combinedFeedback,
+    };
+
+    try {
+      const response = await fetch(
+        `${BASE_URL}/V1/diagnosis/addDoctorComment/${currentPatientId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (response.ok) {
+        // Save feedback to local storage
+        const updatedReports = reports.map((report) =>
+          report.patient_id === currentPatientId
+            ? { ...report, feedback: combinedFeedback }
+            : report
+        );
+        setReports(updatedReports);
+        setFilteredReports(updatedReports);
+        localStorage.setItem("reports", JSON.stringify(updatedReports));
+
+        setShowModal(false);
+      } else {
+        console.error("Failed to save feedback:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error saving feedback:", error);
+    }
   };
 
   const filterByVisitDate = () => {
@@ -102,7 +145,13 @@ export default function DiagnosisReport() {
   };
 
   useEffect(() => {
-    fetchReportsData();
+    const storedReports = localStorage.getItem("reports");
+    if (storedReports) {
+      setReports(JSON.parse(storedReports));
+      setFilteredReports(JSON.parse(storedReports));
+    } else {
+      fetchReportsData();
+    }
   }, []);
 
   const handleSearchChange = (e) => {
@@ -434,12 +483,9 @@ export default function DiagnosisReport() {
                         <Button
                           variant="danger"
                           size="sm"
-                          onClick={() =>
-                            handleOpenModal(rowData.consultantDoctor)
-                          }
+                          onClick={() => handleOpenModal(rowData.patient_id)}
                         >
-                          <i className="fa fa-envelope"></i>{" "}
-                          {/* Email icon for comment */}
+                          <i className="fa fa-envelope"></i>
                         </Button>
                       )}
                       style={{
@@ -460,10 +506,10 @@ export default function DiagnosisReport() {
           <Modal.Title>Patient Feedback Call Description</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form>
+          <Form onSubmit={handleSaveComments}>
             {[...Array(5)].map((_, index) => (
               <Form.Group key={index} className="mb-3">
-                <Form.Label>Comment {index + 1} :</Form.Label>
+                <Form.Label>Comment {index + 1}:</Form.Label>
                 <Form.Control
                   as="textarea"
                   rows={2}
@@ -473,13 +519,13 @@ export default function DiagnosisReport() {
                 />
               </Form.Group>
             ))}
+            <Modal.Footer>
+              <Button variant="primary" type="submit">
+                Submit
+              </Button>
+            </Modal.Footer>
           </Form>
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="primary" onClick={handleSaveComments}>
-            Submit
-          </Button>
-        </Modal.Footer>
       </Modal>
     </div>
   );
