@@ -57,8 +57,8 @@ export default function DiagnosisReport() {
               comment: item.comment,
               // Patient details
               Uid_no: item.patientDetail?.Uid_no,
-              name: item.patientDetail?.name,
-              age: item.patientDetail?.age,
+              prefix: item.patientDetail?.prefix,
+              name: `${item.patientDetail?.prefix} ${item.patientDetail?.name}`, // Concatenate prefix and name              age: item.patientDetail?.age,
               sex: item.patientDetail?.sex,
               phone: item.patientDetail?.phone,
               mobile_2: item.patientDetail?.mobile_2,
@@ -155,34 +155,45 @@ export default function DiagnosisReport() {
   };
 
   const filterByVisitDate = () => {
+    const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
+
+    console.log("Raw Reports Data:", reports); // Debugging: Check the original API data
+
     if (!fromDate || !toDate) {
-      setFilteredReports(reports);
-      console.log("All Reports:", reports);
+      // Default to showing only today's data
+      const todaysData = reports.filter((report) => {
+        const reportDate = new Date(report.date_diagnosis)
+          .toISOString()
+          .split("T")[0];
+        return reportDate === today;
+      });
+
+      setFilteredReports(todaysData);
+      console.log("Filtered Today's Data:", todaysData);
       return;
     }
 
+    // If date range is selected, filter accordingly
     const filteredData = reports.filter((report) => {
-      const visitDate = new Date(report.date_diagnosis);
-      const startDate = new Date(fromDate);
-      const endDate = new Date(toDate);
-
-      return visitDate >= startDate && visitDate <= endDate;
+      const visitDate = new Date(report.date_diagnosis)
+        .toISOString()
+        .split("T")[0];
+      return visitDate >= fromDate && visitDate <= toDate;
     });
 
     setFilteredReports(filteredData);
-    console.log("Filtered Reports:", filteredData);
+    console.log("Filtered Reports by Date Range:", filteredData);
   };
 
+
+  // Load only today's data initially
   useEffect(() => {
-    const storedReports = localStorage.getItem("diagnosisReports");
-    if (storedReports) {
-      setReports(JSON.parse(storedReports));
-      setFilteredReports(JSON.parse(storedReports));
-      console.log("Stored Reports:", JSON.parse(storedReports)); // Log stored reports
-    } else {
-      fetchReportsData();
-    }
+    fetchReportsData();
   }, []);
+
+  useEffect(() => {
+    filterByVisitDate();
+  }, [reports]); // Apply filtering once reports are fetched
 
   const handleSearchChange = (e) => {
     const value = e.target.value.toLowerCase();
@@ -231,18 +242,21 @@ export default function DiagnosisReport() {
             type="date"
             value={fromDate}
             onChange={(e) => setFromDate(e.target.value)}
+            max={new Date().toISOString().split("T")[0]} // Disable future dates
           />
         </Form.Group>
+
         <Form.Group className="pe-3 mb-0">
           To Date
           <Form.Control
             type="date"
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
+            max={new Date().toISOString().split("T")[0]} // Disable future dates
           />
         </Form.Group>
-        <Button variant="primary" onClick={() => filterByVisitDate(true)}>
-          Refresh Data
+        <Button variant="primary" onClick={filterByVisitDate}>
+          Find Data
         </Button>
       </div>
     </div>
@@ -352,7 +366,7 @@ export default function DiagnosisReport() {
                         padding: "0.75rem",
                       }}
                     />
-
+                    {/* 
                     <Column
                       field="sex"
                       header="Gender"
@@ -362,7 +376,7 @@ export default function DiagnosisReport() {
                         textAlign: "center",
                         padding: "0.75rem",
                       }}
-                    />
+                    /> */}
 
                     <Column
                       field="age"
@@ -385,7 +399,7 @@ export default function DiagnosisReport() {
                         padding: "0.75rem",
                       }}
                     />
-
+                    {/* 
                     <Column
                       field="mobile_2"
                       header="Alt Phone No"
@@ -395,7 +409,7 @@ export default function DiagnosisReport() {
                         textAlign: "center",
                         padding: "0.75rem",
                       }}
-                    />
+                    /> */}
 
                     <Column
                       field="ref"
@@ -407,7 +421,7 @@ export default function DiagnosisReport() {
                         padding: "0.75rem",
                       }}
                     />
-
+                    {/* 
                     <Column
                       field="occupation"
                       header="Occupation"
@@ -417,7 +431,7 @@ export default function DiagnosisReport() {
                         textAlign: "center",
                         padding: "0.75rem",
                       }}
-                    />
+                    /> */}
 
                     <Column
                       field="address"

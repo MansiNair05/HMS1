@@ -102,13 +102,16 @@ export default function OpdSurgeryReport() {
   useEffect(() => {
     const storedReports = localStorage.getItem("OPDreports");
     if (storedReports) {
-      setReports(JSON.parse(storedReports));
-      setFilteredReports(JSON.parse(storedReports));
-      console.log("Stored Reports:", JSON.parse(storedReports)); // Log stored reports
+      const parsedReports = JSON.parse(storedReports);
+      setReports(parsedReports);
+      setFilteredReports(parsedReports);
+      if (fromDate && toDate) {
+        filterByVisitDate();
+      }
     } else {
       fetchReportsData();
     }
-  }, []);
+  }, [fromDate, toDate]);
 
   const parseDate = (dateStr) => {
     if (!dateStr) return null;
@@ -122,153 +125,42 @@ export default function OpdSurgeryReport() {
     return new Date(year, month - 1, day);
   };
 
-  const filterRecords = (search, from, to) => {
-    console.log("Filtering with dates:", from, to); // Debug log
-    let filtered = [...reports];
-
-    // Filter by date range if both dates are selected
-    if (from && to) {
-      const fromDate = parseDate(from);
-      const toDate = parseDate(to);
-
-      if (fromDate && toDate) {
-        // Set time to start and end of days
-        fromDate.setHours(0, 0, 0, 0);
-        toDate.setHours(23, 59, 59, 999);
-
-        console.log("Date range:", fromDate, "to", toDate); // Debug log
-
-        filtered = filtered.filter((report) => {
-          const recordDate = parseDate(report.surgery_date);
-          if (!recordDate) return false;
-
-          console.log(
-            "Comparing date:",
-            report.surgery_date,
-            recordDate >= fromDate && recordDate <= toDate
-          ); // Debug log
-          return recordDate >= fromDate && recordDate <= toDate;
-        });
-      }
+  const filterByVisitDate = () => {
+    if (!fromDate || !toDate) {
+      setFilteredReports(reports);
+      return;
     }
 
-    // Filter by search term if present
-    if (search) {
-      filtered = filtered.filter((report) =>
-        Object.values(report).some(
-          (field) =>
-            typeof field === "string" && field.toLowerCase().includes(search)
-        )
-      );
-    }
+    const fromDateObj = new Date(fromDate);
+    const toDateObj = new Date(toDate);
 
-    // Sort by surgery date
-    filtered.sort((a, b) => {
-      const dateA = parseDate(a.surgery_date);
-      const dateB = parseDate(b.surgery_date);
-      if (!dateA || !dateB) return 0;
-      return dateA - dateB;
+    // Set time to start and end of day
+    fromDateObj.setHours(0, 0, 0, 0);
+    toDateObj.setHours(23, 59, 59, 999);
+
+    const filtered = reports.filter((report) => {
+      // Parse dd/mm/yyyy to Date object
+      const [day, month, year] = report.surgery_date.split("/");
+      const surgeryDate = new Date(year, month - 1, day);
+      surgeryDate.setHours(0, 0, 0, 0);
+
+      return surgeryDate >= fromDateObj && surgeryDate <= toDateObj;
     });
 
-    console.log("Filtered records:", filtered); // Debug log
+    console.log("Date filtering:", {
+      fromDate: fromDateObj,
+      toDate: toDateObj,
+      totalRecords: reports.length,
+      filteredRecords: filtered.length,
+    });
+
     setFilteredReports(filtered);
-  };
-
-  const handleFromDateChange = (e) => {
-    const newFromDate = e.target.value;
-    console.log("New from date:", newFromDate); // Debug log
-    setFromDate(newFromDate);
-    filterRecords(searchTerm, newFromDate, toDate);
-  };
-
-  const handleToDateChange = (e) => {
-    const newToDate = e.target.value;
-    console.log("New to date:", newToDate); // Debug log
-    setToDate(newToDate);
-    filterRecords(searchTerm, fromDate, newToDate);
-  };
-
-  const fetchReportsData = async () => {
-    setLoading(true);
-    try {
-      const url = new URL(
-        `${BASE_URL}/V1/surgeryDetails/listAllSurgeryDetails`
-      );
-
-      if (fromDate && toDate) {
-        const formatDateForApi = (dateStr) => {
-          const date = new Date(dateStr);
-          const day = String(date.getDate()).padStart(2, "0");
-          const month = String(date.getMonth() + 1).padStart(2, "0");
-          const year = date.getFullYear();
-          return `${day}/${month}/${year}`;
-        };
-
-        const params = {
-          from: formatDateForApi(fromDate),
-          to: formatDateForApi(toDate),
-        };
-
-        console.log("API date params:", params); // Debug log
-        Object.keys(params).forEach((key) =>
-          url.searchParams.append(key, params[key])
-        );
-      }
-
-      const response = await fetch(url.toString(), {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      const data = await response.json();
-      console.log("Raw API Response:", data);
-
-      if (response.ok) {
-        const result = Array.isArray(data.data)
-          ? data.data.map((item, index) => ({
-              srNo: index + 1,
-              patient_id: item.patient_id,
-              admission_date: item.admission_date,
-              surgery_date: item.surgery_date,
-              diagnosis: item.plan || "",
-              assistanceDoctor: item.assistanceDoctor || "",
-              opd_feedback: item.opd_feedback || "",
-              // Patient details from nested patientDetail object
-              name: item.patientDetail?.name || "",
-              age: item.patientDetail?.age || "",
-              sex: item.patientDetail?.sex || "",
-              phone: item.patientDetail?.phone || "",
-              mobile_2: item.patientDetail?.mobile_2 || "",
-              occupation: item.patientDetail?.occupation || "",
-              address: item.patientDetail?.address || "",
-              ref: item.patientDetail?.ref || "",
-            }))
-          : [];
-
-        console.log("Mapped Results:", result);
-        setReports(result);
-        setFilteredReports(result);
-        localStorage.setItem("OPDreports", JSON.stringify(result));
-      } else {
-        console.error("Error Response:", {
-          status: response.status,
-          statusText: response.statusText,
-          message: data.message || "Unknown error",
-        });
-      }
-    } catch (error) {
-      console.error("Fetch Error:", error);
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleSearchChange = (e) => {
     const value = e.target.value.toLowerCase();
     setSearchTerm(value);
-    filterRecords(value, fromDate, toDate);
+    filterByVisitDate();
   };
 
   const header = (
@@ -302,7 +194,10 @@ export default function OpdSurgeryReport() {
           <Form.Control
             type="date"
             value={fromDate}
-            onChange={handleFromDateChange}
+            onChange={(e) => {
+              setFromDate(e.target.value);
+              if (toDate) filterByVisitDate();
+            }}
           />
         </Form.Group>
         <Form.Group className="pe-3 mb-0">
@@ -310,15 +205,97 @@ export default function OpdSurgeryReport() {
           <Form.Control
             type="date"
             value={toDate}
-            onChange={handleToDateChange}
+            onChange={(e) => {
+              setToDate(e.target.value);
+              if (fromDate) filterByVisitDate();
+            }}
           />
         </Form.Group>
-        <Button variant="primary" onClick={fetchReportsData}>
-          Refresh Data
+        <Button variant="primary" onClick={filterByVisitDate}>
+          Find Data
         </Button>
       </div>
     </div>
   );
+
+  const fetchReportsData = async () => {
+    setLoading(true);
+    try {
+      const url = new URL(
+        `${BASE_URL}/V1/surgeryDetails/listAllSurgeryDetails`
+      );
+
+      if (fromDate && toDate) {
+        const formatDateForApi = (dateStr) => {
+          const date = new Date(dateStr);
+          const day = String(date.getDate()).padStart(2, "0");
+          const month = String(date.getMonth() + 1).padStart(2, "0");
+          const year = date.getFullYear();
+          return `${day}/${month}/${year}`;
+        };
+
+        const params = {
+          from: formatDateForApi(fromDate),
+          to: formatDateForApi(toDate),
+        };
+        Object.keys(params).forEach((key) =>
+          url.searchParams.append(key, params[key])
+        );
+      }
+
+      const response = await fetch(url.toString(), {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+      console.log("API Response Data:", data); // Debug log
+
+      if (response.ok) {
+        const result = Array.isArray(data.data)
+          ? data.data.map((item, index) => {
+              console.log("Patient Detail:", item.patientDetail); // Debug log
+              return {
+                srNo: index + 1,
+                patient_id: item.patient_id,
+                admission_date: item.admission_date,
+                surgery_date: item.surgery_date,
+                diagnosis: item.plan || "",
+                assistanceDoctor: item.assistanceDoctor || "",
+                opd_feedback: item.opd_feedback || "",
+                // Explicitly log and map the prefix
+                prefix: item.patientDetail?.prefix || "",
+                name: item.patientDetail?.name || "",
+                age: item.patientDetail?.age || "",
+                sex: item.patientDetail?.sex || "",
+                phone: item.patientDetail?.phone || "",
+                mobile_2: item.patientDetail?.mobile_2 || "",
+                occupation: item.patientDetail?.occupation || "",
+                address: item.patientDetail?.address || "",
+                ref: item.patientDetail?.ref || "",
+              };
+            })
+          : [];
+
+        console.log("Mapped Results:", result); // Debug log
+        setReports(result);
+        setFilteredReports(result);
+        localStorage.setItem("OPDreports", JSON.stringify(result));
+      } else {
+        console.error("Error Response:", {
+          status: response.status,
+          statusText: response.statusText,
+          message: data.message || "Unknown error",
+        });
+      }
+    } catch (error) {
+      console.error("Fetch Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div
@@ -385,6 +362,18 @@ export default function OpdSurgeryReport() {
                         field="name"
                         header="Patient Name"
                         sortable
+                        body={(rowData) => {
+                          console.log("Row Data:", rowData); // Debug log
+                          const prefix = rowData.prefix
+                            ? rowData.prefix.toUpperCase()
+                            : "";
+                          const name = rowData.name
+                            ? rowData.name.toUpperCase()
+                            : "";
+                          const fullName = `${prefix} ${name}`.trim();
+                          console.log("Displaying name:", fullName); // Debug log
+                          return fullName;
+                        }}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
