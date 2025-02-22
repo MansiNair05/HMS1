@@ -85,6 +85,7 @@ import Surgery from "./pages/Doctor_Panel/Surgery";
 import DischargeCard from "./pages/Doctor_Panel/DischargeCard";
 
 import DiagnosisReport from "./pages/ManageReports/DiagnosisReport";
+import OpdSurgeryReport from "./pages/ManageReports/OpdSurgeryReport";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -291,6 +292,7 @@ function AppContent() {
         <Route exact path="/dischargeCard" element={<DischargeCard />} />
         
         <Route exact path="/diagnosisReport" element={<DiagnosisReport/>} />
+        <Route exact path="/opdSurgeryReport" element={<OpdSurgeryReport/>}/>
 
         <Route exact path="/login" element={<Login />} />
         <Route exact path="/register" element={<Register />} />

@@ -30,6 +30,8 @@ export default function DiagnosisReport() {
     setLoading(true);
     try {
       const url = new URL(`${BASE_URL}/V1/diagnosis/listAllDiagnosis`);
+      console.log("Fetching data from:", url.toString());
+
       const response = await fetch(url, {
         method: "GET",
         headers: {
@@ -38,38 +40,56 @@ export default function DiagnosisReport() {
       });
 
       const data = await response.json();
-      console.log("Fetched Data:", data); // Log the fetched data
+      console.log("Raw API Response:", data);
 
       if (response.ok) {
-      console.log("Fetched Data:", data.data);
-
         const result = Array.isArray(data.data)
           ? data.data.map((item, index) => ({
-              srNo: index + 1, // Adding serial number
-              ...item,
-              ...(item.patientDetail || {}), // Merge patient details
-              ...(item.patientHistoryDetail || {}), // Merge patient history
+              srNo: index + 1,
+              date_diagnosis: item.date_diagnosis,
+              diagnosis: item.diagnosis,
+              diagnosisAdvice: item.diagnosisAdvice,
+              adviceComment: item.adviceComment,
+              consultantDoctor: item.consultantDoctor,
+              assistanceDoctor: item.assistanceDoctor,
+              feedback: item.feedback,
+              comment: item.comment,
+              // Patient details
+              Uid_no: item.patientDetail?.Uid_no,
+              name: item.patientDetail?.name,
+              age: item.patientDetail?.age,
+              sex: item.patientDetail?.sex,
+              phone: item.patientDetail?.phone,
+              mobile_2: item.patientDetail?.mobile_2,
+              occupation: item.patientDetail?.occupation,
+              address: item.patientDetail?.address,
+              ref: item.patientDetail?.ref,
+              // Patient history details
+              past_history: item.patientHistoryDetail?.past_history,
             }))
           : [];
 
+        console.log("Mapped Results:", result);
         setReports(result);
-        setFilteredReports(result); // Initially, show all data
-        console.log(response);
+        setFilteredReports(result);
       } else {
-        console.error(
-          "Error fetching reports:",
-          data.message || "Unknown error"
-        );
+        console.error("Error Response:", {
+          status: response.status,
+          statusText: response.statusText,
+          message: data.message || "Unknown error",
+        });
       }
     } catch (error) {
-      console.error("Error fetching reports:", error);
+      console.error("Fetch Error:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const feedbackBodyTemplate = (rowData) => {
-    return rowData.feedback ? rowData.feedback : "No comments";
+    return rowData.feedback && rowData.feedback.trim() !== ""
+      ? rowData.feedback
+      : "No comments";
   };
 
   const handleOpenModal = (patientId) => {
@@ -130,6 +150,7 @@ export default function DiagnosisReport() {
   const filterByVisitDate = () => {
     if (!fromDate || !toDate) {
       setFilteredReports(reports);
+      console.log("All Reports:", reports);
       return;
     }
 
@@ -142,6 +163,7 @@ export default function DiagnosisReport() {
     });
 
     setFilteredReports(filteredData);
+    console.log("Filtered Reports:", filteredData);
   };
 
   useEffect(() => {
@@ -149,6 +171,7 @@ export default function DiagnosisReport() {
     if (storedReports) {
       setReports(JSON.parse(storedReports));
       setFilteredReports(JSON.parse(storedReports));
+      console.log("Stored Reports:", JSON.parse(storedReports)); // Log stored reports
     } else {
       fetchReportsData();
     }
@@ -158,15 +181,15 @@ export default function DiagnosisReport() {
     const value = e.target.value.toLowerCase();
     setSearchTerm(value);
 
-    // Filter reports based on fields that START WITH the search term
     const filteredData = reports.filter((report) =>
       Object.values(report).some(
         (field) =>
-          typeof field === "string" && field.toLowerCase().includes(value) // Changed to startsWith
+          typeof field === "string" && field.toLowerCase().includes(value)
       )
     );
 
     setFilteredReports(filteredData);
+    console.log("Search Results:", filteredData);
   };
 
   const header = (
@@ -469,6 +492,7 @@ export default function DiagnosisReport() {
                     <Column
                       field="feedback"
                       header="Feedback"
+                      body={feedbackBodyTemplate}
                       sortable
                       style={{
                         border: "1px solid #90caf9",
