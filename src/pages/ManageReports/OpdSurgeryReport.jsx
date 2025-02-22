@@ -31,13 +31,14 @@ export default function OpdSurgeryReport() {
   const [comments, setComments] = useState(["", "", "", "", ""]);
 
   const handleShowModal = (patientId) => {
+    console.log("Opening modal for patient ID:", patientId);
     setCurrentPatientId(patientId);
     setShowModal(true);
   };
   const feedbackBodyTemplate = (rowData) => {
-    return rowData.feedback && rowData.feedback.trim() !== ""
-      ? rowData.feedback
-      : "No comments";
+    return rowData.opd_feedback && rowData.opd_feedback.trim() !== ""
+      ? rowData.opd_feedback
+      : "No feedback";
   };
   const handleCloseModal = () => {
     setShowModal(false);
@@ -50,17 +51,17 @@ export default function OpdSurgeryReport() {
     event.preventDefault();
 
     const combinedFeedback = Object.entries(comments)
+      .filter(([_, value]) => value)
       .map(([title, comment]) => `${title}: ${comment}`)
-      .join(", ");
+      .join(" | ");
 
     const payload = {
-      patient_id: currentPatientId,
       opd_feedback: combinedFeedback,
     };
 
     try {
       const response = await fetch(
-        `${BASE_URL}/V1/surgery/addPatientComment/${currentPatientId}`,
+        `${BASE_URL}/V1/surgeryDetails/addPatientComment/${currentPatientId}`,
         {
           method: "POST",
           headers: {
@@ -71,6 +72,7 @@ export default function OpdSurgeryReport() {
       );
 
       if (response.ok) {
+        // Update the opd_feedback in local storage
         const updatedReports = reports.map((report) =>
           report.patient_id === currentPatientId
             ? { ...report, opd_feedback: combinedFeedback }
@@ -78,15 +80,15 @@ export default function OpdSurgeryReport() {
         );
         setReports(updatedReports);
         setFilteredReports(updatedReports);
-        localStorage.setItem("reports", JSON.stringify(updatedReports));
+        localStorage.setItem("OPDreports", JSON.stringify(updatedReports));
 
         setShowModal(false);
-        setComments({});
+        setComments({}); // Reset comments
       } else {
-        console.error("Failed to save feedback:", response.statusText);
+        console.error("Failed to save opd_feedback:", response.statusText);
       }
     } catch (error) {
-      console.error("Error saving feedback:", error);
+      console.error("Error saving opd_feedback:", error);
     }
   };
 
@@ -108,23 +110,117 @@ export default function OpdSurgeryReport() {
     }
   }, []);
 
+  const parseDate = (dateStr) => {
+    if (!dateStr) return null;
+    // Handle both formats: dd/mm/yyyy and yyyy-mm-dd
+    let day, month, year;
+    if (dateStr.includes("/")) {
+      [day, month, year] = dateStr.split("/").map((num) => parseInt(num, 10));
+    } else {
+      [year, month, day] = dateStr.split("-").map((num) => parseInt(num, 10));
+    }
+    return new Date(year, month - 1, day);
+  };
+
+  const filterRecords = (search, from, to) => {
+    console.log("Filtering with dates:", from, to); // Debug log
+    let filtered = [...reports];
+
+    // Filter by date range if both dates are selected
+    if (from && to) {
+      const fromDate = parseDate(from);
+      const toDate = parseDate(to);
+
+      if (fromDate && toDate) {
+        // Set time to start and end of days
+        fromDate.setHours(0, 0, 0, 0);
+        toDate.setHours(23, 59, 59, 999);
+
+        console.log("Date range:", fromDate, "to", toDate); // Debug log
+
+        filtered = filtered.filter((report) => {
+          const recordDate = parseDate(report.surgery_date);
+          if (!recordDate) return false;
+
+          console.log(
+            "Comparing date:",
+            report.surgery_date,
+            recordDate >= fromDate && recordDate <= toDate
+          ); // Debug log
+          return recordDate >= fromDate && recordDate <= toDate;
+        });
+      }
+    }
+
+    // Filter by search term if present
+    if (search) {
+      filtered = filtered.filter((report) =>
+        Object.values(report).some(
+          (field) =>
+            typeof field === "string" && field.toLowerCase().includes(search)
+        )
+      );
+    }
+
+    // Sort by surgery date
+    filtered.sort((a, b) => {
+      const dateA = parseDate(a.surgery_date);
+      const dateB = parseDate(b.surgery_date);
+      if (!dateA || !dateB) return 0;
+      return dateA - dateB;
+    });
+
+    console.log("Filtered records:", filtered); // Debug log
+    setFilteredReports(filtered);
+  };
+
+  const handleFromDateChange = (e) => {
+    const newFromDate = e.target.value;
+    console.log("New from date:", newFromDate); // Debug log
+    setFromDate(newFromDate);
+    filterRecords(searchTerm, newFromDate, toDate);
+  };
+
+  const handleToDateChange = (e) => {
+    const newToDate = e.target.value;
+    console.log("New to date:", newToDate); // Debug log
+    setToDate(newToDate);
+    filterRecords(searchTerm, fromDate, newToDate);
+  };
+
   const fetchReportsData = async () => {
     setLoading(true);
     try {
       const url = new URL(
         `${BASE_URL}/V1/surgeryDetails/listAllSurgeryDetails`
       );
-      console.log("Fetching data from:", url.toString());
 
-      const response = await fetch(
-        `${BASE_URL}/V1/surgeryDetails/listAllSurgeryDetails`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      if (fromDate && toDate) {
+        const formatDateForApi = (dateStr) => {
+          const date = new Date(dateStr);
+          const day = String(date.getDate()).padStart(2, "0");
+          const month = String(date.getMonth() + 1).padStart(2, "0");
+          const year = date.getFullYear();
+          return `${day}/${month}/${year}`;
+        };
+
+        const params = {
+          from: formatDateForApi(fromDate),
+          to: formatDateForApi(toDate),
+        };
+
+        console.log("API date params:", params); // Debug log
+        Object.keys(params).forEach((key) =>
+          url.searchParams.append(key, params[key])
+        );
+      }
+
+      const response = await fetch(url.toString(), {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
       const data = await response.json();
       console.log("Raw API Response:", data);
@@ -154,7 +250,7 @@ export default function OpdSurgeryReport() {
         console.log("Mapped Results:", result);
         setReports(result);
         setFilteredReports(result);
-        localStorage.setItem("reports", JSON.stringify(result));
+        localStorage.setItem("OPDreports", JSON.stringify(result));
       } else {
         console.error("Error Response:", {
           status: response.status,
@@ -172,14 +268,7 @@ export default function OpdSurgeryReport() {
   const handleSearchChange = (e) => {
     const value = e.target.value.toLowerCase();
     setSearchTerm(value);
-    setFilteredReports(
-      reports.filter((report) =>
-        Object.values(report).some(
-          (field) =>
-            typeof field === "string" && field.toLowerCase().includes(value)
-        )
-      )
-    );
+    filterRecords(value, fromDate, toDate);
   };
 
   const header = (
@@ -213,7 +302,7 @@ export default function OpdSurgeryReport() {
           <Form.Control
             type="date"
             value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
+            onChange={handleFromDateChange}
           />
         </Form.Group>
         <Form.Group className="pe-3 mb-0">
@@ -221,7 +310,7 @@ export default function OpdSurgeryReport() {
           <Form.Control
             type="date"
             value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
+            onChange={handleToDateChange}
           />
         </Form.Group>
         <Button variant="primary" onClick={fetchReportsData}>
@@ -416,7 +505,10 @@ export default function OpdSurgeryReport() {
                           <Button
                             variant="danger"
                             size="sm"
-                            onClick={() => handleShowModal(rowData.patient_id)}
+                            onClick={() => {
+                              console.log("Opening comments for:", rowData);
+                              handleShowModal(rowData.patient_id);
+                            }}
                           >
                             <i className="fa fa-envelope"></i>
                           </Button>
