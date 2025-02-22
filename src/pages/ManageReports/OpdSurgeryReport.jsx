@@ -98,7 +98,7 @@ export default function OpdSurgeryReport() {
   const [toDate, setToDate] = useState("");
 
   useEffect(() => {
-    const storedReports = localStorage.getItem("reports");
+    const storedReports = localStorage.getItem("OPDreports");
     if (storedReports) {
       setReports(JSON.parse(storedReports));
       setFilteredReports(JSON.parse(storedReports));
@@ -136,7 +136,7 @@ export default function OpdSurgeryReport() {
               patient_id: item.patient_id,
               admission_date: item.admission_date,
               surgery_date: item.surgery_date,
-              plan: item.plan || "",
+              diagnosis: item.plan || "",
               assistanceDoctor: item.assistanceDoctor || "",
               opd_feedback: item.opd_feedback || "",
               // Patient details from nested patientDetail object

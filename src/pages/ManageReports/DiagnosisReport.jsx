@@ -46,6 +46,7 @@ export default function DiagnosisReport() {
         const result = Array.isArray(data.data)
           ? data.data.map((item, index) => ({
               srNo: index + 1,
+              patient_id: item.patient_id,
               date_diagnosis: item.date_diagnosis,
               diagnosis: item.diagnosis,
               diagnosisAdvice: item.diagnosisAdvice,
@@ -72,6 +73,7 @@ export default function DiagnosisReport() {
         console.log("Mapped Results:", result);
         setReports(result);
         setFilteredReports(result);
+        localStorage.setItem("diagnosisReports", JSON.stringify(result));
       } else {
         console.error("Error Response:", {
           status: response.status,
@@ -92,8 +94,9 @@ export default function DiagnosisReport() {
       : "No comments";
   };
 
-  const handleOpenModal = (patientId) => {
-    setCurrentPatientId(patientId);
+  const handleOpenModal = (patient_id) => {
+    console.log("handleopen", patient_id);
+    setCurrentPatientId(patient_id);
     setShowModal(true);
   };
 
@@ -115,6 +118,7 @@ export default function DiagnosisReport() {
       feedback: combinedFeedback,
     };
 
+    console.log("patientId", currentPatientId);
     try {
       const response = await fetch(
         `${BASE_URL}/V1/diagnosis/addDoctorComment/${currentPatientId}`,
@@ -128,7 +132,7 @@ export default function DiagnosisReport() {
       );
 
       if (response.ok) {
-        // Save feedback to local storage
+        // Update feedback in local storage using patient_id
         const updatedReports = reports.map((report) =>
           report.patient_id === currentPatientId
             ? { ...report, feedback: combinedFeedback }
@@ -136,7 +140,10 @@ export default function DiagnosisReport() {
         );
         setReports(updatedReports);
         setFilteredReports(updatedReports);
-        localStorage.setItem("reports", JSON.stringify(updatedReports));
+        localStorage.setItem(
+          "diagnosisReports",
+          JSON.stringify(updatedReports)
+        );
 
         setShowModal(false);
       } else {
@@ -167,7 +174,7 @@ export default function DiagnosisReport() {
   };
 
   useEffect(() => {
-    const storedReports = localStorage.getItem("reports");
+    const storedReports = localStorage.getItem("diagnosisReports");
     if (storedReports) {
       setReports(JSON.parse(storedReports));
       setFilteredReports(JSON.parse(storedReports));
@@ -507,7 +514,11 @@ export default function DiagnosisReport() {
                         <Button
                           variant="danger"
                           size="sm"
-                          onClick={() => handleOpenModal(rowData.patient_id)}
+                          onClick={() => {
+                            console.log("Rowdata", rowData);
+                            handleOpenModal(rowData.patient_id);
+                            console.log("PATIENT ID", rowData.patient_id);
+                          }}
                         >
                           <i className="fa fa-envelope"></i>
                         </Button>
