@@ -60,7 +60,7 @@ export default function OpdSurgeryReport() {
 
     try {
       const response = await fetch(
-        `${BASE_URL}/V1/surgery/updateSurgeryFeedback/${currentPatientId}`,
+        `${BASE_URL}/V1/surgery/addPatientComment/${currentPatientId}`,
         {
           method: "POST",
           headers: {
@@ -116,12 +116,15 @@ export default function OpdSurgeryReport() {
       );
       console.log("Fetching data from:", url.toString());
 
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `${BASE_URL}/V1/surgeryDetails/listAllSurgeryDetails`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       const data = await response.json();
       console.log("Raw API Response:", data);
