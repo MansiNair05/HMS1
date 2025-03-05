@@ -13,10 +13,21 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.158:5000/api";
+const BASE_URL = "http://192.168.90.238:5000/api";
 
-const SurgeryTabs = () => {
+const SurgeryTabs = ({
+  selectedOptions,
+  setSelectedOptions,
+  isDisabled,
+  formData,
+  setFormData,
+}) => {
   const [key, setKey] = useState("piles");
+
+  // Ensure formData and surgeryTabs exist
+  if (!formData || !formData.surgeryTabs) {
+    return null; // Or a loading state
+  }
 
   const tabData = [
     {
@@ -72,13 +83,13 @@ const SurgeryTabs = () => {
       id: "uninary",
       title: "Uninary",
       checkboxes: ["Uninary Incontinence"],
-      textarea: "uninary_duration",
+      textarea: "Urinary_incontinence_duration",
     },
     {
       id: "fecal",
       title: "Fecal",
       checkboxes: ["Fecal Incontinence"],
-      textarea: "fecal_duration",
+      textarea: "Fecal_incontinence_duration",
     },
     {
       id: "urology",
@@ -94,7 +105,6 @@ const SurgeryTabs = () => {
         "Stream of urine",
         "Nocturia",
       ],
-      textarea: "", // No textarea for Urology tab
     },
     {
       id: "ods",
@@ -106,159 +116,107 @@ const SurgeryTabs = () => {
         "Enema/laxative",
         "Fragmented Defecation",
       ],
-      textarea: "ods_duration",
-      bowelHabitsTextarea: "bowel_habits", // Added Bowel Habits textarea
+      textareas: [
+        { name: "ods_duration", placeholder: "Duration" },
+        { name: "bowel_habits", placeholder: "Bowel Habits" },
+      ],
     },
     {
       id: "pilonidal",
       title: "Pilonidal Sinus",
       checkboxes: [], // No checkboxes for this tab
-      pilonidalSinusTextarea: "pilonidal_sinus",
+      textarea: "pilonidalsinus",
     },
     {
       id: "circumcision",
       title: "Circumcision",
       checkboxes: [], // No checkboxes for this tab
-      circumcisionTextarea: "circumcision",
+      textarea: "circumcision",
     },
   ];
 
-  return (
-    <div
-      style={{
-        backgroundColor: "#fff",
-        borderRadius: "8px",
-        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-        padding: "20px",
-      }}
-    >
-      <Tabs
-        activeKey={key}
-        onSelect={(k) => setKey(k)}
-        style={{
-          borderBottom: "2px solid #e0f7fa",
-        }}
-      >
-        {tabData.map((tab) => (
-          <Tab
-            eventKey={tab.id}
-            title={tab.title}
-            key={tab.id}
-            style={{
-              padding: "15px",
-            }}
-          >
-            <div
-              style={{
-                padding: "20px",
-                backgroundColor: "#fff",
-                borderRadius: "0 0 8px 8px",
-              }}
-            >
-              <Row>
-                {tab.checkboxes.map((item, index) => (
-                  <Col md={4} key={index} style={{ marginBottom: "10px" }}>
-                    <Form.Check
-                      type="checkbox"
-                      id={`${tab.id}-${index}`}
-                      label={item}
-                      name={`${tab.id}[]`}
-                      value={item}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                      }}
-                    />
-                  </Col>
-                ))}
-              </Row>
+  const handleCheckboxChange = (e) => {
+    const { value, checked } = e.target;
+    setSelectedOptions((prev) =>
+      checked ? [...prev, value] : prev.filter((item) => item !== value)
+    );
+  };
 
-              {/* Textareas in a row if they exist */}
-              {(tab.textarea ||
-                tab.bowelHabitsTextarea ||
-                tab.pilonidalSinusTextarea ||
-                tab.circumcisionTextarea) && (
-                <Row style={{ marginTop: "20px" }}>
-                  {tab.bowelHabitsTextarea && (
-                    <Col md={6}>
-                      <Form.Control
-                        as="textarea"
-                        name={tab.bowelHabitsTextarea}
-                        placeholder="Bowel Habits"
-                        style={{
-                          width: "100%",
-                          minHeight: "80px",
-                          padding: "10px",
-                          borderRadius: "4px",
-                          border: "1px solid #ced4da",
-                        }}
-                      />
-                    </Col>
-                  )}
-                  {tab.textarea && (
-                    <Col md={6}>
-                      <Form.Control
-                        as="textarea"
-                        name={tab.textarea}
-                        placeholder="Duration"
-                        style={{
-                          width: "100%",
-                          minHeight: "80px",
-                          padding: "10px",
-                          borderRadius: "4px",
-                          border: "1px solid #ced4da",
-                        }}
-                      />
-                    </Col>
-                  )}
-                  {tab.pilonidalSinusTextarea && (
-                    <Col md={12}>
-                      <Form.Control
-                        as="textarea"
-                        name={tab.pilonidalSinusTextarea}
-                        placeholder="Pilonidal Sinus"
-                        style={{
-                          width: "100%",
-                          minHeight: "80px",
-                          padding: "10px",
-                          borderRadius: "4px",
-                          border: "1px solid #ced4da",
-                        }}
-                      />
-                    </Col>
-                  )}
-                  {tab.circumcisionTextarea && (
-                    <Col md={12}>
-                      <Form.Control
-                        as="textarea"
-                        name={tab.circumcisionTextarea}
-                        placeholder="Circumcision"
-                        style={{
-                          width: "100%",
-                          minHeight: "80px",
-                          padding: "10px",
-                          borderRadius: "4px",
-                          border: "1px solid #ced4da",
-                        }}
-                      />
-                    </Col>
-                  )}
-                </Row>
-              )}
-            </div>
-          </Tab>
-        ))}
-      </Tabs>
-    </div>
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevState) => ({
+      ...prevState,
+      surgeryTabs: {
+        ...prevState.surgeryTabs,
+        [name]: value,
+      },
+    }));
+  };
+
+  return (
+    <Tabs
+      activeKey={key}
+      onSelect={(k) => setKey(k)}
+      style={{ borderBottom: "2px solid #e0f7fa" }}
+    >
+      {tabData.map((tab) => (
+        <Tab
+          eventKey={tab.id}
+          title={tab.title}
+          key={tab.id}
+          style={{ padding: "15px" }}
+        >
+          <Row>
+            {tab.checkboxes.map((item, index) => (
+              <Col md={4} key={index} style={{ marginBottom: "10px" }}>
+                <Form.Check
+                  type="checkbox"
+                  id={`${tab.id}-${index}`}
+                  label={item}
+                  value={item}
+                  checked={
+                    Array.isArray(selectedOptions) &&
+                    selectedOptions.includes(item)
+                  } // Ensure selectedOptions is an array
+                  onChange={handleCheckboxChange}
+                  disabled={isDisabled}
+                />
+              </Col>
+            ))}
+          </Row>
+
+          {tab.textarea && (
+            <Row style={{ marginTop: "20px" }}>
+              <Col md={6}>
+                <Form.Control
+                  as="textarea"
+                  name={tab.textarea}
+                  placeholder="Duration"
+                  value={formData.surgeryTabs[tab.textarea] || ""}
+                  onChange={handleInputChange}
+                  disabled={isDisabled}
+                  style={{
+                    width: "100%",
+                    minHeight: "80px",
+                    padding: "10px",
+                    borderRadius: "4px",
+                    border: "1px solid #ced4da",
+                  }}
+                />
+              </Col>
+            </Row>
+          )}
+        </Tab>
+      ))}
+    </Tabs>
   );
 };
 
-const PatientHistory = () => {
+export default function PatientHistory() {
   const [patientId, setPatientId] = useState(
     localStorage.getItem("selectedPatientId")
   );
-  const [showTextareas, setShowTextareas] = useState({}); // Track visibility of textareas
+  const [showTextareas, setShowTextareas] = useState({});
   const [selectedFile, setSelectedFile] = useState(null);
   const [formData, setFormData] = useState({
     patient_date: "",
@@ -290,6 +248,7 @@ const PatientHistory = () => {
       dm: false,
       htn: false,
       heartDisease: false,
+      other: "",
     },
     past_history: {
       dm: "",
@@ -337,14 +296,27 @@ const PatientHistory = () => {
       { id: 1, name: "", indication: "", since: "" },
       { id: 2, name: "", indication: "", since: "" },
     ],
+    surgeryTabs: {
+      piles_duration: "",
+      fistula_duration: "",
+      hernia_duration: "",
+      varicose_duration: "",
+      uninary_duration: "",
+      fecal_duration: "",
+      urology_duration: "",
+      ods_duration: "",
+      bowel_habits: "",
+      pilonidalsinus: "",
+      circumcision: "",
+    },
   });
 
   const [errors, setErrors] = useState({});
   const [patientHistory, setPatientHistory] = useState([]);
   const [assistantsDoctor, setAssistantsDoctor] = useState([]);
-  const [showEditButton, setShowEditButton] = useState(false); // Controls visibility of "Edit Diagnosis"
-  const [isDisabled, setIsDisabled] = useState(false); // Controls edit mode
-  const [disablePreviousButton, setDisablePreviousButton] = useState(false); // Disables "Previous Records" after clicking
+  const [showEditButton, setShowEditButton] = useState(false);
+  const [isDisabled, setIsDisabled] = useState(false);
+  const [disablePreviousButton, setDisablePreviousButton] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState([]); // Track selected checkboxes
 
   useEffect(() => {
@@ -386,7 +358,6 @@ const PatientHistory = () => {
         if (data?.data?.patientHistory?.length > 0) {
           const patientData = data.data.patientHistory[0];
 
-          // Safely update formData with nested objects
           setFormData((prevState) => ({
             ...prevState,
             ...patientData,
@@ -442,7 +413,6 @@ const PatientHistory = () => {
     fetchPatientData();
   }, [patientId]);
 
-  // Fetch options from API
   useEffect(() => {
     const fetchDropdownOptions = async () => {
       try {
@@ -476,52 +446,72 @@ const PatientHistory = () => {
 
   const handleInputChange = (e, id, field) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: value,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+
+    if (name === "family_history") {
+      setFormData((prevState) => ({
+        ...prevState,
+        family_history: {
+          ...prevState.family_history,
+          other: value,
+        },
+      }));
+    } else {
+      setFormData((prevState) => ({
+        ...prevState,
+        [name]: type === "checkbox" ? checked : value,
+      }));
+    }
     if (id && field) {
-      // Medication update
       const updatedMedications = formData.medications.map((med) =>
         med.id === id ? { ...med, [field]: value } : med
       );
       setFormData({ ...formData, medications: updatedMedications });
     } else {
-      // General form field update
       setFormData({ ...formData, [name]: value });
     }
   };
 
-  // Handle File Selection
   const handleFileChange = (event) => {
-    const file = event.target.files[0]; // Get the selected file
+    const file = event.target.files[0];
     setSelectedFile(file);
   };
 
- const handleCheckboxChange = (e) => {
-   const { name, checked } = e.target;
-   const [category, field] = name.split(".");
+  const handleCheckboxChange = (e) => {
+    const { name, checked } = e.target;
+    const [category, field] = name.split(".");
+    const [parent, child] = name.split(".");
 
-   setFormData((prev) => ({
-     ...prev,
-     [category]: {
-       ...prev[category],
-       [field]: checked,
-     },
-   }));
- };
-
+    if (name === "family_history") {
+      setFormData((prevState) => ({
+        ...prevState,
+        family_history: {
+          ...prevState.family_history,
+          [child]: checked,
+        },
+      }));
+    } else if (child) {
+      setFormData({
+        ...formData,
+        [parent]: { ...formData[parent], [child]: checked },
+      });
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [category]: {
+          ...prev[category],
+          [field]: checked,
+        },
+      }));
+    }
+  };
 
   const handleHistoryClick = async () => {
     const patientId = localStorage.getItem("selectedPatientId");
 
     try {
       console.log("Form data before saving:", formData);
-      // Format the data before sending
       const formattedData = {
         ...formData,
-        // Convert objects to strings using JSON.stringify
         general_history: JSON.stringify(formData.general_history),
         past_history: JSON.stringify(formData.past_history),
         habits: JSON.stringify(formData.habits),
@@ -531,11 +521,10 @@ const PatientHistory = () => {
         systematicExamination: JSON.stringify(formData.systematicExamination),
         family_history: JSON.stringify(formData.family_history),
         advice: JSON.stringify(formData.advice),
-        selectedOptions,
+        name: selectedOptions.name,
         patientId,
       };
 
-      // First, save the patient history data
       const saveResponse = await fetch(
         `${BASE_URL}/V1/patientHistory/addPatientHistory/${patientId}`,
         {
@@ -552,7 +541,6 @@ const PatientHistory = () => {
         throw new Error(errorData.message || "Failed to save patient history");
       }
 
-      // Then, update the historychk
       const historyResponse = await fetch(
         `${BASE_URL}/V1/patientHistory/updateHistoryChk/${patientId}`,
         {
@@ -566,14 +554,14 @@ const PatientHistory = () => {
         throw new Error("Failed to update history check");
       }
 
-      // If both operations are successful, show success message
       alert("Patient history saved successfully!");
     } catch (error) {
       console.error("Error saving patient history:", error);
       alert("Failed to save patient history. Please try again.");
     }
   };
-  const [previousRecordDate, setPreviousRecordDate] = useState(""); // Store the previous record date
+
+  const [previousRecordDate, setPreviousRecordDate] = useState("");
 
   const fetchPreviousRecords = async (prevData) => {
     try {
@@ -584,7 +572,7 @@ const PatientHistory = () => {
       );
 
       const result = await response.json();
-      console.log("on click Fetched Data:", result.data.patientHistory); // Log API response
+      console.log("on click Fetched Data:", result.data.patientHistory);
 
       if (!response.ok) {
         throw new Error("Failed to fetch previous records");
@@ -592,78 +580,83 @@ const PatientHistory = () => {
 
       const patientHistory = result.data.patientHistory;
 
-      // Set previous record date before updating formData
       setPreviousRecordDate(
         patientHistory.date_patientHistory || prevData.date_patientHistory || ""
       );
+      const symptomsArray = patientHistory.symptoms;
 
-      // Update formData with all the fields from the API
       setFormData((prevData) => ({
         ...prevData,
-        // Basic details
         patient_date: patientHistory.patient_date || "",
         height: patientHistory.height || "",
         weight: patientHistory.weight || "",
         painScale: patientHistory.painScale || "",
-
-        // Vital Signs
         vitalSigns: {
           ...prevData.vitalSigns,
-          BP: patientHistory.vitalSigns?.BP || "",
-          Pulse: patientHistory.vitalSigns?.Pulse || "",
-          RR: patientHistory.vitalSigns?.RR || "",
+          BP: patientHistory.BP || "",
+          Pulse: patientHistory.Pulse || "",
+          RR: patientHistory.RR || "",
         },
-
-        // Systematic Examination
         systematicExamination: {
           ...prevData.systematicExamination,
-          RS: patientHistory.systematicExamination?.RS || "",
-          CVS: patientHistory.systematicExamination?.CVS || "",
-          CNS: patientHistory.systematicExamination?.CNS || "",
-          PA: patientHistory.systematicExamination?.PA || "",
+          RS: patientHistory.RS || "",
+          CVS: patientHistory.CVS || "",
+          CNS: patientHistory.CNS || "",
+          PA: patientHistory.PA || "",
         },
-
-        // General History
         general_history: {
           ...prevData.general_history,
-          hoWtLoss: patientHistory.general_history?.hoWtLoss || false,
-          decAppetite: patientHistory.general_history?.decAppetite || false,
+          hoWtLoss: patientHistory.hoWtLoss || false,
+          decAppetite: patientHistory.decAppetite || false,
           hoStrainingForurination:
-            patientHistory.general_history?.hoStrainingForurination || false,
-          acidity: patientHistory.general_history?.acidity || false,
-          gas: patientHistory.general_history?.gas || false,
-          bloating: patientHistory.general_history?.bloating || false,
+            patientHistory.hoStrainingForurination || false,
+          acidity: patientHistory.acidity || false,
+          gas: patientHistory.gas || false,
+          bloating: patientHistory.bloating || false,
         },
-
-        // Family History
+        symptoms: {
+          ...prevData.symptoms,
+          pusDischarge: symptomsArray.includes("Pus Discharge"),
+          boil: symptomsArray.includes("Boil"),
+          wateryDischarge: symptomsArray.includes("Watery Discharge"),
+          swellingAnalRegion: symptomsArray.includes(
+            "Swelling near anal region"
+          ),
+        },
         family_history: {
           ...prevData.family_history,
-          piles: patientHistory.family_history?.piles || false,
-          constipation: patientHistory.family_history?.constipation || false,
-          dm: patientHistory.family_history?.dm || false,
-          htn: patientHistory.family_history?.htn || false,
-          heartDisease: patientHistory.family_history?.heartDisease || false,
+          piles: Boolean(patientHistory.family_history?.includes("Piles")),
+          constipation: Boolean(
+            patientHistory.family_history?.includes("Constipation")
+          ),
+          dm: Boolean(patientHistory.family_history?.includes("DM")),
+          htn: Boolean(patientHistory.family_history?.includes("HTN")),
+          heartDisease: Boolean(
+            patientHistory.family_history?.includes("Heart Disease")
+          ),
+          other: patientHistory.family_history || "",
         },
-
-        // Past History
         past_history: {
           ...prevData.past_history,
-          dm: patientHistory.past_history?.dm || "",
-          htn: patientHistory.past_history?.htn || "",
-          brAsthma: patientHistory.past_history?.brAsthma || "",
-          thyroid: patientHistory.past_history?.thyroid || "",
+          dm: patientHistory.dm || "",
+          htn: patientHistory.htn || "",
+          brAsthma: patientHistory.brAsthma || "",
+          thyroid: patientHistory.thyroid || "",
         },
-
-        // Habits
         habits: {
           ...prevData.habits,
-          smoking: patientHistory.habits?.smoking || "",
-          alcohol: patientHistory.habits?.alcohol || "",
-          tobacco: patientHistory.habits?.tobacco || "",
-          drugs: patientHistory.habits?.drugs || "",
+          smoking: Boolean(patientHistory.habits?.includes("Smoking")),
+          alcohol: Boolean(patientHistory.habits?.includes("Alcohol")),
+          tobacco: Boolean(patientHistory.habits?.includes("Tobacco")),
+          drugs: Boolean(patientHistory.habits?.includes("Drugs")),
         },
-
-        // Surgery Tabs Data
+        surgeryTabs: {
+          ...prevData.surgeryTabs,
+          piles_duration: patientHistory.piles_duration || "",
+          fistula_duration: patientHistory.fistula_duration || "",
+          hernia_duration: patientHistory.hernia_duration || "",
+          varicose_duration: patientHistory.varicose_duration || "",
+        },
         piles: patientHistory.piles || [],
         fistula: patientHistory.fistula || [],
         hernia: patientHistory.hernia || [],
@@ -674,65 +667,53 @@ const PatientHistory = () => {
         ods: patientHistory.ods || [],
         pilonidal: patientHistory.pilonidal || "",
         circumcision: patientHistory.circumcision || "",
-
-        // Other fields
         drugs_allergy: patientHistory.drugs_allergy || "",
         pastSurgicalHistory: patientHistory.pastSurgicalHistory || "",
         anyOtherComplaints: patientHistory.anyOtherComplaints || "",
         presentComplaints: patientHistory.presentComplaints || "",
-
-        // Ongoing Medicines
         ongoing_medicines: {
           ...prevData.ongoing_medicines,
-          Clopidogrel: patientHistory.ongoing_medicines?.Clopidogrel || false,
-          aspirin: patientHistory.ongoing_medicines?.aspirin || false,
-          warfarin: patientHistory.ongoing_medicines?.warfarin || false,
+          Clopidogrel: Boolean(
+            patientHistory.medication_on?.includes("Clopidogrel")
+          ),
+          aspirin: Boolean(patientHistory.medication_on?.includes("Aspirin")),
+          warfarin: Boolean(patientHistory.medication_on?.includes("Warfarin")),
         },
-
         otherongoingmedi: patientHistory.otherongoingmedi || "",
-
-        // Investigation
         investigation: {
           ...prevData.investigation,
-          hb: patientHistory.investigation?.hb || false,
-          bslr: patientHistory.investigation?.bslr || false,
-          bleedingTimeBt: patientHistory.investigation?.bleedingTimeBt || false,
-          clottingTimeBt: patientHistory.investigation?.clottingTimeBt || false,
-          ptInr: patientHistory.investigation?.ptInr || false,
-          hiv: patientHistory.investigation?.hiv || false,
-          hbsag: patientHistory.investigation?.hbsag || false,
-          srCreatinine: patientHistory.investigation?.srCreatinine || false,
-          vitB: patientHistory.investigation?.vitB || false,
+          hb: Boolean(patientHistory.investigation?.includes("HB")),
+          bslr: Boolean(patientHistory.investigation?.includes("BSLR")),
+          bleedingTimeBt: Boolean(patientHistory.investigation?.includes("BT")),
+          clottingTimeBt: Boolean(patientHistory.investigation?.includes("CT")),
+          ptInr: Boolean(patientHistory.investigation?.includes("PT/INR")),
+          hiv: Boolean(patientHistory.investigation?.includes("HIV")),
+          hbsag: Boolean(patientHistory.investigation?.includes("HBsAg")),
+          srCreatinine: Boolean(
+            patientHistory.investigation?.includes("Sr. Creatinine")
+          ),
+          vitB: Boolean(patientHistory.investigation?.includes("Vit B12")),
         },
         investigationComments: patientHistory.investigationComments || {},
         knowncaseof: patientHistory.knowncaseof || "",
-
-        // Advice
         advice: {
           ...prevData.advice,
-          mrd: patientHistory.advice?.mrd || false,
-          manoBf: patientHistory.advice?.manoBf || false,
-          coloGastro: patientHistory.advice?.coloGastro || false,
-          diet: patientHistory.advice?.diet || false,
-          b: patientHistory.advice?.b || false,
-          d: patientHistory.advice?.d || false,
+          mrd: patientHistory.mrd || false,
+          manoBf: patientHistory.manoBf || false,
+          coloGastro: patientHistory.coloGastro || false,
+          diet: patientHistory.diet || false,
+          b: patientHistory.b || false,
+          d: patientHistory.d || false,
         },
-
-        // Medications
         medications: patientHistory.medications || [
           { id: 1, name: "", indication: "", since: "" },
           { id: 2, name: "", indication: "", since: "" },
         ],
       }));
 
-      // Also update selected checkboxes for surgery tabs
       setSelectedOptions(patientHistory.selectedOptions || []);
-
-      // Show the "Edit Diagnosis" button
       setShowEditButton(true);
-      // Disable "Previous Records" button after clicking it
       setDisablePreviousButton(true);
-      // Disable form fields
       setIsDisabled(true);
 
       console.log("Form data updated with previous records");
@@ -742,36 +723,19 @@ const PatientHistory = () => {
     }
   };
 
-  // Enable form editing when "Edit Diagnosis" is clicked
   const handleEditPatientHistory = () => {
     setIsDisabled(false);
     alert("Editing mode enabled. You can now modify the diagnosis details.");
   };
 
   const handleNewRecord = () => {
-    setFormData({
-      // Basic details
+    const newData = {
       patient_date: new Date().toISOString().split("T")[0],
       height: "",
       weight: "",
       painScale: "",
-
-      // Vital Signs
-      vitalSigns: {
-        BP: "",
-        Pulse: "",
-        RR: "",
-      },
-
-      // Systematic Examination
-      systematicExamination: {
-        RS: "",
-        CVS: "",
-        CNS: "",
-        PA: "",
-      },
-
-      // General History
+      vitalSigns: { BP: "", Pulse: "", RR: "" },
+      systematicExamination: { RS: "", CVS: "", CNS: "", PA: "" },
       general_history: {
         hoWtLoss: false,
         decAppetite: false,
@@ -780,33 +744,16 @@ const PatientHistory = () => {
         gas: false,
         bloating: false,
       },
-
-      // Family History
       family_history: {
         piles: false,
         constipation: false,
         dm: false,
         htn: false,
         heartDisease: false,
+        other: "",
       },
-
-      // Past History
-      past_history: {
-        dm: "",
-        htn: "",
-        brAsthma: "",
-        thyroid: "",
-      },
-
-      // Habits
-      habits: {
-        smoking: "",
-        alcohol: "",
-        tobacco: "",
-        drugs: "",
-      },
-
-      // Surgery Tabs Data
+      past_history: { dm: "", htn: "", brAsthma: "", thyroid: "" },
+      habits: { smoking: "", alcohol: "", tobacco: "", drugs: "" },
       piles: [],
       fistula: [],
       hernia: [],
@@ -817,23 +764,16 @@ const PatientHistory = () => {
       ods: [],
       pilonidal: "",
       circumcision: "",
-
-      // Other fields
       drugs_allergy: "",
       pastSurgicalHistory: "",
       anyOtherComplaints: "",
       presentComplaints: "",
-
-      // Ongoing Medicines
       ongoing_medicines: {
         Clopidogrel: false,
         aspirin: false,
         warfarin: false,
       },
-
       otherongoingmedi: "",
-
-      // Investigation
       investigation: {
         hb: false,
         bslr: false,
@@ -845,10 +785,7 @@ const PatientHistory = () => {
         srCreatinine: false,
         vitB: false,
       },
-
       knowncaseof: "",
-
-      // Advice
       advice: {
         mrd: false,
         manoBf: false,
@@ -857,24 +794,29 @@ const PatientHistory = () => {
         b: false,
         d: false,
       },
-
-      // Medications
       medications: [
         { id: 1, name: "", indication: "", since: "" },
         { id: 2, name: "", indication: "", since: "" },
       ],
-    });
+      surgeryTabs: {
+        piles_duration: "",
+        fistula_duration: "",
+        hernia_duration: "",
+        varicose_duration: "",
+        uninary_duration: "",
+        fecal_duration: "",
+        urology_duration: "",
+        ods_duration: "",
+        bowel_habits: "",
+        pilonidal_sinus: "",
+      },
+    };
 
-    // Reset selected options for surgery tabs
+    console.log("New Form Data:", newData);
+    setFormData(newData);
     setSelectedOptions([]);
-
-    // Hide "Edit Diagnosis" button when creating a new record
     setShowEditButton(false);
-
-    // Enable the "Previous Records" button when creating a new record
     setDisablePreviousButton(false);
-
-    // Allow editing for a new record
     setIsDisabled(false);
 
     alert("New Record: You can now enter new data.");
@@ -900,8 +842,8 @@ const PatientHistory = () => {
                 borderRadius: "12px",
                 boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
                 borderColor: "#00bcd4",
-                background: "white",
-                border: "1px solid #00bcd4",
+                background: "#f8f9fa",
+                border: "3px solid #00bcd4",
               }}
             >
               <Card.Body>
@@ -926,7 +868,6 @@ const PatientHistory = () => {
                     >
                       Previous Records
                     </button>
-                    {/* Show Edit Diagnosis Button only after clicking "Previous Records" */}
                     {showEditButton && (
                       <button
                         type="button"
@@ -938,7 +879,6 @@ const PatientHistory = () => {
                       </button>
                     )}
                   </div>
-                  {/* Show the previous record date when available */}
                   {previousRecordDate && (
                     <div style={{ marginTop: "15px" }}>
                       <strong>Previous Record Date: </strong>
@@ -946,7 +886,6 @@ const PatientHistory = () => {
                     </div>
                   )}
                   <br />
-                  {/* Row 1: Patient Info */}
                   <Row>
                     <Col md={2} className="mb-4">
                       <Form.Group className="mb-3">
@@ -999,8 +938,7 @@ const PatientHistory = () => {
                             isInvalid={!!errors.height}
                             placeholder="Enter height"
                           />
-                          <span className="ms-2 align-self-center">FEET</span>{" "}
-                          {/* Text outside the box */}
+                          <span className="ms-2 align-self-center">FEET</span>
                         </div>
                         <Form.Control.Feedback type="invalid">
                           {errors.height}
@@ -1024,8 +962,7 @@ const PatientHistory = () => {
                             isInvalid={!!errors.weight}
                             placeholder="Enter weight"
                           />
-                          <span className="ms-2 align-self-center">kgs</span>{" "}
-                          {/* Text outside the box */}
+                          <span className="ms-2 align-self-center">kgs</span>
                         </div>
                         <Form.Control.Feedback type="invalid">
                           {errors.weight}
@@ -1034,9 +971,13 @@ const PatientHistory = () => {
                     </Col>
                   </Row>
                   <br />
-                  <SurgeryTabs />
-                  <br />
-                  <br />
+                  <SurgeryTabs
+                    selectedOptions={selectedOptions}
+                    setSelectedOptions={setSelectedOptions}
+                    isDisabled={isDisabled}
+                    formData={formData}
+                    setFormData={setFormData}
+                  />
                   <Row>
                     <Col md={3}>
                       <Form.Group>
@@ -1067,7 +1008,6 @@ const PatientHistory = () => {
                   <br />
                   <Row>
                     <Col md={6}>
-                      {/* Row 3: Vital Signs */}
                       <Form.Label>Vital Signs:</Form.Label>
                       <Row>
                         <Col md={3}>
@@ -1078,15 +1018,19 @@ const PatientHistory = () => {
                                 type="text"
                                 name="vitalSigns.BP"
                                 value={formData.vitalSigns.BP}
-                                onChange={(e) =>
+                                onChange={(e) => {
+                                  const value = e.target.value.replace(
+                                    /\D/g,
+                                    ""
+                                  );
                                   setFormData((prev) => ({
                                     ...prev,
                                     vitalSigns: {
                                       ...prev.vitalSigns,
-                                      BP: e.target.value,
+                                      BP: value,
                                     },
-                                  }))
-                                }
+                                  }));
+                                }}
                               />
                               <span className="ms-2">mm of hg</span>
                             </div>
@@ -1100,15 +1044,19 @@ const PatientHistory = () => {
                                 type="text"
                                 name="vitalSigns.Pulse"
                                 value={formData.vitalSigns.Pulse}
-                                onChange={(e) =>
+                                onChange={(e) => {
+                                  const value = e.target.value.replace(
+                                    /\D/g,
+                                    ""
+                                  );
                                   setFormData((prev) => ({
                                     ...prev,
                                     vitalSigns: {
                                       ...prev.vitalSigns,
-                                      Pulse: e.target.value,
+                                      Pulse: value,
                                     },
-                                  }))
-                                }
+                                  }));
+                                }}
                               />
                               <span className="ms-2">/Min</span>
                             </div>
@@ -1117,21 +1065,27 @@ const PatientHistory = () => {
                         <Col md={3}>
                           <Form.Group>
                             <Form.Label>RR:</Form.Label>
-                            <Form.Control
-                              type="text"
-                              name="vitalSigns.RR"
-                              value={formData.vitalSigns.RR}
-                              onChange={(e) =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  vitalSigns: {
-                                    ...prev.vitalSigns,
-                                    RR: e.target.value,
-                                  },
-                                }))
-                              }
-                            />
-                            <span className="ms-2">/Min</span>
+                            <div className="d-flex align-items">
+                              <Form.Control
+                                type="text"
+                                name="vitalSigns.RR"
+                                value={formData.vitalSigns.RR}
+                                onChange={(e) => {
+                                  const value = e.target.value.replace(
+                                    /\D/g,
+                                    ""
+                                  );
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    vitalSigns: {
+                                      ...prev.vitalSigns,
+                                      RR: value,
+                                    },
+                                  }));
+                                }}
+                              />
+                              <span className="ms-2">/Min</span>
+                            </div>
                           </Form.Group>
                         </Col>
                       </Row>
@@ -1220,7 +1174,6 @@ const PatientHistory = () => {
                       </Row>
                     </Col>
                   </Row>
-                  <br />
                   {/* Row 5: Family History */}
                   <Row className="mb-3">
                     <Col>
@@ -1265,8 +1218,9 @@ const PatientHistory = () => {
                           <Col xs={7}>
                             <Form.Control
                               as="textarea"
+                              placeholder="Other"
                               name="family_history"
-                              value={formData.family_history}
+                              value={formData.family_history?.other}
                               onChange={handleInputChange}
                             />
                           </Col>
@@ -1334,157 +1288,135 @@ const PatientHistory = () => {
                     <Form.Label>Past Medical History:</Form.Label>
                     <Col>
                       <Form.Group>
-                        <Form.Label>DM:</Form.Label>
-                        <Form.Control
-                          type="text"
+                        <Form.Check
+                          inline
+                          type="checkbox"
+                          label="DM"
                           name="past_history.dm"
-                          value={formData.past_history.dm}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              past_history: {
-                                ...prev.past_history,
-                                dm: e.target.value,
-                              },
-                            }))
-                          }
+                          checked={formData.past_history.dm}
+                          onChange={handleCheckboxChange}
                         />
                       </Form.Group>
                     </Col>
                     <Col>
                       <Form.Group>
-                        <Form.Label>HTN:</Form.Label>
-                        <Form.Control
-                          type="text"
+                        <Form.Check
+                          inline
+                          type="checkbox"
+                          label="HTN"
                           name="past_history.htn"
-                          value={formData.past_history.htn}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              past_history: {
-                                ...prev.past_history,
-                                htn: e.target.value,
-                              },
-                            }))
-                          }
+                          checked={formData.past_history.htn}
+                          onChange={handleCheckboxChange}
                         />
                       </Form.Group>
                     </Col>
                     <Col>
                       <Form.Group>
-                        <Form.Label>Br Asthma:</Form.Label>
-                        <Form.Control
-                          type="text"
+                        <Form.Check
+                          inline
+                          type="checkbox"
+                          label="Br Asthma"
                           name="past_history.brAsthma"
-                          value={formData.past_history.brAsthma}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              past_history: {
-                                ...prev.past_history,
-                                brAsthma: e.target.value,
-                              },
-                            }))
-                          }
+                          checked={formData.past_history.brAsthma}
+                          onChange={handleCheckboxChange}
                         />
                       </Form.Group>
                     </Col>
                     <Col>
                       <Form.Group>
-                        <Form.Label>Thyroid:</Form.Label>
-                        <Form.Control
-                          type="text"
+                        <Form.Check
+                          inline
+                          type="checkbox"
+                          label="Thyroid"
                           name="past_history.thyroid"
-                          value={formData.past_history.thyroid}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              past_history: {
-                                ...prev.past_history,
-                                thyroid: e.target.value,
-                              },
-                            }))
-                          }
+                          checked={formData.past_history.thyroid}
+                          onChange={handleCheckboxChange}
                         />
                       </Form.Group>
                     </Col>
                   </Row>
-                  <br />
+                  <Row>
+                    <Col md={6}>
+                      <Form.Control
+                        as="textarea"
+                        placeholder="Any Other Specify"
+                        name="past_history.otherDetails"
+                        value={formData.past_history.otherDetails || ""}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            past_history: {
+                              ...prev.past_history,
+                              otherDetails: e.target.value,
+                            },
+                          }))
+                        }
+                        style={{ minHeight: "80px" }}
+                      />
+                    </Col>
+                  </Row>
                   <Form.Label>Habits:</Form.Label>
                   <Row className="mb-3">
                     <Col>
                       <Form.Group>
-                        <Form.Label>Smoking:</Form.Label>
-                        <Form.Control
-                          type="text"
+                        <Form.Check
+                          inline
+                          type="checkbox"
+                          label="Smoking"
                           name="habits.smoking"
-                          value={formData.habits.smoking}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              habits: {
-                                ...prev.habits,
-                                smoking: e.target.value,
-                              },
-                            }))
-                          }
+                          checked={formData.habits.smoking}
+                          onChange={handleCheckboxChange}
                         />
                       </Form.Group>
                     </Col>
                     <Col>
                       <Form.Group>
-                        <Form.Label>Alcohol:</Form.Label>
-                        <Form.Control
-                          type="text"
+                        <Form.Check
+                          inline
+                          type="checkbox"
+                          label="Alcohol"
                           name="habits.alcohol"
-                          value={formData.habits.alcohol}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              habits: {
-                                ...prev.habits,
-                                alcohol: e.target.value,
-                              },
-                            }))
-                          }
+                          checked={formData.habits.alcohol}
+                          onChange={handleCheckboxChange}
                         />
                       </Form.Group>
                     </Col>
                     <Col>
                       <Form.Group>
-                        <Form.Label>Tobacco:</Form.Label>
-                        <Form.Control
-                          type="text"
+                        <Form.Check
+                          inline
+                          type="checkbox"
+                          label="Tobacco"
                           name="habits.tobacco"
-                          value={formData.habits.tobacco}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              habits: {
-                                ...prev.habits,
-                                tobacco: e.target.value,
-                              },
-                            }))
-                          }
+                          checked={formData.habits.tobacco}
+                          onChange={handleCheckboxChange}
                         />
                       </Form.Group>
                     </Col>
                     <Col>
                       <Form.Group>
-                        <Form.Label>Drugs:</Form.Label>
-                        <Form.Control
-                          type="text"
+                        <Form.Check
+                          inline
+                          type="checkbox"
+                          label="Drugs"
                           name="habits.drugs"
-                          value={formData.habits.drugs}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              habits: {
-                                ...prev.habits,
-                                drugs: e.target.value,
-                              },
-                            }))
-                          }
+                          checked={formData.habits.drugs}
+                          onChange={handleCheckboxChange}
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+
+                  <br />
+                  <Row>
+                    <Col md={10}>
+                      <Form.Group>
+                        <Form.Label>Allergy to Any Drug:</Form.Label>
+                        <Form.Control
+                          as="textarea"
+                          name="allergyToDrugs"
+                          value={formData.allergyToDrugs}
+                          onChange={handleInputChange}
                         />
                       </Form.Group>
                     </Col>
@@ -1570,20 +1502,6 @@ const PatientHistory = () => {
                   <Row>
                     <Col>
                       <Form.Group>
-                        <Form.Label>Allergy to Any Drug:</Form.Label>
-                        <Form.Control
-                          as="textarea"
-                          name="allergyToDrugs"
-                          value={formData.allergyToDrugs}
-                          onChange={handleInputChange}
-                        />
-                      </Form.Group>
-                    </Col>
-                  </Row>
-                  <br />
-                  <Row>
-                    <Col>
-                      <Form.Group>
                         <Form.Label>Past Surgical History:</Form.Label>
                         <Form.Control
                           as="textarea"
@@ -1657,7 +1575,7 @@ const PatientHistory = () => {
                             onChange={handleCheckboxChange}
                           />
                         </Col>
-                        <Col xs={7}>
+                        <Col xs={3}>
                           <Form.Control
                             as="textarea"
                             placeholder="Any Other"
@@ -1671,7 +1589,7 @@ const PatientHistory = () => {
                   </Row>
                   <br />
                   <Row>
-                    <Col md={8}>
+                    <Col md={15}>
                       <Form.Label>Previous Investigation:</Form.Label>
                       <Row>
                         <Col>
@@ -1687,14 +1605,20 @@ const PatientHistory = () => {
                                 label: "Clotting Time-BT",
                                 name: "investigation.clottingTimeBt",
                               },
-                              { label: "PT INR", name: "investigation.ptInr" },
+                              {
+                                label: "PT INR",
+                                name: "investigation.ptInr",
+                              },
                               { label: "HIV", name: "investigation.hiv" },
                               { label: "Hbsag", name: "investigation.hbsag" },
                               {
                                 label: "SR.Creatinine",
                                 name: "investigation.srCreatinine",
                               },
-                              { label: "VIT B12", name: "investigation.vitB" },
+                              {
+                                label: "VIT B12",
+                                name: "investigation.vitB",
+                              },
                             ].map((item, index) => (
                               <div key={index} className="me-3">
                                 <Form.Check
@@ -1708,74 +1632,53 @@ const PatientHistory = () => {
                                     ]
                                   }
                                   onChange={handleCheckboxChange}
-                                  disabled={isDisabled} // Disable when viewing old records
+                                  disabled={isDisabled}
                                 />
-                                {formData.investigation[
-                                  item.name.split(".")[1]
-                                ] && (
-                                  <Form.Control
-                                    as="textarea"
-                                    placeholder={`Enter details for ${item.label}`}
-                                    className="mb-2"
-                                    style={{ width: "150px" }}
-                                    value={
-                                      formData.investigationComments?.[
-                                        item.name.split(".")[1]
-                                      ] || ""
-                                    }
-                                    onChange={(e) =>
-                                      setFormData((prev) => ({
-                                        ...prev,
-                                        investigationComments: {
-                                          ...prev.investigationComments,
-                                          [item.name.split(".")[1]]:
-                                            e.target.value,
-                                        },
-                                      }))
-                                    }
-                                    readOnly={isDisabled}
-                                  />
-                                )}
                               </div>
                             ))}
                           </div>
                         </Col>
+                        <Col>
+                          {/* Upload File Section */}
+                          <div className="mt-3">
+                            <input
+                              type="file"
+                              id="fileInput"
+                              onChange={handleFileChange}
+                              className="d-none"
+                            />
+                            <label
+                              htmlFor="fileInput"
+                              className="btn btn-primary"
+                            >
+                              Upload File
+                            </label>
+                            {selectedFile && (
+                              <div className="mt-2 text-primary">
+                                <strong>Selected File:</strong>{" "}
+                                {selectedFile.name}
+                              </div>
+                            )}
+                          </div>
+                        </Col>
                       </Row>
                     </Col>
-                    <Col>
-                      {/* Upload File Section */}
-                      <div className="mt-3">
-                        <input
-                          type="file"
-                          id="fileInput"
-                          onChange={handleFileChange}
-                          className="d-none"
-                        />
-                        <label htmlFor="fileInput" className="btn btn-primary">
-                          Upload File
-                        </label>
-                        {selectedFile && (
-                          <div className="mt-2 text-primary">
-                            <strong>Selected File:</strong> {selectedFile.name}
-                          </div>
-                        )}
-                      </div>
-                    </Col>
-                  </Row>
-                  <br />
-                  <Row>
-                    <Col>
+                    <Col md={8}>
                       <Form.Group>
-                        <Form.Label>Investigation Details:</Form.Label>
+                        {/* <Form.Label>Investigation Details:</Form.Label> */}
                         <Form.Control
                           as="textarea"
                           name="investigationDetails"
+                          placeholder="Investigation Details"
                           value={formData.investigationDetails}
                           onChange={handleInputChange}
                         />
                       </Form.Group>
                     </Col>
-                    <Col>
+                  </Row>
+                  <br />
+                  <Row>
+                    <Col md={10}>
                       <Form.Group>
                         <Form.Label>Known Case Of:</Form.Label>
                         <Form.Control
@@ -1866,17 +1769,16 @@ const PatientHistory = () => {
                       </Row>
                     </Col>
                   </Row>
-                  <br />
                   <Row>
                     <Col md={3}>
-                      <Form.Group controlId="assistantsDoctorName">
+                      <Form.Group controlId="name">
                         <Form.Label>Assistant Doctor:</Form.Label>
                         <Form.Select
-                          value={selectedOptions?.assistantsDoctorName || ""}
+                          value={selectedOptions?.name || ""}
                           onChange={(e) =>
                             setSelectedOptions({
                               ...selectedOptions,
-                              assistantsDoctorName: e.target.value,
+                              name: e.target.value,
                             })
                           }
                         >
@@ -1893,9 +1795,9 @@ const PatientHistory = () => {
                                 .map((doctor) => doctor.name)
                                 .filter(Boolean),
                             ]),
-                          ].map((assistantsDoctorName, index) => (
-                            <option key={index} value={assistantsDoctorName}>
-                              {assistantsDoctorName}
+                          ].map((name, index) => (
+                            <option key={index} value={name}>
+                              {name}
                             </option>
                           ))}
                         </Form.Select>
@@ -1915,8 +1817,201 @@ const PatientHistory = () => {
           </Col>
         </Row>
       </Container>
+      <style>
+        {`
+          .enquiry-card {
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border: none;
+            background: #f8f9fa;
+            overflow: hidden;
+            margin-bottom: 30px;
+          }
+
+          .card-body {
+            padding: 30px;
+          }
+
+          .form-section {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+          }
+
+          .form-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+          }
+
+          .form-control, .form-select {
+            border-radius: 8px;
+            border: 3px solid #dee2e6;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+            background-color: #ffffff;
+            color: #2c3e50;
+            font-size: 0.95rem;
+          }
+
+          .form-control:focus, .form-select:focus {
+            border-color: #00bcd4;
+            box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
+            background-color: #f8F9FA;
+          }
+
+          textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+          }
+
+          .form-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 16px 12px;
+          }
+
+          .btn-primary {
+            background:linear-gradient(45deg, #00bcd4, #00acc1);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 188, 212, 0.2);
+          }
+
+          .btn-primary:hover {
+            background: linear-gradient(45deg, #00acc1, #0097a7);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 188, 212, 0.3);
+          }
+
+          .btn-primary:disabled {
+            background: #bdc3c7;
+            transform: none;
+          }
+
+          /* Error message styling */
+          .error-message {
+            color: #e74c3c;
+            font-size: 0.85rem;
+            margin-top: 5px;
+          }
+
+          /* Responsive adjustments */
+          @media (max-width: 768px) {
+            .card-body {
+              padding: 20px;
+            }
+
+            .form-section {
+              padding: 15px;
+            }
+
+            .btn-primary {
+              width: 100%;
+              margin-top: 15px;
+            }
+          }
+
+          /* Row spacing */
+          .row {
+            margin-bottom: 20px;
+          }
+
+          /* Spinner styling */
+          .spinner-border {
+            margin-right: 8px;
+            width: 1.2rem;
+            height: 1.2rem;
+          }
+
+          /* Optional: Add animation for form elements */
+          .form-control, .form-select, .btn {
+            animation: fadeIn 0.5s ease-in-out;
+          }
+
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+              transform: translateY(10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          /* Optional: Add hover effect for form controls */
+          .form-control:hover, .form-select:hover {
+            border-color: #3498db;
+          }
+
+          .checkbox-group {
+            margin-bottom: 10px;
+          }
+
+          .custom-checkbox {
+            border: 3px solid #dee2e6;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            display: block;
+            transition: all 0.3s ease;
+          }
+
+          .custom-checkbox:hover {
+            border-color: #00bcd4;
+          }
+
+          .custom-checkbox label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-left: 8px;
+          }
+
+          .details-input {
+            margin-top: 8px;
+            border: 3px solid #dee2e6;
+            border-radius: 8px;
+            padding: 8px 12px;
+            width: 100%;
+            transition: all 0.3s ease;
+          }
+
+          .details-input:focus {
+            border-color: #00bcd4;
+            box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
+          }
+
+          .other-details-textarea {
+            border: 3px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px;
+            min-height: 80px;
+            width: 100%;
+            transition: all 0.3s ease;
+          }
+
+          .other-details-textarea:focus {
+            border-color: #00bcd4;
+            box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
+          }
+
+          .form-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+          }
+        `}
+      </style>
     </div>
   );
-};
-
-export default PatientHistory;
+}

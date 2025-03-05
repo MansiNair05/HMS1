@@ -13,8 +13,9 @@ import {
   Modal,
 } from "react-bootstrap";
 import PageBreadcrumb from "../../componets/PageBreadcrumb";
+import * as XLSX from "xlsx";
 
-const BASE_URL = "http://192.168.90.158:5000/api";
+const BASE_URL = "http://192.168.90.238:5000/api";
 
 export default function DiagnosisReport() {
   const [showModal, setShowModal] = useState(false);
@@ -57,12 +58,13 @@ export default function DiagnosisReport() {
               comment: item.comment,
               // Patient details
               Uid_no: item.patientDetail?.Uid_no,
-              prefix: item.patientDetail?.prefix,
-              name: `${item.patientDetail?.prefix} ${item.patientDetail?.name}`, // Concatenate prefix and name              age: item.patientDetail?.age,
+              // prefix: item.patientDetail?.prefix,
+              name: `${item.patientDetail?.prefix} ${item.patientDetail?.name}`, // Concatenate prefix and name
+              age: item.patientDetail?.age,
               sex: item.patientDetail?.sex,
               phone: item.patientDetail?.phone,
-              mobile_2: item.patientDetail?.mobile_2,
-              occupation: item.patientDetail?.occupation,
+              // mobile_2: item.patientDetail?.mobile_2,
+              // occupation: item.patientDetail?.occupation,
               address: item.patientDetail?.address,
               ref: item.patientDetail?.ref,
               // Patient history details
@@ -92,6 +94,18 @@ export default function DiagnosisReport() {
     return rowData.feedback && rowData.feedback.trim() !== ""
       ? rowData.feedback
       : "No comments";
+  };
+
+  const exportToExcel = () => {
+    if (!filteredReports.length) {
+      alert("No data to export!");
+      return;
+    }
+
+    const worksheet = XLSX.utils.json_to_sheet(filteredReports);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Diagnosis Reports");
+    XLSX.writeFile(workbook, "DiagnosisReports.xlsx");
   };
 
   const handleOpenModal = (patient_id) => {
@@ -185,7 +199,6 @@ export default function DiagnosisReport() {
     console.log("Filtered Reports by Date Range:", filteredData);
   };
 
-
   // Load only today's data initially
   useEffect(() => {
     fetchReportsData();
@@ -225,39 +238,46 @@ export default function DiagnosisReport() {
           />
         </InputGroup>
       </Form.Group>
-      <div
-        className="d-flex align-items-center"
-        style={{
-          gap: "15px",
-          border: "2px solid #4dd0e1",
-          textAlign: "center",
-          borderRadius: "8px",
-          padding: "10px",
-          backgroundColor: "#e0f7fa",
-        }}
-      >
-        <Form.Group className="pe-3 mb-0">
-          From Date
-          <Form.Control
-            type="date"
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-            max={new Date().toISOString().split("T")[0]} // Disable future dates
-          />
-        </Form.Group>
 
-        <Form.Group className="pe-3 mb-0">
-          To Date
-          <Form.Control
-            type="date"
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-            max={new Date().toISOString().split("T")[0]} // Disable future dates
-          />
-        </Form.Group>
-        <Button variant="primary" onClick={filterByVisitDate}>
-          Find Data
+      <div className="d-flex align-items-center" style={{ gap: "15px" }}>
+        <Button variant="success" onClick={exportToExcel}>
+          Export to Excel
         </Button>
+
+        <div
+          className="d-flex align-items-center"
+          style={{
+            gap: "15px",
+            border: "2px solid #4dd0e1",
+            textAlign: "center",
+            borderRadius: "8px",
+            padding: "10px",
+            backgroundColor: "#e0f7fa",
+          }}
+        >
+          <Form.Group className="pe-3 mb-0">
+            From Date
+            <Form.Control
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              max={new Date().toISOString().split("T")[0]} // Disable future dates
+            />
+          </Form.Group>
+
+          <Form.Group className="pe-3 mb-0">
+            To Date
+            <Form.Control
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              max={new Date().toISOString().split("T")[0]} // Disable future dates
+            />
+          </Form.Group>
+          <Button variant="primary" onClick={filterByVisitDate}>
+            Find Data
+          </Button>
+        </div>
       </div>
     </div>
   );

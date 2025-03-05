@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.158:5000/apii"; // Replace with your actual backend URL
+const BASE_URL = "http://192.168.90.238:5000/api"; // Replace with your actual backend URL
 
 const DiagnosisTabs = () => {
   const [key, setKey] = useState("piles");
@@ -224,14 +224,14 @@ export default function Diagnosis() {
       test: false,
     },
     // medicinesPrescribed: false,
-      medicinesPrescribed: {
-    AAC: false,
-    ANTACID: false,
-    PROBIOTICS: false,
-    NSAIDS: false,
-    ANTIBIOTICS: false,
-    other: "", // Add an "other" field for the textarea
-  },
+    medicinesPrescribed: {
+      AAC: false,
+      ANTACID: false,
+      PROBIOTICS: false,
+      NSAIDS: false,
+      ANTIBIOTICS: false,
+      other: "", // Add an "other" field for the textarea
+    },
     medicineDetails: "",
     surgicalAdvice: [],
     comment: "",
@@ -291,7 +291,7 @@ export default function Diagnosis() {
   const [showEditButton, setShowEditButton] = useState(false); // Controls visibility of "Edit Diagnosis"
   const [isDisabled, setIsDisabled] = useState(false); // Controls edit mode
   const [disablePreviousButton, setDisablePreviousButton] = useState(false); // Disables "Previous Records" after clicking
-const [showSurgicalDate, setShowSurgicalDate] = useState(false);
+  const [showSurgicalDate, setShowSurgicalDate] = useState(false);
 
   // Add state for previous records
   const [selectedRecord, setSelectedRecord] = useState(null);
@@ -396,13 +396,13 @@ const [showSurgicalDate, setShowSurgicalDate] = useState(false);
     });
   };
 
-  const handleSurgicalAdviceChange = (e) => {
-    const { value, checked } = e.target;
-    setFormData((prevData) => {
-      const updatedSurgicalAdvice = checked
-        ? [...prevData.surgicalAdvice, value]
-        : prevData.surgicalAdvice.filter((item) => item !== value);
-      return { ...prevData, surgicalAdvice: updatedSurgicalAdvice };
+  const handleSurgicalAdviceChange = (selectedOption) => {
+    setFormData((prevState) => {
+      const updatedAdvice = prevState.surgicalAdvice.includes(selectedOption)
+        ? prevState.surgicalAdvice.filter((item) => item !== selectedOption)
+        : [...prevState.surgicalAdvice, selectedOption];
+
+      return { ...prevState, surgicalAdvice: updatedAdvice };
     });
   };
 
@@ -420,309 +420,308 @@ const [showSurgicalDate, setShowSurgicalDate] = useState(false);
     } else {
       setFormData({ ...formData, [name]: value });
     }
-    };
+  };
 
-    const handleCheckboxChange = (e) => {
-      const { name, checked } = e.target;
-      // Check if the surgical date checkbox is clicked
-      if (name === "checkSurgicalDate") {
-        setShowSurgicalDate(checked);
-      }
-      const [parent, child] = name.split(".");
+  const handleCheckboxChange = (e) => {
+    const { name, checked } = e.target;
+    // Check if the surgical date checkbox is clicked
+    if (name === "checkSurgicalDate") {
+      setShowSurgicalDate(checked);
+    }
+    const [parent, child] = name.split(".");
 
-      if (parent === "medicinesPrescribed") {
-        // Handle medicinesPrescribed checkboxes
-        setFormData((prevData) => ({
-          ...prevData,
-          medicinesPrescribed: {
-            ...prevData.medicinesPrescribed,
-            [child]: checked, // Update the specific medicine checkbox
-          },
-        }));
-      } else if (child) {
-        setFormData({
-          ...formData,
-          [parent]: { ...formData[parent], [child]: checked },
-        });
+    if (parent === "medicinesPrescribed") {
+      // Handle medicinesPrescribed checkboxes
+      setFormData((prevData) => ({
+        ...prevData,
+        medicinesPrescribed: {
+          ...prevData.medicinesPrescribed,
+          [child]: checked, // Update the specific medicine checkbox
+        },
+      }));
+    } else if (child) {
+      setFormData({
+        ...formData,
+        [parent]: { ...formData[parent], [child]: checked },
+      });
+    } else {
+      setFormData({ ...formData, [name]: checked });
+    }
+  };
+
+  const validate = () => {
+    const errors = {};
+    // Add validation logic here
+    return errors;
+  };
+
+  // Update the date formatting utility functions
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString || dateString === "0000-00-00" || dateString === "")
+      return "";
+
+    try {
+      // Handle different date formats
+      let date;
+      if (dateString.includes("/")) {
+        const [day, month, year] = dateString.split("/");
+        date = new Date(year, month - 1, day);
+      } else if (dateString.includes("-")) {
+        date = new Date(dateString);
       } else {
-        setFormData({ ...formData, [name]: checked });
+        date = new Date(dateString);
       }
-    };
 
-    const validate = () => {
-      const errors = {};
-      // Add validation logic here
-      return errors;
-    };
+      if (isNaN(date.getTime())) return ""; // Return empty string if invalid date
 
-    // Update the date formatting utility functions
-    const formatDateForDisplay = (dateString) => {
-      if (!dateString || dateString === "0000-00-00" || dateString === "")
-        return "";
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
 
-      try {
-        // Handle different date formats
-        let date;
-        if (dateString.includes("/")) {
-          const [day, month, year] = dateString.split("/");
-          date = new Date(year, month - 1, day);
-        } else if (dateString.includes("-")) {
-          date = new Date(dateString);
-        } else {
-          date = new Date(dateString);
-        }
+      return `${day}/${month}/${year}`;
+    } catch (error) {
+      console.warn("Invalid date format:", dateString);
+      return "";
+    }
+  };
 
-        if (isNaN(date.getTime())) return ""; // Return empty string if invalid date
+  const formatDateForAPI = (dateString) => {
+    if (!dateString || dateString === "0000-00-00" || dateString === "")
+      return null;
 
-        const day = String(date.getDate()).padStart(2, "0");
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const year = date.getFullYear();
-
-        return `${day}/${month}/${year}`;
-      } catch (error) {
-        console.warn("Invalid date format:", dateString);
-        return "";
+    try {
+      // If the date is already in YYYY-MM-DD format
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        return dateString;
       }
-    };
 
-    const formatDateForAPI = (dateString) => {
-      if (!dateString || dateString === "0000-00-00" || dateString === "")
-        return null;
-
-      try {
-        // If the date is already in YYYY-MM-DD format
-        if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-          return dateString;
-        }
-
-        // If the date is in DD/MM/YYYY format
-        if (dateString.includes("/")) {
-          const [day, month, year] = dateString.split("/");
-          return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-        }
-
-        // If it's a Date object or timestamp
-        const date = new Date(dateString);
-        if (!isNaN(date.getTime())) {
-          return date.toISOString().split("T")[0];
-        }
-
-        return null;
-      } catch (error) {
-        console.warn("Invalid date format:", dateString);
-        return null;
+      // If the date is in DD/MM/YYYY format
+      if (dateString.includes("/")) {
+        const [day, month, year] = dateString.split("/");
+        return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
       }
-    };
 
-    const handleSubmit = async (e, isEdit = false) => {
-      e.preventDefault();
+      // If it's a Date object or timestamp
+      const date = new Date(dateString);
+      if (!isNaN(date.getTime())) {
+        return date.toISOString().split("T")[0];
+      }
 
-      try {
-        // Basic validation
-        if (!formData.diagnosis || formData.diagnosis.trim() === "") {
-          alert("Please enter a diagnosis");
-          return;
-        }
+      return null;
+    } catch (error) {
+      console.warn("Invalid date format:", dateString);
+      return null;
+    }
+  };
 
-        if (!patientId) {
-          alert("Patient ID is required");
-          return;
-        }
+  const handleSubmit = async (e, isEdit = false) => {
+    e.preventDefault();
 
-        const requestBody = {
-          patientId: patientId.toString(),
-          diagnosis: formData.diagnosis.trim(),
-          date_diagnosis: formData.date_diagnosis || null,
-          provisionaldiagnosis: formData.provisionaldiagnosis || "",
-          investigationorders: formData.investigationorders || "",
-          diagnosisAdvice: {
-            medication: Boolean(formData.diagnosisAdvice?.medication),
-            surgery: Boolean(formData.diagnosisAdvice?.surgery),
-            test: Boolean(formData.diagnosisAdvice?.test),
-          },
-          medicinesPrescribed: Boolean(formData.medicinesPrescribed),
-          medicineDetails: formData.medicineDetails || "",
-          surgicalAdvice: Array.isArray(formData.surgicalAdvice)
-            ? formData.surgicalAdvice
-            : [],
-          comment: formData.comment || "",
-          adviceComment: formData.adviceComment || "",
-          SurgicalDate: formData.SurgicalDate || null,
-          RF: Array.isArray(formData.RF) ? formData.RF : [],
-          Laser: Array.isArray(formData.Laser) ? formData.Laser : [],
-          MW: Array.isArray(formData.MW) ? formData.MW : [],
-          categoryComment: formData.categoryComment || "",
-          advice: {
-            mcdpa: Boolean(formData.advice?.mcdpa),
-            manometry: Boolean(formData.advice?.manometry),
-            diet: Boolean(formData.advice?.diet),
-            echo: Boolean(formData.advice?.echo),
-            uroflowmetry: Boolean(formData.advice?.uroflowmetry),
-            colo: Boolean(formData.advice?.colo),
-            xray: Boolean(formData.advice?.xray),
-            mri: Boolean(formData.advice?.mri),
-            cht: Boolean(formData.advice?.cht),
-            gastro: Boolean(formData.advice?.gastro),
-            ct: Boolean(formData.advice?.ct),
-            doppler: Boolean(formData.advice?.doppler),
-            biofeedback: Boolean(formData.advice?.biofeedback),
-            labInvestigation: Boolean(formData.advice?.labInvestigation),
-            ultrasonography: Boolean(formData.advice?.ultrasonography),
-            EchoAnalImaging: Boolean(formData.advice?.EchoAnalImaging),
-          },
-          other: {
-            insurance: Boolean(formData.other?.insurance),
-            reimbursement: Boolean(formData.other?.reimbursement),
-            workshop: Boolean(formData.other?.workshop),
-            pdc: Boolean(formData.other?.pdc),
-          },
-          consultantDoctor: formData.consultantDoctor || "",
-          assistantDoctor: formData.assistantDoctor || "",
-        };
+    try {
+      // Basic validation
+      if (!formData.diagnosis || formData.diagnosis.trim() === "") {
+        alert("Please enter a diagnosis");
+        return;
+      }
 
-        // Determine URL and method based on the button clicked
-        const url = isEdit
-          ? `${BASE_URL}/V1/diagnosis/updateDiagnosis/${patientId}`
-          : `${BASE_URL}/V1/diagnosis/addDiagnosis/${patientId}`;
-        const method = isEdit ? "PUT" : "POST";
+      if (!patientId) {
+        alert("Patient ID is required");
+        return;
+      }
+      const requestBody = {
+        patientId: patientId.toString(),
+        diagnosis: formData.diagnosis.trim(),
+        date_diagnosis: formData.date_diagnosis || null,
+        provisionaldiagnosis: formData.provisionaldiagnosis || "",
+        investigationorders: formData.investigationorders || "",
+        diagnosisAdvice: JSON.stringify({
+          medication: Boolean(formData.diagnosisAdvice?.medication),
+          surgery: Boolean(formData.diagnosisAdvice?.surgery),
+          test: Boolean(formData.diagnosisAdvice?.test),
+        }),
+        medicinesPrescribed: Boolean(formData.medicinesPrescribed),
+        medicineDetails: formData.medicineDetails || "",
+        surgicalAdvice: formData.surgicalAdvice.join(", "), // Convert array to string
+        comment: formData.comment || "",
+        adviceComment: formData.adviceComment || "",
+        SurgicalDate: formData.SurgicalDate || null,
+        RF: formData.RF.join(", "), // Convert array to string
+        Laser: formData.Laser.join(", "), // Convert array to string
+        MW: formData.MW.join(", "), // Convert array to string
+        categoryComment: formData.categoryComment || "",
+        advice: JSON.stringify({
+          mcdpa: Boolean(formData.advice?.mcdpa),
+          manometry: Boolean(formData.advice?.manometry),
+          diet: Boolean(formData.advice?.diet),
+          echo: Boolean(formData.advice?.echo),
+          uroflowmetry: Boolean(formData.advice?.uroflowmetry),
+          colo: Boolean(formData.advice?.colo),
+          xray: Boolean(formData.advice?.xray),
+          mri: Boolean(formData.advice?.mri),
+          cht: Boolean(formData.advice?.cht),
+          gastro: Boolean(formData.advice?.gastro),
+          ct: Boolean(formData.advice?.ct),
+          doppler: Boolean(formData.advice?.doppler),
+          biofeedback: Boolean(formData.advice?.biofeedback),
+          labInvestigation: Boolean(formData.advice?.labInvestigation),
+          ultrasonography: Boolean(formData.advice?.ultrasonography),
+          EchoAnalImaging: Boolean(formData.advice?.EchoAnalImaging),
+        }),
+        other: JSON.stringify({
+          insurance: Boolean(formData.other?.insurance),
+          reimbursement: Boolean(formData.other?.reimbursement),
+          workshop: Boolean(formData.other?.workshop),
+          pdc: Boolean(formData.other?.pdc),
+        }),
+        consultantDoctor: formData.consultantDoctor || "",
+        assistantDoctor: formData.assistantDoctor || "",
+      };
+      // Determine URL and method based on the button clicked
+      const url = isEdit
+        ? `${BASE_URL}/V1/diagnosis/updateDiagnosis/${patientId}`
+        : `${BASE_URL}/V1/diagnosis/addDiagnosis/${patientId}`;
+      const method = isEdit ? "PUT" : "POST";
 
-        console.log(`Making ${method} request to ${url}`);
+      console.log(`Making ${method} request to ${url}`);
 
-        const response = await fetch(url, {
-          method: method,
+      console.log("Request body:", requestBody);
+      console.log("Submitting to:", url);
+
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          responseData.message ||
+            responseData.error ||
+            "Failed to save diagnosis"
+        );
+      }
+
+      alert(
+        isEdit
+          ? "Diagnosis updated successfully!"
+          : "Diagnosis submitted successfully!"
+      );
+
+      if (isEdit) {
+        setIsDisabled(true);
+      }
+    } catch (error) {
+      console.error("Submission Error:", error);
+      alert(
+        `Error: ${
+          error.message || "An error occurred while submitting the diagnosis"
+        }`
+      );
+    }
+  };
+  const [previousRecordDate, setPreviousRecordDate] = useState(""); // Store the previous record date
+  const fetchPreviousRecords = async () => {
+    try {
+      if (!patientId) {
+        console.error("No patient ID available");
+        return;
+      }
+
+      console.log("Fetching records for patient:", patientId);
+
+      const response = await fetch(
+        `${BASE_URL}/V1/diagnosis/listDiagnosis/${patientId}`,
+        {
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(requestBody),
-        });
-
-        const responseData = await response.json();
-
-        if (!response.ok) {
-          throw new Error(
-            responseData.message ||
-            responseData.error ||
-            "Failed to save diagnosis"
-          );
         }
+      );
 
-        alert(
-          isEdit
-            ? "Diagnosis updated successfully!"
-            : "Diagnosis submitted successfully!"
-        );
+      const result = await response.json();
+      console.log("Fetched data:", result);
 
-        if (isEdit) {
-          setIsDisabled(true);
-        }
-      } catch (error) {
-        console.error("Submission Error:", error);
-        alert(
-          `Error: ${error.message || "An error occurred while submitting the diagnosis"
-          }`
-        );
+      if (!response.ok) {
+        throw new Error("Failed to fetch previous records");
       }
-    };
-    const [previousRecordDate, setPreviousRecordDate] = useState(""); // Store the previous record date
-    const fetchPreviousRecords = async () => {
-      try {
-        if (!patientId) {
-          console.error("No patient ID available");
-          return;
-        }
 
-        console.log("Fetching records for patient:", patientId);
+      const enrichedDiagnosisData = result.data.enrichedDiagnosisData;
 
-        const response = await fetch(
-          `${BASE_URL}/V1/diagnosis/listDiagnosis/${patientId}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        const result = await response.json();
-        console.log("Fetched data:", result);
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch previous records");
-        }
-
-        const enrichedDiagnosisData = result.data.enrichedDiagnosisData;
-
-        // Update formData with all the fields from the API
-        setFormData((prevData) => ({
-          ...prevData,
-          ...enrichedDiagnosisData,
-        }));
-
-        // Show the "Edit Diagnosis" button
-        setShowEditButton(true);
-        // Disable "Previous Records" button after clicking it
-        setDisablePreviousButton(true);
-        // Disable form fields
-        setIsDisabled(true);
-
-        console.log("Form data updated with previous records");
-      } catch (error) {
-        console.error("Error fetching previous records:", error);
-        alert("Failed to fetch previous records.");
-      }
-    };
-
-    // Add function to handle record selection
-    const handleRecordSelect = (record) => {
+      // Update formData with all the fields from the API
       setFormData((prevData) => ({
         ...prevData,
-        ...record,
+        ...enrichedDiagnosisData,
       }));
-      setSelectedRecord(record);
+
+      // Show the "Edit Diagnosis" button
+      setShowEditButton(true);
+      // Disable "Previous Records" button after clicking it
+      setDisablePreviousButton(true);
+      // Disable form fields
       setIsDisabled(true);
-    };
 
-    // Enable form editing when "Edit Diagnosis" is clicked
-    const handleEditDiagnosis = () => {
-      setIsDisabled(false); // Enable form editing
-      setShowEditButton(false); // Hide the "Edit Diagnosis" button while in edit mode
-      // This will enable "Save Edit Diagnosis" and disable "Save New Record"
-    };
+      console.log("Form data updated with previous records");
+    } catch (error) {
+      console.error("Error fetching previous records:", error);
+      alert("Failed to fetch previous records.");
+    }
+  };
 
-    const handleNewRecord = () => {
-      setFormData({
-        date_diagnosis: "",
-        provisionaldiagnosis: "",
-        investigationorders: "",
-        diagnosis: "",
-        comment: "",
-        adviceComment: "",
-        SurgicalDate: "",
-        RF: [],
-        Laser: [],
-        MW: [],
-        categoryComment: "",
-        consultantDoctor: "",
-        assistantDoctor: "",
-      });
+  // Add function to handle record selection
+  const handleRecordSelect = (record) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      ...record,
+    }));
+    setSelectedRecord(record);
+    setIsDisabled(true);
+  };
 
-      // Hide "Edit Diagnosis" button when creating a new record
-      setShowEditButton(false);
-      // Enable the "Previous Records" button when creating a new record
-      setDisablePreviousButton(false);
-      setIsDisabled(false); // Allow editing for a new record
-      alert("New Record: You can now enter new data.");
-    };
+  // Enable form editing when "Edit Diagnosis" is clicked
+  const handleEditDiagnosis = () => {
+    setIsDisabled(false); // Enable form editing
+    setShowEditButton(false); // Hide the "Edit Diagnosis" button while in edit mode
+    // This will enable "Save Edit Diagnosis" and disable "Save New Record"
+  };
 
-    const handlePrint = () => {
-      window.print();
-    };
+  const handleNewRecord = () => {
+    setFormData({
+      date_diagnosis: "",
+      provisionaldiagnosis: "",
+      investigationorders: "",
+      diagnosis: "",
+      comment: "",
+      adviceComment: "",
+      SurgicalDate: "",
+      RF: [],
+      Laser: [],
+      MW: [],
+      categoryComment: "",
+      consultantDoctor: "",
+      assistantDoctor: "",
+    });
 
-    // Add a useEffect to log form data changes
-    useEffect(() => {
-      console.log("Current Form Data:", formData);
-    }, [formData]);
-  
+    // Hide "Edit Diagnosis" button when creating a new record
+    setShowEditButton(false);
+    // Enable the "Previous Records" button when creating a new record
+    setDisablePreviousButton(false);
+    setIsDisabled(false); // Allow editing for a new record
+    alert("New Record: You can now enter new data.");
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  // Add a useEffect to log form data changes
+  useEffect(() => {
+    console.log("Current Form Data:", formData);
+  }, [formData]);
 
   return (
     <div
@@ -743,8 +742,8 @@ const [showSurgicalDate, setShowSurgicalDate] = useState(false);
                 borderRadius: "12px",
                 boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
                 borderColor: "#00bcd4",
-                background: "white",
-                border: "1px solid #00bcd4",
+                background: "#f8f9fa",
+                border: "3px solid #00bcd4",
               }}
             >
               <Card.Body>
@@ -761,13 +760,12 @@ const [showSurgicalDate, setShowSurgicalDate] = useState(false);
                     <button
                       type="button"
                       className="btn btn-primary"
-                      style={{
-                        float: "right",
-                      }}
+                      style={{ float: "right" }}
                       onClick={handlePrint}
                     >
                       Print
                     </button>
+
                     <br />
                     <br />
                     <div>
@@ -809,24 +807,22 @@ const [showSurgicalDate, setShowSurgicalDate] = useState(false);
                         <Form.Label>Diagnosis Date:</Form.Label>
                         <DatePicker
                           selected={
-                            formData?.date_diagnosis
-                              ? new Date(formData.date_diagnosis)
+                            formData?.appointmentDate
+                              ? new Date(formData.appointmentDate)
                               : null
                           }
                           onChange={(date) => {
-                            handleInputChange({
-                              target: {
-                                name: "date_diagnosis",
-                                value: date
-                                  ? date.toISOString().split("T")[0]
-                                  : "",
-                              },
-                            });
+                            setFormData((prev) => ({
+                              ...prev,
+                              appointmentDate: date
+                                ? date.toISOString().split("T")[0]
+                                : "",
+                            }));
                           }}
                           dateFormat="yyyy-MM-dd"
                           className="form-control"
-                          placeholderText="Select Diagnosis Date"
-                          maxDate={new Date()} // Prevent selecting future dates
+                          placeholderText="Select Appointment Date"
+                          minDate={new Date()} // Ensures only today and future dates are selectable
                           showMonthDropdown
                           showYearDropdown
                           dropdownMode="select"
@@ -1010,7 +1006,14 @@ const [showSurgicalDate, setShowSurgicalDate] = useState(false);
                             }}
                           >
                             {surgicalAdviceOptions.map((option) => (
-                              <Dropdown.Item key={option} as="div">
+                              <Dropdown.Item
+                                key={option}
+                                as="div"
+                                onClick={() =>
+                                  handleSurgicalAdviceChange(option)
+                                } // ✅ Click anywhere selects checkbox
+                                style={{ cursor: "pointer" }}
+                              >
                                 <Form.Check
                                   type="checkbox"
                                   label={option}
@@ -1018,7 +1021,7 @@ const [showSurgicalDate, setShowSurgicalDate] = useState(false);
                                   checked={formData.surgicalAdvice?.includes(
                                     option
                                   )}
-                                  onChange={handleSurgicalAdviceChange}
+                                  onChange={() => {}} // ✅ Empty to prevent double triggering
                                 />
                               </Dropdown.Item>
                             ))}
@@ -1424,16 +1427,6 @@ const [showSurgicalDate, setShowSurgicalDate] = useState(false);
                     <Button
                       type="button"
                       variant="primary"
-                      disabled={isDisabled}
-                      style={{ marginRight: "10px" }}
-                      onClick={(e) => handleSubmit(e, true)}
-                    >
-                      Save Edit Diagnosis
-                    </Button>
-
-                    <Button
-                      type="button"
-                      variant="primary"
                       onClick={(e) => handleSubmit(e, false)}
                     >
                       Save New Record
@@ -1445,6 +1438,144 @@ const [showSurgicalDate, setShowSurgicalDate] = useState(false);
           </Col>
         </Row>
       </Container>
+      <style>
+        {`
+          .enquiry-card {
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border: none;
+            background: #f8f9fa;
+            overflow: hidden;
+            margin-bottom: 30px;
+          }
+
+          .card-body {
+            padding: 30px;
+          }
+
+          .form-section {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+          }
+
+          .form-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+          }
+
+          .form-control, .form-select {
+            border-radius: 8px;
+            border: 3px solid #dee2e6;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+            background-color: #ffffff;
+            color: #2c3e50;
+            font-size: 0.95rem;
+          }
+
+          .form-control:focus, .form-select:focus {
+            border-color: #00bcd4;
+            box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
+            background-color: #f8F9FA;
+          }
+
+          textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+          }
+
+          .form-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 16px 12px;
+          }
+
+          .btn-primary {
+            background:linear-gradient(45deg, #00bcd4, #00acc1);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 188, 212, 0.2);
+          }
+
+          .btn-primary:hover {
+            background: linear-gradient(45deg, #00acc1, #0097a7);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 188, 212, 0.3);
+          }
+
+          .btn-primary:disabled {
+            background: #bdc3c7;
+            transform: none;
+          }
+
+          /* Error message styling */
+          .error-message {
+            color: #e74c3c;
+            font-size: 0.85rem;
+            margin-top: 5px;
+          }
+
+          /* Responsive adjustments */
+          @media (max-width: 768px) {
+            .card-body {
+              padding: 20px;
+            }
+
+            .form-section {
+              padding: 15px;
+            }
+
+            .btn-primary {
+              width: 100%;
+              margin-top: 15px;
+            }
+          }
+
+          /* Row spacing */
+          .row {
+            margin-bottom: 20px;
+          }
+
+          /* Spinner styling */
+          .spinner-border {
+            margin-right: 8px;
+            width: 1.2rem;
+            height: 1.2rem;
+          }
+
+          /* Optional: Add animation for form elements */
+          .form-control, .form-select, .btn {
+            animation: fadeIn 0.5s ease-in-out;
+          }
+
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+              transform: translateY(10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          /* Optional: Add hover effect for form controls */
+          .form-control:hover, .form-select:hover {
+            border-color: #3498db;
+          }
+        `}
+      </style>
     </div>
   );
 }

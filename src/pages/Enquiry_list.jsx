@@ -13,7 +13,7 @@ import {
 } from "react-bootstrap";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
 
-const BASE_URL = "http://192.168.90.158:5000/api";
+const BASE_URL = "http://192.168.90.203:5000/api";
 
 export default function EnquiryList() {
   const [enquiries, setEnquiries] = useState([]);
@@ -87,8 +87,7 @@ export default function EnquiryList() {
     const filteredData = enquiries.filter((enquiry) =>
       Object.values(enquiry).some(
         (field) =>
-          typeof field === "string" &&
-          field.toLowerCase().includes(value)
+          typeof field === "string" && field.toLowerCase().includes(value)
       )
     );
 

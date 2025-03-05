@@ -7,7 +7,7 @@ import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.158:5000/api";
+const BASE_URL = "http://192.168.90.238:5000/api";
 
 export default function Personal() {
   const location = useLocation();
@@ -15,7 +15,6 @@ export default function Personal() {
     localStorage.getItem("selectedPatientId")
   );
 
-  const [selectedReference, setSelectedReference] = useState("dr_ref");
   const [rowData, setRowData] = useState({});
   const [errors, setErrors] = useState({});
 
@@ -26,6 +25,7 @@ export default function Personal() {
     "Mentally Stressful": false,
   });
 
+  const [selectedReference, setSelectedReference] = useState("");
   const [referenceDetails, setReferenceDetails] = useState({
     newspaper: "",
     internet: "",
@@ -44,7 +44,7 @@ export default function Personal() {
   });
 
   const [oldPatientDetails, setOldPatientDetails] = useState({
-    patient_ref_no: "",
+    patient_ref_no: "", // This will store the phone number
     old_patient_name: "",
     old_patient_id_value: "",
     old_patient_pincode: "",
@@ -149,10 +149,15 @@ export default function Personal() {
   const formatDate = (dateString) => {
     if (!dateString) return "";
 
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return ""; // Return empty string if invalid date
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return ""; // Return empty string if invalid date
 
-    return date.toISOString().split("T")[0]; // Returns YYYY-MM-DD format
+      return date.toISOString().split("T")[0]; // Returns YYYY-MM-DD format
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "";
+    }
   };
 
   const handleWorkPatternChange = (e) => {
@@ -206,7 +211,23 @@ export default function Personal() {
   };
 
   const handleReferenceChange = (e) => {
-    setSelectedReference(e.target.value);
+    const selectedValue = e.target.value;
+    setSelectedReference(selectedValue);
+
+    // If TVShow is selected, set the reference_type and clear the TVShow field
+    if (selectedValue === "TVShow") {
+      setRowData((prev) => ({
+        ...prev,
+        reference_type: "TV Show", // Store "TV Show" in reference_type
+        ref: "", // Clear previous selection
+      }));
+    } else {
+      setRowData((prev) => ({
+        ...prev,
+        reference_type: "", // Clear reference_type for other selections
+        ref: "", // Clear ref for other selections
+      }));
+    }
   };
 
   const handleReferenceDetailsChange = (e) => {
@@ -215,6 +236,50 @@ export default function Personal() {
       ...prev,
       [name]: value,
     }));
+
+    // Check if HHC Board is selected and update the ref field
+    if (name === "HHC_board" && value === "HHC_board") {
+      setRowData((prev) => ({
+        ...prev,
+        ref: value, // Store the selected value in ref
+      }));
+    }
+    if (name === "HHF" && value === "HHF") {
+      setRowData((prev) => ({
+        ...prev,
+        ref: value, // Store the selected value in ref
+      }));
+    }
+
+    if (name === "other") {
+      setRowData((prev) => ({
+        ...prev,
+        ref: value, // Store the selected value in ref
+      }));
+    }
+
+    if (name === "WOM") {
+      setRowData((prev) => ({
+        ...prev,
+        ref: value, // Store the selected value in ref
+      }));
+    }
+
+    if (selectedReference === "family_friends") {
+      setRowData((prev) => ({
+        ...prev,
+        ref: `${referenceDetails.friendname || ""},${
+          referenceDetails.friendno || ""
+        }`,
+      }));
+    }
+
+    if (selectedReference === "old_ref") {
+      setRowData((prev) => ({
+        ...prev,
+        ref: `${oldPatientDetails.patient_ref_no || ""}`, // Store the pincode in ref
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -225,7 +290,7 @@ export default function Personal() {
 
     switch (selectedReference) {
       case "newspaper":
-        reference_type = `Newspaper: ${referenceDetails.newspaper || ""}`;
+        reference_type = `Newspaper`;
         break;
       case "dr_ref":
         reference_type = `Doctor Reference: ${
@@ -233,25 +298,19 @@ export default function Personal() {
         } - ${referenceDetails.reference_doctor_speciality || ""}`;
         break;
       case "internet":
-        reference_type = `Internet: ${referenceDetails.internet || ""}`;
+        reference_type = `Internet`;
         break;
       case "MediaRef":
-        reference_type = `Entertainment Media: ${
-          referenceDetails.MediaRef || ""
-        }`;
+        reference_type = `Entertainment Media`;
         break;
       case "TVShow":
-        reference_type = `TV Show: ${referenceDetails.TVShow || ""}`;
+        reference_type = `TVShow`;
         break;
       case "old_ref":
-        reference_type = `Patient Reference: ${
-          oldPatientDetails.old_patient_name || ""
-        } (${oldPatientDetails.patient_ref_no || ""})`;
+        reference_type = `Patient Reference`;
         break;
       case "family_friends":
-        reference_type = `Family/Friends: ${
-          referenceDetails.friendname || ""
-        } (${referenceDetails.friendno || ""})`;
+        reference_type = `Family/Friends`;
         break;
       case "hhc_board":
         reference_type = "HHC Board";
@@ -260,10 +319,10 @@ export default function Personal() {
         reference_type = "HHF";
         break;
       case "other":
-        reference_type = `Other: ${referenceDetails.other || ""}`;
+        reference_type = `Other`;
         break;
       case "WOM":
-        reference_type = `WOM: ${referenceDetails.WOM || ""}`;
+        reference_type = `WOM`;
         break;
       default:
         reference_type = "";
@@ -320,7 +379,14 @@ export default function Personal() {
 
           // Check if the API response structure is correct
           if (data && data.data) {
-            setRowData(data.data);
+            // Ensure birth_date is properly formatted
+            const formattedData = {
+              ...data.data,
+              birth_date: data.data.birth_date
+                ? formatDate(data.data.birth_date)
+                : null,
+            };
+            setRowData(formattedData);
           } else {
             console.error("Unexpected data structure:", data);
           }
@@ -334,6 +400,107 @@ export default function Personal() {
 
     fetchPatientData();
   }, [patientId]);
+
+  // Add this state for doctor search
+  const [doctorSearchResults, setDoctorSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Add this function to fetch doctor details
+  const searchDoctorByName = async (name) => {
+    if (!name || name.length < 3) {
+      setDoctorSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const response = await fetch(
+        `${BASE_URL}/V1/Patients/listDoctor?name=${name}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        // Filter the results based on the search term
+        const filteredResults = data.data.filter(
+          (doctor) =>
+            doctor.ref_doctor_name.toLowerCase().includes(name.toLowerCase()) ||
+            (doctor.reference_doctor_speciality &&
+              doctor.reference_doctor_speciality
+                .toLowerCase()
+                .includes(name.toLowerCase()))
+        );
+        console.log("Filtered doctor results:", filteredResults);
+        setDoctorSearchResults(filteredResults);
+      }
+    } catch (error) {
+      console.error("Error searching doctor:", error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Add these new states near the top of your component
+  const [patientSearchResults, setPatientSearchResults] = useState([]);
+  const [isSearchingPatient, setIsSearchingPatient] = useState(false);
+
+  // Add this new function alongside your other functions
+  const searchPatientByPhone = async (phone) => {
+    if (!phone || phone.length < 10) {
+      setPatientSearchResults([]);
+      return;
+    }
+
+    setIsSearchingPatient(true);
+    try {
+      console.log("Calling API with phone:", phone); // ✅ Log input phone
+
+      const response = await fetch(
+        `${BASE_URL}/V1/Patients/listRefPatient/${phone}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("API Response Status:", response.status); // ✅ Log API status
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("API Response Data:", data); // ✅ Log full API response
+
+        if (data.statusCode === 200 && data.data.refPatientData) {
+          // Access the nested refPatientData
+          const results = Array.isArray(data.data.refPatientData)
+            ? data.data.refPatientData
+            : [data.data.refPatientData];
+          setPatientSearchResults(results);
+          console.log("Updated Patient Search Results:", results); // ✅ Log updated results
+        } else {
+          console.log("No patient found.");
+          setPatientSearchResults([]);
+        }
+      } else {
+        console.error("API Error:", response.status, await response.text());
+      }
+    } catch (error) {
+      console.error("Error searching patient:", error);
+    } finally {
+      setIsSearchingPatient(false);
+    }
+  };
+
+  // Debug state updates
+  useEffect(() => {
+    console.log("Updated state in UI:", patientSearchResults);
+  }, [patientSearchResults]);
 
   return (
     <div
@@ -355,8 +522,8 @@ export default function Personal() {
                 borderRadius: "12px",
                 boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
                 borderColor: "#00bcd4",
-                background: "white",
-                border: "1px solid #00bcd4",
+                background: "#f8f9fa",
+                border: "3px solid #00bcd4",
               }}
             >
               <Card.Body>
@@ -365,7 +532,12 @@ export default function Personal() {
                   <button
                     type="button"
                     className="btn btn-primary"
-                    style={{ marginTop: "5px", float: "right" }}
+                    style={{
+                      marginTop: "5px",
+                      float: "right",
+                      backgroundColor: "#00bcd4",
+                      color: "white",
+                    }}
                     onClick={() => setIsEditing(true)}
                   >
                     Edit Patient
@@ -380,11 +552,11 @@ export default function Personal() {
                           type="text"
                           name="Uid_no"
                           value={rowData?.Uid_no}
-                          readOnly
+                          // readOnly
                           style={{
                             backgroundColor: "#e9ecef", // Light grey background to indicate read-only
                             color: "#6c757d", // Grey text color
-                            cursor: "not-allowed", // Show "not-allowed" cursor
+                            // cursor: "not-allowed", // Show "not-allowed" cursor
                           }}
                           onChange={handleInputChange}
                         />
@@ -452,11 +624,11 @@ export default function Personal() {
                             <option value="MR">MR</option>
                             <option value="MS">MS</option>
                             <option value="MRS">MRS</option>
-                            <option value="MASTER">MASTER</option>
+                            {/* <option value="MASTER">MASTER</option> */}
                           </select>
                         </div>
                         {/* Patient Name Input */}
-                        <Col md={5}>
+                        <Col md={6}>
                           <div
                             style={{
                               display: "flex",
@@ -540,8 +712,23 @@ export default function Personal() {
                         />
                       </Form.Group>
                     </Col>
+                    <Col md={2}>
+                      <Form.Group className="mb-20">
+                        <Form.Label>Gender</Form.Label>
+                        <Form.Control
+                          as="select"
+                          name="sex"
+                          value={rowData.sex || rowData?.sex}
+                          onChange={handleInputChange}
+                        >
+                          <option value="">Select Gender</option>
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                        </Form.Control>
+                      </Form.Group>
+                    </Col>
                     {/* Mobile No */}
-                    <Col md={4} className="mb-4">
+                    <Col md={2} className="mb-4">
                       <Form.Group className="mb-3">
                         <Form.Label>Mobile No</Form.Label>
                         <Form.Control
@@ -554,7 +741,9 @@ export default function Personal() {
                         />
                       </Form.Group>
                     </Col>
-                    <Col md={4} className="mb-4">
+                  </Row>
+                  <Row>
+                    <Col md={2} className="mb-4">
                       <Form.Group className="mb-3">
                         <Form.Label>Alternate No</Form.Label>
                         <Form.Control
@@ -563,38 +752,25 @@ export default function Personal() {
                           name="alternateNo"
                           value={rowData.mobile_2}
                           onChange={handleInputChange}
-                          placeholder="Enter Alternate Number"
+                          placeholder="Alternate Number"
                         />
                       </Form.Group>
                     </Col>
-                    <Col md={4} className="mb-4">
+                    <Col md={2} className="mb-4">
                       <Form.Group className="mb-3">
                         <Form.Label>Pincode No</Form.Label>
                         <Form.Control
                           id="pincode"
                           type="number"
                           name="pincode"
-                          value={rowData.pincode || rowData.pincode}
+                          placeholder="Enter Pincode No"
+                          value={rowData.pincode}
                           onChange={handleInputChange}
                         />
                       </Form.Group>
                     </Col>
-                    <Col md={4}>
-                      <Form.Group className="mb-20">
-                        <Form.Label>Gender</Form.Label>
-                        <Form.Control
-                          as="select"
-                          name="gender"
-                          value={rowData.gender || rowData?.gender}
-                          onChange={handleInputChange}
-                        >
-                          <option value="">Select Gender</option>
-                          <option value="Male">Male</option>
-                          <option value="Female">Female</option>
-                        </Form.Control>
-                      </Form.Group>
-                    </Col>
-                    <Col md={4}>
+
+                    <Col md={2}>
                       <Form.Group className="mb-3">
                         <Form.Label>Blood Group</Form.Label>
                         <Form.Select
@@ -602,13 +778,10 @@ export default function Personal() {
                           name="blood_group"
                           value={rowData.blood_group || rowData?.blood_group}
                           onChange={(e) =>
-                            setRowData({
-                              rowData,
-                              blood_group: e.target.value,
-                            })
+                            setRowData({ rowData, blood_group: e.target.value })
                           }
                         >
-                          <option value="">Select Blood Group</option>
+                          <option value="">Blood Group</option>
                           <option value="A+">A+</option>
                           <option value="A-">A-</option>
                           <option value="B+">B+</option>
@@ -620,14 +793,14 @@ export default function Personal() {
                         </Form.Select>
                       </Form.Group>
                     </Col>
-                    <Col md={4} className="mb-4">
+                    <Col md={3} className="mb-4">
                       <Form.Group className="mb-3">
                         <Form.Label>Identity</Form.Label>
                         <Form.Control
                           id="identity"
                           as="select"
                           name="identity"
-                          value={rowData.identity || rowData.identity}
+                          value={rowData.identity}
                           onChange={handleInputChange}
                         >
                           <option value="">Select Identity</option>
@@ -637,12 +810,21 @@ export default function Personal() {
                         </Form.Control>
                       </Form.Group>
                     </Col>
-                    <Col md={4}>
-                      <Form.Group>
-                        <Form.Label> </Form.Label>
-                        <Form.Control></Form.Control>
+                    <Col md={3}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Identity Number</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="identityNumber"
+                          value={rowData.identityNumber || ""}
+                          onChange={handleInputChange}
+                          placeholder="Enter Identity Number"
+                        />
                       </Form.Group>
                     </Col>
+                  </Row>
+                  <br />
+                  <Row>
                     <Col md={2} className="mb-4">
                       <Form.Group className="mb-3">
                         {/* Add className="d-block" to move label above the input box */}
@@ -722,12 +904,67 @@ export default function Personal() {
                         />
                       </Form.Group>
                     </Col>
-
+                  </Row>
+                  <br />
+                  <Row>
+                    <Col md={12}>
+                      <Form.Group className="mb-4">
+                        <Form.Label>Add Specific Work Pattern</Form.Label>
+                        <div className="checkbox-grid">
+                          <Row>
+                            <Col md={2}>
+                              <Form.Check
+                                type="checkbox"
+                                id="workPattern-sedentary"
+                                label="Sedentary"
+                                name="Sedentary"
+                                checked={workPatterns.Sedentary}
+                                onChange={handleWorkPatternChange}
+                              />
+                            </Col>
+                            <Col md={2}>
+                              <Form.Check
+                                type="checkbox"
+                                id="workPattern-travelling"
+                                label="Travelling"
+                                name="Travelling"
+                                checked={workPatterns.Travelling}
+                                onChange={handleWorkPatternChange}
+                              />
+                            </Col>
+                            <Col md={3}>
+                              <Form.Check
+                                type="checkbox"
+                                id="workPattern-strenuous"
+                                label="Strenuous (Physical Activity)"
+                                name="Strenuous (Physical Activity)"
+                                checked={
+                                  workPatterns["Strenuous (Physical Activity)"]
+                                }
+                                onChange={handleWorkPatternChange}
+                              />
+                            </Col>
+                            <Col md={2}>
+                              <Form.Check
+                                type="checkbox"
+                                id="workPattern-mental"
+                                label="Mentally Stressful"
+                                name="Mentally Stressful"
+                                checked={workPatterns["Mentally Stressful"]}
+                                onChange={handleWorkPatternChange}
+                              />
+                            </Col>
+                          </Row>
+                        </div>
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  <Row>
                     <Col md={4} className="mb-4">
                       <Form.Group className="mb-3">
                         <Form.Label>Reference</Form.Label>
                         <Form.Select
-                          value={rowData?.selectedReference}
+                          value={selectedReference}
                           onChange={handleReferenceChange}
                           className="mb-3"
                         >
@@ -763,16 +1000,16 @@ export default function Personal() {
                                   name="newspaper"
                                   label={paper}
                                   value={paper}
-                                  onChange={handleReferenceDetailsChange}
+                                  onChange={(e) => {
+                                    handleReferenceDetailsChange(e); // Update referenceDetails
+                                    setRowData((prev) => ({
+                                      ...prev,
+                                      ref: paper, // Store the selected TV show in ref
+                                    }));
+                                  }}
                                   checked={referenceDetails.newspaper === paper}
                                 />
                               ))}
-                              <Form.Control
-                                type="text"
-                                placeholder="Other"
-                                name="Other_Newspaper"
-                                onChange={handleReferenceDetailsChange}
-                              />
                             </div>
                           </div>
                         )}
@@ -797,7 +1034,13 @@ export default function Personal() {
                                   name="internet"
                                   label={source}
                                   value={source}
-                                  onChange={handleReferenceDetailsChange}
+                                  onChange={(e) => {
+                                    handleReferenceDetailsChange(e); // Update referenceDetails
+                                    setRowData((prev) => ({
+                                      ...prev,
+                                      ref: source, // Store the selected TV show in ref
+                                    }));
+                                  }}
                                   checked={referenceDetails.internet === source}
                                 />
                               ))}
@@ -813,11 +1056,76 @@ export default function Personal() {
                               <Col md={6}>
                                 <Form.Control
                                   type="text"
-                                  placeholder="Doctor Name (min: 4 digits)"
+                                  placeholder="Search Doctor Name (min: 3 characters)"
                                   name="reference_doctor_name"
                                   value={referenceDetails.reference_doctor_name}
-                                  onChange={handleReferenceDetailsChange}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    handleReferenceDetailsChange(e);
+                                    searchDoctorByName(value);
+                                  }}
                                 />
+                                {/* Search Results Dropdown */}
+                                {isSearching && <div>Searching...</div>}
+                                {doctorSearchResults.length > 0 && (
+                                  <div
+                                    className="search-results"
+                                    style={{
+                                      position: "absolute",
+                                      zIndex: 1000,
+                                      backgroundColor: "white",
+                                      border: "1px solid #ddd",
+                                      borderRadius: "4px",
+                                      maxHeight: "200px",
+                                      overflowY: "auto",
+                                      width: "15%",
+                                      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                                    }}
+                                  >
+                                    {doctorSearchResults.map(
+                                      (doctor, index) => (
+                                        <div
+                                          key={index}
+                                          className="search-result-item"
+                                          style={{
+                                            padding: "10px",
+                                            cursor: "pointer",
+                                            borderBottom: "1px solid #eee",
+                                            "&:hover": {
+                                              backgroundColor: "#f5f5f5",
+                                            },
+                                          }}
+                                          onClick={() => {
+                                            setReferenceDetails((prev) => ({
+                                              ...prev,
+                                              reference_doctor_name:
+                                                doctor.ref_doctor_name || "",
+                                              reference_doctor_no:
+                                                doctor.ref_doctor_phone || "",
+                                              reference_doctor_speciality:
+                                                doctor.reference_doctor_speciality ||
+                                                "",
+                                              reference_doctor_location:
+                                                doctor.reference_doctor_location ||
+                                                "",
+                                            }));
+                                            setDoctorSearchResults([]); // Clear search results after selection
+                                          }}
+                                        >
+                                          <div style={{ fontWeight: "bold" }}>
+                                            {doctor.ref_doctor_name}
+                                          </div>
+                                          <div
+                                            style={{
+                                              fontSize: "0.9em",
+                                              color: "#666",
+                                            }}
+                                          ></div>
+                                        </div>
+                                      )
+                                    )}
+                                  </div>
+                                )}
                               </Col>
                               <Col md={6}>
                                 <Form.Control
@@ -826,6 +1134,7 @@ export default function Personal() {
                                   name="reference_doctor_no"
                                   value={referenceDetails.reference_doctor_no}
                                   onChange={handleReferenceDetailsChange}
+                                  readOnly
                                 />
                               </Col>
                               <Col md={6}>
@@ -837,6 +1146,7 @@ export default function Personal() {
                                     referenceDetails.reference_doctor_speciality
                                   }
                                   onChange={handleReferenceDetailsChange}
+                                  readOnly
                                 />
                               </Col>
                               <Col md={6}>
@@ -848,6 +1158,7 @@ export default function Personal() {
                                     referenceDetails.reference_doctor_location
                                   }
                                   onChange={handleReferenceDetailsChange}
+                                  readOnly
                                 />
                               </Col>
                             </Row>
@@ -866,7 +1177,13 @@ export default function Personal() {
                                   name="MediaRef"
                                   label={media}
                                   value={media}
-                                  onChange={handleReferenceDetailsChange}
+                                  onChange={(e) => {
+                                    handleReferenceDetailsChange(e); // Update referenceDetails
+                                    setRowData((prev) => ({
+                                      ...prev,
+                                      ref: media, // Store the selected TV show in ref
+                                    }));
+                                  }}
                                   checked={referenceDetails.MediaRef === media}
                                 />
                               ))}
@@ -893,7 +1210,13 @@ export default function Personal() {
                                   name="TVShow"
                                   label={show}
                                   value={show}
-                                  onChange={handleReferenceDetailsChange}
+                                  onChange={(e) => {
+                                    handleReferenceDetailsChange(e); // Update referenceDetails
+                                    setRowData((prev) => ({
+                                      ...prev,
+                                      ref: show, // Store the selected TV show in ref
+                                    }));
+                                  }}
                                   checked={referenceDetails.TVShow === show}
                                 />
                               ))}
@@ -913,31 +1236,146 @@ export default function Personal() {
                           >
                             <Form.Label>Patient Reference</Form.Label>
                             <Row>
-                              <Col md={12} style={{ marginBottom: "20px" }}>
+                              <Col
+                                md={12}
+                                style={{
+                                  marginBottom: "20px",
+                                  position: "relative",
+                                }}
+                              >
                                 <Form.Control
                                   type="text"
-                                  placeholder="Enter Phone Number"
+                                  placeholder="Phone Number"
                                   name="patient_ref_no"
-                                  value={oldPatientDetails.patient_ref_no}
+                                  value={oldPatientDetails.patient_ref_no} // This should show the phone number
                                   onChange={(e) => {
-                                    const value = e.target.value;
                                     setOldPatientDetails((prev) => ({
                                       ...prev,
-                                      patient_ref_no: value,
+                                      patient_ref_no: e.target.value,
                                     }));
-                                  }}
-                                  style={{
-                                    height: "38px",
-                                    width: "100%",
-                                    borderRadius: "4px",
-                                    border: "1px solid #ced4da",
+                                    searchPatientByPhone(e.target.value);
                                   }}
                                 />
-                              </Col>
 
-                              {/* Patient Details Fields without labels */}
-                              <Col md={4}>
-                                <Form.Group style={{ marginBottom: "15px" }}>
+                                {/* Search Results Dropdown */}
+                                {(isSearchingPatient ||
+                                  patientSearchResults.length > 0) && (
+                                  <div
+                                    className="search-results"
+                                    style={{
+                                      position: "absolute",
+                                      zIndex: 1000,
+                                      backgroundColor: "white",
+                                      border: "1px solid #ddd",
+                                      borderRadius: "4px",
+                                      maxHeight: "300px", // Increased height
+                                      overflowY: "auto",
+                                      width: "100%", // You can adjust this width as needed
+                                      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                                    }}
+                                  >
+                                    {isSearchingPatient && (
+                                      <div>Searching...</div>
+                                    )}
+                                    {patientSearchResults.length > 0 ? (
+                                      patientSearchResults.map(
+                                        (patient, index) => {
+                                          console.log(
+                                            "Rendering patient:",
+                                            patient
+                                          ); // ✅ Debug
+                                          return (
+                                            <div
+                                              key={index}
+                                              className="search-result-item"
+                                              style={{
+                                                display: "flex", // Makes the content horizontal
+                                                padding: "10px",
+                                                cursor: "pointer",
+                                                borderBottom: "1px solid #eee",
+                                                backgroundColor: "#fff",
+                                                alignItems: "center", // Ensures the items align vertically in the center
+                                                justifyContent: "space-between", // Spreads out the content evenly
+                                              }}
+                                              onClick={() => {
+                                                console.log(
+                                                  "Selected patient:",
+                                                  patient
+                                                ); // ✅ Debug
+                                                setOldPatientDetails({
+                                                  patient_ref_no:
+                                                    patient.phone || "", // Fill phone number here
+                                                  old_patient_name:
+                                                    patient.name || "",
+                                                  old_patient_id_value:
+                                                    patient.patient_id || "",
+                                                  old_patient_pincode:
+                                                    patient.pincode || "",
+                                                });
+                                                setPatientSearchResults([]); // Clear search results after selection
+                                              }}
+                                            >
+                                              <div
+                                                style={{
+                                                  fontWeight: "bold",
+                                                  flex: 2,
+                                                  fontSize: "1.1em",
+                                                }}
+                                              >
+                                                {patient.name}
+                                              </div>
+                                              <div
+                                                style={{
+                                                  fontSize: "0.9em",
+                                                  color: "#666",
+                                                  flex: 1,
+                                                }}
+                                              >
+                                                Pincode: {patient.pincode}
+                                              </div>
+                                              <div
+                                                style={{
+                                                  fontSize: "0.9em",
+                                                  color: "#666",
+                                                  flex: 1,
+                                                }}
+                                              >
+                                                Phone: {patient.phone}
+                                              </div>
+                                            </div>
+                                          );
+                                        }
+                                      )
+                                    ) : (
+                                      <div
+                                        style={{
+                                          padding: "10px",
+                                          color: "#666",
+                                        }}
+                                      >
+                                        No patient found
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Patient Details Inputs */}
+                                {/* <Col md={4}>
+                                  <Form.Control
+                                    type="text"
+                                    placeholder="Phone Number"
+                                    name="patient_ref_no"
+                                    value={oldPatientDetails.patient_ref_no} // Show phone number here
+                                    onChange={(e) => {
+                                      setOldPatientDetails((prev) => ({
+                                        ...prev,
+                                        patient_ref_no: e.target.value,
+                                      }));
+                                    }}
+                                    readOnly
+                                  />
+                                </Col> */}
+                                <Col md={12}>
                                   <Form.Control
                                     type="text"
                                     placeholder="Patient Name"
@@ -949,18 +1387,10 @@ export default function Personal() {
                                         old_patient_name: e.target.value,
                                       }));
                                     }}
-                                    style={{
-                                      height: "38px",
-                                      width: "100%",
-                                      borderRadius: "4px",
-                                      border: "1px solid #ced4da",
-                                    }}
+                                    readOnly
                                   />
-                                </Form.Group>
-                              </Col>
-
-                              <Col md={4}>
-                                <Form.Group style={{ marginBottom: "15px" }}>
+                                </Col>
+                                <Col md={12}>
                                   <Form.Control
                                     type="text"
                                     placeholder="Patient ID"
@@ -974,18 +1404,10 @@ export default function Personal() {
                                         old_patient_id_value: e.target.value,
                                       }));
                                     }}
-                                    style={{
-                                      height: "38px",
-                                      width: "100%",
-                                      borderRadius: "4px",
-                                      border: "1px solid #ced4da",
-                                    }}
+                                    readOnly
                                   />
-                                </Form.Group>
-                              </Col>
-
-                              <Col md={4}>
-                                <Form.Group style={{ marginBottom: "15px" }}>
+                                </Col>
+                                <Col md={12}>
                                   <Form.Control
                                     type="text"
                                     placeholder="Pincode"
@@ -999,15 +1421,55 @@ export default function Personal() {
                                         old_patient_pincode: e.target.value,
                                       }));
                                     }}
-                                    style={{
-                                      height: "38px",
-                                      width: "100%",
-                                      borderRadius: "4px",
-                                      border: "1px solid #ced4da",
-                                    }}
+                                    readOnly
                                   />
-                                </Form.Group>
+                                </Col>
                               </Col>
+                              {/*  <Col md={4}>
+                                <Form.Control
+                                  type="text"
+                                  placeholder="Patient Name"
+                                  name="old_patient_name"
+                                  value={oldPatientDetails.old_patient_name}
+                                  onChange={(e) => {
+                                    setOldPatientDetails((prev) => ({
+                                      ...prev,
+                                      old_patient_name: e.target.value,
+                                    }));
+                                  }}
+                                  readOnly
+                                />
+                              </Col>
+                              <Col md={4}>
+                                <Form.Control
+                                  type="text"
+                                  placeholder="Patient ID"
+                                  name="old_patient_id_value"
+                                  value={oldPatientDetails.old_patient_id_value}
+                                  onChange={(e) => {
+                                    setOldPatientDetails((prev) => ({
+                                      ...prev,
+                                      old_patient_id_value: e.target.value,
+                                    }));
+                                  }}
+                                  readOnly
+                                />
+                              </Col>
+                              <Col md={4}>
+                                <Form.Control
+                                  type="text"
+                                  placeholder="Pincode"
+                                  name="old_patient_pincode"
+                                  value={oldPatientDetails.old_patient_pincode}
+                                  onChange={(e) => {
+                                    setOldPatientDetails((prev) => ({
+                                      ...prev,
+                                      old_patient_pincode: e.target.value,
+                                    }));
+                                  }}
+                                  readOnly
+                                />
+                              </Col> */}
                             </Row>
                           </div>
                         )}
@@ -1025,38 +1487,22 @@ export default function Personal() {
                             <Form.Label>Family/Friends</Form.Label>
                             <Row>
                               <Col md={6}>
-                                <Form.Group style={{ marginBottom: "15px" }}>
-                                  <Form.Control
-                                    type="text"
-                                    placeholder="Friend Name"
-                                    name="friendname"
-                                    value={referenceDetails.friendname}
-                                    onChange={handleReferenceDetailsChange}
-                                    style={{
-                                      height: "38px",
-                                      width: "100%",
-                                      borderRadius: "4px",
-                                      border: "1px solid #ced4da",
-                                    }}
-                                  />
-                                </Form.Group>
+                                <Form.Control
+                                  type="text"
+                                  placeholder="Friend Name"
+                                  name="friendname"
+                                  value={referenceDetails.friendname}
+                                  onChange={handleReferenceDetailsChange}
+                                />
                               </Col>
                               <Col md={6}>
-                                <Form.Group style={{ marginBottom: "15px" }}>
-                                  <Form.Control
-                                    type="text"
-                                    placeholder="Friend Number"
-                                    name="friendno"
-                                    value={referenceDetails.friendno}
-                                    onChange={handleReferenceDetailsChange}
-                                    style={{
-                                      height: "38px",
-                                      width: "100%",
-                                      borderRadius: "4px",
-                                      border: "1px solid #ced4da",
-                                    }}
-                                  />
-                                </Form.Group>
+                                <Form.Control
+                                  type="text"
+                                  placeholder="Friend Number"
+                                  name="friendno"
+                                  value={referenceDetails.friendno}
+                                  onChange={handleReferenceDetailsChange}
+                                />
                               </Col>
                             </Row>
                           </div>
@@ -1072,7 +1518,7 @@ export default function Personal() {
                               marginTop: "10px",
                             }}
                           >
-                            <Form.Label>HHC Board</Form.Label>
+                            <Form.Label>Other Detail</Form.Label>
                             <Row>
                               <Col md={12}>
                                 <Form.Check
@@ -1081,7 +1527,6 @@ export default function Personal() {
                                   label="HHC Board"
                                   value="HHC_board"
                                   onChange={handleReferenceDetailsChange}
-                                  style={{ marginBottom: "10px" }}
                                 />
                               </Col>
                             </Row>
@@ -1098,7 +1543,7 @@ export default function Personal() {
                               marginTop: "10px",
                             }}
                           >
-                            <Form.Label>HHF</Form.Label>
+                            <Form.Label>Other Detail</Form.Label>
                             <Row>
                               <Col md={12}>
                                 <Form.Check
@@ -1107,7 +1552,6 @@ export default function Personal() {
                                   label="HHF"
                                   value="HHF"
                                   onChange={handleReferenceDetailsChange}
-                                  style={{ marginBottom: "10px" }}
                                 />
                               </Col>
                             </Row>
@@ -1127,21 +1571,13 @@ export default function Personal() {
                             <Form.Label>Other Detail</Form.Label>
                             <Row>
                               <Col md={12}>
-                                <Form.Group style={{ marginBottom: "15px" }}>
-                                  <Form.Control
-                                    type="text"
-                                    placeholder="Other"
-                                    name="other"
-                                    value={referenceDetails.other}
-                                    onChange={handleReferenceDetailsChange}
-                                    style={{
-                                      height: "38px",
-                                      width: "100%",
-                                      borderRadius: "4px",
-                                      border: "1px solid #ced4da",
-                                    }}
-                                  />
-                                </Form.Group>
+                                <Form.Control
+                                  type="text"
+                                  placeholder="Other"
+                                  name="other"
+                                  value={referenceDetails.other}
+                                  onChange={handleReferenceDetailsChange}
+                                />
                               </Col>
                             </Row>
                           </div>
@@ -1160,82 +1596,13 @@ export default function Personal() {
                             <Form.Label>WOM Detail</Form.Label>
                             <Row>
                               <Col md={12}>
-                                <Form.Group style={{ marginBottom: "15px" }}>
-                                  <Form.Control
-                                    type="text"
-                                    placeholder="WOM"
-                                    name="WOM"
-                                    value={referenceDetails.WOM}
-                                    onChange={handleReferenceDetailsChange}
-                                    style={{
-                                      height: "38px",
-                                      width: "100%",
-                                      borderRadius: "4px",
-                                      border: "1px solid #ced4da",
-                                    }}
-                                  />
-                                </Form.Group>
-                              </Col>
-                            </Row>
-                            <Row>
-                              <Col md={12}>
-                                <Form.Group className="mb-4">
-                                  <Form.Label>
-                                    Add Specific Work Pattern
-                                  </Form.Label>
-                                  <div
-                                    className="checkbox-grid"
-                                    style={{
-                                      display: "grid",
-                                      gridTemplateColumns:
-                                        "repeat(auto-fill, minmax(200px, 1fr))",
-                                      gap: "10px",
-                                      padding: "15px",
-                                      backgroundColor: "#fff",
-                                      borderRadius: "4px",
-                                      border: "1px solid #ced4da",
-                                    }}
-                                  >
-                                    <Form.Check
-                                      type="checkbox"
-                                      id="workPattern-sedentary"
-                                      label="Sedentary"
-                                      name="Sedentary"
-                                      checked={workPatterns.Sedentary}
-                                      onChange={handleWorkPatternChange}
-                                    />
-                                    <Form.Check
-                                      type="checkbox"
-                                      id="workPattern-travelling"
-                                      label="Travelling"
-                                      name="Travelling"
-                                      checked={workPatterns.Travelling}
-                                      onChange={handleWorkPatternChange}
-                                    />
-                                    <Form.Check
-                                      type="checkbox"
-                                      id="workPattern-strenuous"
-                                      label="Strenuous (Physical Activity)"
-                                      name="Strenuous (Physical Activity)"
-                                      checked={
-                                        workPatterns[
-                                          "Strenuous (Physical Activity)"
-                                        ]
-                                      }
-                                      onChange={handleWorkPatternChange}
-                                    />
-                                    <Form.Check
-                                      type="checkbox"
-                                      id="workPattern-mental"
-                                      label="Mentally Stressful"
-                                      name="Mentally Stressful"
-                                      checked={
-                                        workPatterns["Mentally Stressful"]
-                                      }
-                                      onChange={handleWorkPatternChange}
-                                    />
-                                  </div>
-                                </Form.Group>
+                                <Form.Control
+                                  type="text"
+                                  placeholder="WOM"
+                                  name="WOM"
+                                  value={referenceDetails.WOM}
+                                  onChange={handleReferenceDetailsChange}
+                                />
                               </Col>
                             </Row>
                           </div>
@@ -1243,6 +1610,7 @@ export default function Personal() {
                       </Form.Group>
                     </Col>
                   </Row>
+
                   {/* Show update button only when editing */}
                   {isEditing && (
                     <button
@@ -1259,6 +1627,205 @@ export default function Personal() {
           </Col>
         </Row>
       </Container>
+      <style>
+        {`
+          /* Base styles with improved performance */
+          * {
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+          }
+
+          /* Form Layout Standardization */
+          .form-group {
+            margin-bottom: 1.5rem;
+            width: 100%;
+          }
+
+          /* Standardize all form controls */
+          .form-control,
+          .form-select,
+          input[type="text"],
+          input[type="email"],
+          input[type="number"],
+          input[type="date"],
+          select,
+          textarea {
+            height: 45px;
+            padding: 0.5rem 1rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+            width: 100%;
+            margin-bottom: 1rem;
+            transition: all 0.2s ease-in-out;
+            background-color: #ffffff;
+            color: #2c3e50;
+          }
+
+          /* Ensure DatePicker has consistent styling */
+          .react-datepicker-wrapper {
+            width: 100%;
+          }
+
+          .react-datepicker-wrapper input {
+            height: 45px;
+            padding: 0.5rem 1rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+            width: 100%;
+          }
+
+          /* Row and Column Spacing */
+          .row {
+            margin-bottom: 1rem;
+          }
+
+          .col, 
+          [class^="col-"] {
+            padding: 0 1rem;
+          }
+
+          /* Form Labels */
+          .form-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+            display: block;
+          }
+
+          /* Focus States */
+          .form-control:focus,
+          .form-select:focus,
+          input:focus,
+          select:focus,
+          textarea:focus {
+            border-color: #00bcd4;
+            box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
+            outline: none;
+          }
+
+          /* Card and Section Styling */
+          .card {
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+          }
+
+          .card-body {
+            padding: 0;
+          }
+
+          /* Search Results Consistency */
+          .search-results {
+            margin-top: 0.5rem;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+            max-height: 200px;
+            overflow-y: auto;
+          }
+
+          .search-result-item {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #dee2e6;
+          }
+
+          /* Checkbox and Radio Consistency */
+          .form-check {
+            padding: 0.5rem 0;
+            margin-bottom: 0.5rem;
+          }
+
+          .form-check-input {
+            margin-right: 0.5rem;
+          }
+
+          /* Button Consistency */
+          .btn {
+            height: 45px;
+            padding: 0 1.5rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          /* Responsive Adjustments */
+          @media (max-width: 768px) {
+            .form-control,
+            .form-select,
+            input[type="text"],
+            input[type="email"],
+            input[type="number"],
+            input[type="date"],
+            select,
+            textarea,
+            .btn {
+              height: 40px;
+            }
+
+            .card {
+              padding: 1rem;
+            }
+
+            .col, 
+            [class^="col-"] {
+              padding: 0 0.5rem;
+            }
+          }
+
+          /* Reference Section Styling */
+          .reference-details {
+            padding: 1rem;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            margin-top: 1rem;
+          }
+
+          /* Maintain existing color scheme and animations */
+          .btn-primary {
+            background: linear-gradient(45deg, #00bcd4, #00acc1);
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(0, 188, 212, 0.2);
+          }
+
+          .btn-primary:hover {
+            background: linear-gradient(45deg, #00acc1, #0097a7);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 188, 212, 0.3);
+          }
+
+          /* Animation and Accessibility */
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+              transform: translateY(10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            * {
+              animation-duration: 0.01ms !important;
+              animation-iteration-count: 1 !important;
+              transition-duration: 0.01ms !important;
+              scroll-behavior: auto !important;
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }

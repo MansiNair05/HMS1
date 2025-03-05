@@ -1,20 +1,23 @@
-@import 'slick-carousel/slick/slick';
-@import 'slick-carousel/slick/slick-theme';
-@import "bootstrap/scss/bootstrap";
-@import 'animate.css/animate.css';
+// Add this at the top to suppress deprecation warnings
+$enable-deprecation-messages: false;
+$color-mode-type: data;
+
+// Import bootstrap with newer color functions
+@use "sass:color";
+@import "bootstrap/scss/bootstrap.scss";
+@import "slick-carousel/slick/slick";
+@import "slick-carousel/slick/slick-theme";
+@import "animate.css/animate.css";
 @import "font-awesome/css/font-awesome.min.css";
-@import 'simplebar-react/dist/simplebar.min.css';
+@import "simplebar-react/dist/simplebar.min.css";
 
-// Ckediter Scss 
-@import 'ckeditor5/ckeditor5.css';
+// Ckediter Scss
+@import "ckeditor5/ckeditor5.css";
 
-// Fullcalender Scss 
-@import 'fullcalendar-reactwrapper/dist/css/fullcalendar.min.css';
-
-// Data table Scss 
-@import 'primeicons/primeicons.css';
-@import 'primereact/resources/themes/lara-light-indigo/theme.css';
-@import 'primereact/resources/primereact.css';
+// Data table Scss
+@import "primeicons/primeicons.css";
+@import "primereact/resources/themes/lara-light-indigo/theme.css";
+@import "primereact/resources/primereact.css";
 
 /*Custom Style*/
-@import 'assets/scss/style';
+@import "assets/scss/style";

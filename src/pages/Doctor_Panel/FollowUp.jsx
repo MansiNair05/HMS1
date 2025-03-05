@@ -4,7 +4,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.158:5000/api"; // Update with your backend API base URL
+const BASE_URL = "http://192.168.90.238:5000/api"; // Update with your backend API base URL
 
 export default function FollowUp() {
   const [patientId, setPatientId] = useState(
@@ -23,14 +23,13 @@ export default function FollowUp() {
     advice: "",
     plan: "",
     present_complaints: "",
-    date: "",
+    firstVisitDate: "",
     followUpVisitNo: "0",
   });
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     const storedPatientId = localStorage.getItem("selectedPatientId");
-    console.log("Retrieved from localStorage:", storedPatientId);
     if (storedPatientId) setPatientId(storedPatientId);
   }, []);
 
@@ -40,7 +39,6 @@ export default function FollowUp() {
       return;
     }
     const fetchPatientData = async () => {
-      console.log(`Fetching data for patient ID: ${patientId}`);
       try {
         const response = await fetch(
           `${BASE_URL}/V1/followUp/listFollowUp/${patientId}`,
@@ -62,8 +60,6 @@ export default function FollowUp() {
         }
 
         const data = await response.json();
-        console.log("Fetched Data:", data.data.data);
-
         if (data?.data?.data) {
           const { patientData, diagnosisData, followUpData } = data.data.data;
           setFormData({
@@ -75,10 +71,8 @@ export default function FollowUp() {
             occupation: patientData?.occupation || "",
             email: patientData?.email || "",
             reference_type: patientData?.reference_type || "",
-
             diagnosis: diagnosisData?.diagnosis || "",
             advice: diagnosisData?.advice || "",
-
             present_complaints: followUpData?.present_complaints || "",
             firstVisitDate: patientData?.date || "",
             followUpVisitNo: followUpData?.followUpVisitNo || "",
@@ -94,19 +88,15 @@ export default function FollowUp() {
     fetchPatientData();
   }, [patientId]);
 
-  // Track formData updates
-  useEffect(() => {
-    console.log("Updated formData:", formData);
-  }, [formData]);
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({ ...prevState, [name]: value }));
   };
 
   const handleSubmit = async () => {
-    setErrors(validate());
-    if (Object.keys(errors).length > 0) return;
+    const validationErrors = validate();
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) return;
 
     try {
       const response = await fetch(
@@ -120,7 +110,6 @@ export default function FollowUp() {
 
       if (response.ok) {
         alert("Patient data updated successfully");
-        // Set followUpVisitNo to 1 after successful save
         setFormData((prevState) => ({
           ...prevState,
           followUpVisitNo: "1",
@@ -184,13 +173,12 @@ export default function FollowUp() {
                 borderRadius: "12px",
                 boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
                 borderColor: "#00bcd4",
-                background: "white",
-                border: "1px solid #00bcd4",
+                background: "#f8f9fa",
+                border: "3px solid #00bcd4",
               }}
             >
               <Card.Body>
                 <Form>
-                  {" "}
                   <button
                     type="button"
                     className="btn btn-primary"
@@ -211,16 +199,14 @@ export default function FollowUp() {
                           value={formData.Uid_no || ""}
                           readOnly
                           style={{
-                            backgroundColor: "#e9ecef", // Light grey background to indicate read-only
-                            color: "#6c757d", // Grey text color
-                            cursor: "not-allowed", // Show "not-allowed" cursor
+                            backgroundColor: "#e9ecef",
+                            color: "#6c757d",
+                            cursor: "not-allowed",
                           }}
-                          onChange={handleInputChange}
                         />
                       </Form.Group>
                     </Col>
 
-                    {/* Patient Name Input */}
                     <Col md={4} className="mb-4">
                       <Form.Group className="mb-3">
                         <Form.Label>Patient Name</Form.Label>
@@ -230,11 +216,10 @@ export default function FollowUp() {
                           value={formData.name || ""}
                           readOnly
                           style={{
-                            backgroundColor: "#e9ecef", // Light grey background to indicate read-only
-                            color: "#6c757d", // Grey text color
-                            cursor: "not-allowed", // Show "not-allowed" cursor
+                            backgroundColor: "#e9ecef",
+                            color: "#6c757d",
+                            cursor: "not-allowed",
                           }}
-                          onChange={handleInputChange}
                         />
                       </Form.Group>
                     </Col>
@@ -242,43 +227,39 @@ export default function FollowUp() {
                       <Form.Group className="mb-3">
                         <Form.Label>Age</Form.Label>
                         <Form.Control
-                          type="age"
+                          type="text"
                           name="age"
                           value={formData.age || ""}
                           readOnly
                           style={{
-                            backgroundColor: "#e9ecef", // Light grey background to indicate read-only
-                            color: "#6c757d", // Grey text color
-                            cursor: "not-allowed", // Show "not-allowed" cursor
+                            backgroundColor: "#e9ecef",
+                            color: "#6c757d",
+                            cursor: "not-allowed",
                           }}
-                          onChange={handleInputChange}
                         />
                       </Form.Group>
                     </Col>
                   </Row>
                   <br />
                   <Row>
-                    {/* Mobile No */}
                     <Col md={4} className="mb-4">
                       <Form.Group className="mb-3">
                         <Form.Label>Mobile No</Form.Label>
                         <Form.Control
-                          type="number"
+                          type="text"
                           name="phone"
                           value={formData.phone || ""}
                           placeholder="Enter Mobile Number"
                           readOnly
                           style={{
-                            backgroundColor: "#e9ecef", // Light grey background to indicate read-only
-                            color: "#6c757d", // Grey text color
-                            cursor: "not-allowed", // Show "not-allowed" cursor
+                            backgroundColor: "#e9ecef",
+                            color: "#6c757d",
+                            cursor: "not-allowed",
                           }}
-                          onChange={handleInputChange}
                         />
                       </Form.Group>
                     </Col>
 
-                    {/* Address */}
                     <Col md={4} className="mb-4">
                       <Form.Group className="mb-3">
                         <Form.Label>Address</Form.Label>
@@ -289,11 +270,10 @@ export default function FollowUp() {
                           placeholder="Enter Address"
                           readOnly
                           style={{
-                            backgroundColor: "#e9ecef", // Light grey background to indicate read-only
-                            color: "#6c757d", // Grey text color
-                            cursor: "not-allowed", // Show "not-allowed" cursor
+                            backgroundColor: "#e9ecef",
+                            color: "#6c757d",
+                            cursor: "not-allowed",
                           }}
-                          onChange={handleInputChange}
                         />
                       </Form.Group>
                     </Col>
@@ -307,11 +287,10 @@ export default function FollowUp() {
                           value={formData.occupation || ""}
                           readOnly
                           style={{
-                            backgroundColor: "#e9ecef", // Light grey background to indicate read-only
-                            color: "#6c757d", // Grey text color
-                            cursor: "not-allowed", // Show "not-allowed" cursor
+                            backgroundColor: "#e9ecef",
+                            color: "#6c757d",
+                            cursor: "not-allowed",
                           }}
-                          onChange={handleInputChange}
                         />
                       </Form.Group>
                     </Col>
@@ -328,11 +307,10 @@ export default function FollowUp() {
                           placeholder="Enter Email"
                           readOnly
                           style={{
-                            backgroundColor: "#e9ecef", // Light grey background to indicate read-only
-                            color: "#6c757d", // Grey text color
-                            cursor: "not-allowed", // Show "not-allowed" cursor
+                            backgroundColor: "#e9ecef",
+                            color: "#6c757d",
+                            cursor: "not-allowed",
                           }}
-                          onChange={handleInputChange}
                         />
                         {errors.email && (
                           <p style={{ color: "red" }}>{errors.email}</p>
@@ -346,11 +324,10 @@ export default function FollowUp() {
                           value={formData.reference_type || ""}
                           readOnly
                           style={{
-                            backgroundColor: "#e9ecef", // Light grey background to indicate read-only
-                            color: "#6c757d", // Grey text color
-                            cursor: "not-allowed", // Show "not-allowed" cursor
+                            backgroundColor: "#e9ecef",
+                            color: "#6c757d",
+                            cursor: "not-allowed",
                           }}
-                          onChange={handleInputChange}
                         />
                       </Form.Group>
                     </Col>
@@ -391,7 +368,6 @@ export default function FollowUp() {
                   </Row>
                   <br />
                   <Row>
-                    {/* Gender */}
                     <Col md={6} className="mb-4">
                       <Form.Group className="mb-3">
                         <Form.Label>Plan</Form.Label>
@@ -417,15 +393,11 @@ export default function FollowUp() {
                   </Row>
                   <br />
                   <Row>
-                    <Col md={3} className="mb-4">
+                    <Col md={4} className="mb-4">
                       <Form.Group className="mb-3">
-                        <Form.Label>First Visit Date</Form.Label>
-                        {/* <Form.Control
-                          type="date"
-                          name="firstVisitDate"
-                          value={formData.date || ""}
-                          onChange={handleInputChange}
-                        /> */}
+                        <Form.Label className="d-block">
+                          First Visit Date
+                        </Form.Label>
                         <DatePicker
                           selected={
                             formData?.firstVisitDate
@@ -460,8 +432,8 @@ export default function FollowUp() {
                   <button
                     type="button"
                     className="btn btn-primary"
-                    style={{ marginTop: "30px", marginright: "10px" }}
-                    onClick={() => handleSubmit("save")}
+                    style={{ marginTop: "30px", marginRight: "10px" }}
+                    onClick={handleSubmit}
                   >
                     Submit
                   </button>
@@ -471,6 +443,144 @@ export default function FollowUp() {
           </Col>
         </Row>
       </Container>
+      <style>
+        {`
+          .enquiry-card {
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border: none;
+            background: #f8f9fa;
+            overflow: hidden;
+            margin-bottom: 30px;
+          }
+
+          .card-body {
+            padding: 30px;
+          }
+
+          .form-section {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+          }
+
+          .form-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+          }
+
+          .form-control, .form-select {
+            border-radius: 8px;
+            border: 3px solid #dee2e6;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+            background-color: #ffffff;
+            color: #2c3e50;
+            font-size: 0.95rem;
+          }
+
+          .form-control:focus, .form-select:focus {
+            border-color: #00bcd4;
+            box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
+            background-color: #f8F9FA;
+          }
+
+          textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+          }
+
+          .form-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 16px 12px;
+          }
+
+          .btn-primary {
+            background:linear-gradient(45deg, #00bcd4, #00acc1);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 188, 212, 0.2);
+          }
+
+          .btn-primary:hover {
+            background: linear-gradient(45deg, #00acc1, #0097a7);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 188, 212, 0.3);
+          }
+
+          .btn-primary:disabled {
+            background: #bdc3c7;
+            transform: none;
+          }
+
+          /* Error message styling */
+          .error-message {
+            color: #e74c3c;
+            font-size: 0.85rem;
+            margin-top: 5px;
+          }
+
+          /* Responsive adjustments */
+          @media (max-width: 768px) {
+            .card-body {
+              padding: 20px;
+            }
+
+            .form-section {
+              padding: 15px;
+            }
+
+            .btn-primary {
+              width: 100%;
+              margin-top: 15px;
+            }
+          }
+
+          /* Row spacing */
+          .row {
+            margin-bottom: 20px;
+          }
+
+          /* Spinner styling */
+          .spinner-border {
+            margin-right: 8px;
+            width: 1.2rem;
+            height: 1.2rem;
+          }
+
+          /* Optional: Add animation for form elements */
+          .form-control, .form-select, .btn {
+            animation: fadeIn 0.5s ease-in-out;
+          }
+
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+              transform: translateY(10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          /* Optional: Add hover effect for form controls */
+          .form-control:hover, .form-select:hover {
+            border-color: #3498db;
+          }
+        `}
+      </style>
     </div>
   );
 }

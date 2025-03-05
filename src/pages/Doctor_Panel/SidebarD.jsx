@@ -229,7 +229,7 @@ export default function Sidebar() {
               </li>
             </ul>
           </li>
-          </ul>
+        </ul>
       </SimpleBar>
     </div>
   );

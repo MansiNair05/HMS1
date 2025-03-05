@@ -10,8 +10,10 @@ import {
   Dropdown,
 } from "react-bootstrap";
 import NavBarD from "./NavbarD";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.158:5000/api"; // Update with your backend API base URL
+const BASE_URL = "http://192.168.90.238:5000/api"; // Update with your backend API base URL
 
 export default function DischargeCard() {
   const [discharge, setDischarge] = useState([]);
@@ -28,6 +30,7 @@ export default function DischargeCard() {
   const [adviceMedicineU, setdAdviceMedicineU] = useState([]);
   const [tableData, setTableData] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
+  const [showPrintButton, setShowPrintButton] = useState(false);
   const [patientId, setPatientId] = useState(
     localStorage.getItem("selectedPatientId")
   );
@@ -51,7 +54,7 @@ export default function DischargeCard() {
     pulse: "",
     rr: "",
     temp: "",
-    surgery_type: "",
+    surgery_type: [],
     chife_complaints: "",
     past_history: "",
     surgical_history: "",
@@ -92,6 +95,7 @@ export default function DischargeCard() {
     medicineUnit: "",
     medicineRoute: "",
     medicineStatus: "",
+    times: "",
   });
 
   const [dropdownOptions, setDropdownOptions] = useState([]); // Store API options
@@ -174,60 +178,228 @@ export default function DischargeCard() {
   }, []);
 
   // Initial useEffect to fetch basic patient details
-  useEffect(() => {
-    if (!patientId) {
-      console.warn("No patientId found, skipping fetch");
-      return;
-    }
+  // useEffect(() => {
+  //   if (!patientId) {
+  //     console.warn("No patientId found, skipping fetch");
+  //     return;
+  //   }
 
-    const fetchInitialPatientData = async () => {
-      try {
-        console.log("Fetching initial patient data for ID:", patientId);
+  //   const fetchInitialPatientData = async () => {
+  //     try {
+  //       console.log("Fetching initial patient data for ID:", patientId);
 
-        const response = await fetch(
-          `${BASE_URL}/V1/dischargeCard/listDischargeCard/${patientId}`
-        );
+  //       const response = await fetch(
+  //         `${BASE_URL}/V1/dischargeCard/listDischargeCard/${patientId}`
+  //       );
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch patient details");
-        }
+  //       if (!response.ok) {
+  //         throw new Error("Failed to fetch patient details");
+  //       }
 
-        const result = await response.json();
-        console.log("Initial patient data response:", result);
+  //       const result = await response.json();
+  //       console.log("Initial patient data response:", result);
 
-        // Extract patient data from the response
-        const patientData = result.data?.patientData?.[0];
+  //       // Extract patient data from the response
+  //       const patientData = result.data?.patientData?.[0];
 
-        if (patientData) {
-          // Set only the basic patient details
-          setFormData((prevState) => ({
-            ...prevState,
-            name: patientData.name || "",
-            age: patientData.age || "",
-            gender: patientData.sex || "", // Note: API uses 'sex' instead of 'gender'
-            address: patientData.address || "",
-          }));
+  //       if (patientData) {
+  //         // Set only the basic patient details
+  //         setFormData((prevState) => ({
+  //           ...prevState,
+  //           name: patientData.name || "",
+  //           age: patientData.age || "",
+  //           sex: patientData.sex || "", // Note: API uses 'sex' instead of 'sex'
+  //           address: patientData.address || "",
 
-          console.log("Initial patient details set:", {
-            name: patientData.name,
-            age: patientData.age,
-            gender: patientData.sex,
-            address: patientData.address,
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching initial patient data:", error);
+  //           consultantName: "",
+  //           DOA: "",
+  //           DOA_time: "",
+  //           DOD: "",
+  //           DOD_time: "",
+  //           IPDNo: "",
+  //           sPO2: "",
+  //           BP: "",
+  //           pulse: "",
+  //           rr: "",
+  //           temp: "",
+  //           surgery_type: "",
+  //           chife_complaints: "",
+  //           past_history: "",
+  //           surgical_history: "",
+  //           allergies: "",
+  //           surgery_procedure: "",
+  //           surgery_note: "",
+  //           investigation: "",
+  //           diagnosis: "",
+  //           local_care: "",
+  //           carenote: "",
+  //           dateOfIssue: "",
+  //           assistanceDoctor: "",
+  //           Follow_date: "",
+  //           surgeonDoctor: "",
+  //           madeby: "",
+  //           checkedby: "",
+  //           treatingby: "",
+  //           surgeryadvice: "",
+  //           treatmentGiven: "",
+  //           adviceMedicine: "",
+  //           medicine_quantity: "",
+  //           injectionDetails: [],
+  //           dischargeTreat: [],
+  //           timings: {
+  //             BeforeBreakfast: false,
+  //             AfterBreakfast: false,
+  //             BeforeLunch: false,
+  //             AfterLunch: false,
+  //             BeforeDinner: false,
+  //             AfterDinner: false,
+  //             AfterEveningSnacks: false,
+  //           },
+  //         }));
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching initial patient data:", error);
+  //     }
+  //   };
+
+  //   fetchInitialPatientData();
+  // }, [patientId]);
+
+  // useEffect(() => {
+  //   if (!patientId) {
+  //     console.warn("No patientId found, skipping fetch");
+  //     return;
+  //   }
+  //   const fetchPatientData = async () => {
+  //     if (!patientId) {
+  //       console.error("No patient ID available for fetching data.");
+  //       return;
+  //     }
+
+  //     try {
+  //       console.log("Fetching data for patient ID:", patientId);
+
+  //       const response = await fetch(
+  //         `${BASE_URL}/V1/dischargeCard/listDischargeCard/${patientId}`,
+  //         {
+  //           method: "GET",
+  //           headers: {
+  //             "Content-Type": "application/json",
+  //           },
+  //         }
+  //       );
+
+  //       if (!response.ok) {
+  //         console.error(
+  //           "API Response Error:",
+  //           response.status,
+  //           await response.text()
+  //         );
+  //         return;
+  //       }
+
+  //       if (response.ok) {
+  //         const data = await response.json();
+  //         // Initialize form data with properly formatted dates
+  //         const formattedData = {
+  //           ...data,
+  //           birth_date: data.birth_date
+  //             ? new Date(data.birth_date).toISOString().split("T")[0]
+  //             : null,
+  //           DOA: data.DOA
+  //             ? new Date(data.DOA).toISOString().split("T")[0]
+  //             : null,
+  //           DOD: data.DOD
+  //             ? new Date(data.DOD).toISOString().split("T")[0]
+  //             : null,
+  //           dateOfIssue: data.dateOfIssue
+  //             ? new Date(data.dateOfIssue).toISOString().split("T")[0]
+  //             : null,
+  //           Follow_date: data.Follow_date
+  //             ? new Date(data.Follow_date).toISOString().split("T")[0]
+  //             : null,
+  //         };
+  //         setFormData(formattedData);
+  //       }
+
+  //       const data = await response.json();
+  //       console.log("Fetched Data:", data);
+
+  //       if (data?.data?.patientData) {
+  //         // Set basic patient details
+  //         setFormData((prevState) => ({
+  //           ...prevState,
+  //           name: data.data.patientData.name || "",
+  //           age: data.data.patientData.age || "",
+  //           sex: data.data.patientData.sex || "",
+  //           address: data.data.patientData.address || "",
+  //         }));
+  //       }
+
+  //       // Set discharge card data if available
+  //       if (data?.data?.dischargeCardData) {
+  //         setFormData((prevState) => ({
+  //           ...prevState,
+  //           ...data.data.dischargeCardData,
+  //           timings: data.data.dischargeCardData.timings || {
+  //             BeforeBreakfast: false,
+  //             AfterBreakfast: false,
+  //             BeforeLunch: false,
+  //             AfterLunch: false,
+  //             BeforeDinner: false,
+  //             AfterDinner: false,
+  //             AfterEveningSnacks: false,
+  //           },
+  //         }));
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching data:", error);
+  //     }
+  //   };
+
+  //   fetchPatientData();
+  // }, [patientId]);
+  const handleSaveMedicine = async () => {
+    try {
+      console.log("Submitting medicine data:", formData); // ✅ Check if formData has the correct fields
+
+      const response = await fetch(`${BASE_URL}/V1/medicine/upload`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      // Log response status and body
+      console.log("Response Status:", response.status);
+
+      const data = await response.json(); // ✅ Attempt to parse response
+      console.log("API Response Data:", data); // ✅ Log response from API
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to save medicine data");
       }
-    };
 
-    fetchInitialPatientData();
-  }, [patientId]);
+      console.log("Medicine saved successfully:", data);
+
+      // Update UI without reloading
+      setTableData((prevData) => [...prevData, formData]);
+
+      // Close the popup
+      setShowPopup(false);
+    } catch (error) {
+      console.error("Error saving medicine:", error);
+      alert(`Error: ${error.message || "Failed to save medicine. Try again!"}`);
+    }
+  };
 
   useEffect(() => {
     if (!patientId) {
       console.warn("No patientId found, skipping fetch");
       return;
     }
+
     const fetchPatientData = async () => {
       try {
         console.log("Fetching data for patient ID:", patientId);
@@ -254,33 +426,71 @@ export default function DischargeCard() {
         const data = await response.json();
         console.log("Fetched Data:", data);
 
-        if (data?.data?.patientData) {
-          // Set basic patient details
-          setFormData((prevState) => ({
-            ...prevState,
-            name: data.data.patientData.name || "",
-            age: data.data.patientData.age || "",
-            gender: data.data.patientData.gender || "",
-            address: data.data.patientData.address || "",
-          }));
-        }
+        // Extract patient data
+        const patientData = data?.data?.patientData?.[0];
 
-        // Set discharge card data if available
-        if (data?.data?.dischargeCardData) {
-          setFormData((prevState) => ({
-            ...prevState,
-            ...data.data.dischargeCardData,
-            timings: data.data.dischargeCardData.timings || {
-              BeforeBreakfast: false,
-              AfterBreakfast: false,
-              BeforeLunch: false,
-              AfterLunch: false,
-              BeforeDinner: false,
-              AfterDinner: false,
-              AfterEveningSnacks: false,
-            },
-          }));
-        }
+        // Set only basic patient details initially
+        const basicDetails = {
+          name: patientData?.name || "",
+          age: patientData?.age || "",
+          sex: patientData?.sex || "",
+          address: patientData?.address || "",
+          prescription_type: "",
+        };
+
+        // Set form data with only basic details
+        setFormData((prevState) => ({
+          ...prevState,
+          ...basicDetails,
+          // Reset all other fields
+          consultantName: "",
+          DOA: "",
+          DOA_time: "",
+          DOD: "",
+          DOD_time: "",
+          IPDNo: "",
+          sPO2: "",
+          BP: "",
+          pulse: "",
+          rr: "",
+          temp: "",
+          surgery_type: "",
+          chife_complaints: "",
+          past_history: "",
+          surgical_history: "",
+          allergies: "",
+          surgery_procedure: "",
+          surgery_note: "",
+          investigation: "",
+          diagnosis: "",
+          local_care: "",
+          carenote: "",
+          dateOfIssue: "",
+          assistanceDoctor: "",
+          Follow_date: "",
+          surgeonDoctor: "",
+          madeby: "",
+          checkedby: "",
+          treatingby: "",
+          surgeryadvice: "",
+          treatmentGiven: "",
+          adviceMedicine: "",
+          medicine_quantity: "",
+          injectionDetails: [],
+          dischargeTreat: [],
+          timings: {
+            BeforeBreakfast: false,
+            AfterBreakfast: false,
+            BeforeLunch: false,
+            AfterLunch: false,
+            BeforeDinner: false,
+            AfterDinner: false,
+            AfterEveningSnacks: false,
+          },
+        }));
+
+        // Store the full response data for use in fetchPreviousRecords
+        window.fullPatientData = data;
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -322,10 +532,21 @@ export default function DischargeCard() {
   };
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
+
+    // Fields that should only accept numbers
+    const numericFields = ["age", "IPDNo", "sPO2", "BP", "pulse", "rr", "temp"];
+
+    if (numericFields.includes(name)) {
+      // Allow only numbers using regex
+      if (!/^\d*$/.test(value)) {
+        return; // Prevents setting non-numeric values
+      }
+    }
+
     setFormData((prevState) => ({
       ...prevState,
-      [name]: type === "checkbox" ? checked : value, // Handle both checkbox and other input types
+      [name]: value,
     }));
   };
 
@@ -375,6 +596,9 @@ export default function DischargeCard() {
     setFormData((prev) => ({
       ...prev,
       injectionDetails: [...(prev.injectionDetails || []), newInjection],
+      treatmentGiven: "", // Clear the input after adding
+      times: "",
+      medicineRoute: "",
     }));
   };
 
@@ -462,24 +686,177 @@ export default function DischargeCard() {
   };
 
   // Handle checkbox selection change for test type
-  const handleSurgeryTypeChange = (e, surgery_type) => {
-    const { checked } = e.target;
-    setSelectedOptions((prevState) => {
-      const updatedSurgeryTypes = checked
-        ? [...prevState.surgery_type, surgery_type] // Add the surgery type if checked
-        : prevState.surgery_type.filter((item) => item !== surgery_type); // Remove if unchecked
+const handleSurgeryTypeChange = (e, surgeryType) => {
+  const { checked } = e.target;
 
-      return {
-        ...prevState,
-        surgery_type: updatedSurgeryTypes,
-      };
-    });
-  };
+  setFormData((prevState) => {
+    const updatedSurgeryTypes = checked
+      ? [...prevState.surgery_type, surgeryType]
+      : prevState.surgery_type.filter((type) => type !== surgeryType);
+
+    return { ...prevState, surgery_type: updatedSurgeryTypes };
+  });
+};
+
 
   const [previousRecordDate, setPreviousRecordDate] = useState("");
+  // const fetchPreviousRecords = async () => {
+  //   try {
+  //     console.log("Fetching previous records for patientId:", patientId);
+
+  //     const response = await fetch(
+  //       `${BASE_URL}/V1/dischargeCard/listDischargeCard/${patientId}`
+  //     );
+
+  //     if (!response.ok) {
+  //       throw new Error("Failed to fetch previous records");
+  //     }
+
+  //     const result = await response.json();
+  //     console.log("Previous Records Data:", result);
+
+  //     if (!result?.data?.dischargeCardData) {
+  //       alert("No previous records found.");
+  //       return;
+  //     }
+
+  //     const dischargeCard = result.data.dischargeCardData;
+  //     const patientData = result.data.patientData?.[0];
+
+  //     // Log the data we're working with
+  //     console.log("Discharge Card Data:", dischargeCard);
+  //     console.log("Patient Data:", patientData);
+
+  //     // Update form data
+  //     setFormData((prevData) => ({
+  //       ...prevData,
+  //       // Patient basic details
+  //       name: patientData?.name || "",
+  //       age: patientData?.age || "",
+  //       sex: patientData?.sex || "",
+  //       address: patientData?.address || "",
+
+  //       // Dropdown values
+  //       prescription_type: dischargeCard?.prescription_type || "",
+  //       consultantName: dischargeCard?.consultant_name || "",
+  //       surgery_type: dischargeCard?.surgery_type || "",
+  //       assistanceDoctor: dischargeCard?.assistanceDoctor || "",
+  //       surgeonDoctor: dischargeCard?.surgeonDoctor || "",
+  //       madeby: dischargeCard?.madeby || "",
+  //       checkedby: dischargeCard?.checkedby || "",
+  //       treatingby: dischargeCard?.treatingby || "",
+  //       surgeryadvice: dischargeCard?.surgeryadvice || "",
+
+  //       // Other discharge card details
+  //       DOA: formatDate(dischargeCard?.DOA) || "",
+  //       DOA_time: dischargeCard?.DOA_time || "",
+  //       DOD: formatDate(dischargeCard?.DOD) || "",
+  //       DOD_time: dischargeCard?.DOD_time || "",
+  //       IPDNo: dischargeCard?.IPDNo || "",
+  //       sPO2: dischargeCard?.sPO2 || "",
+  //       BP: dischargeCard?.BP || "",
+  //       pulse: dischargeCard?.pulse || "",
+  //       rr: dischargeCard?.rr || "",
+  //       temp: dischargeCard?.temp || "",
+  //       past_history: dischargeCard?.past_history || "",
+  //       allergies: dischargeCard?.allergies || "",
+  //       surgery_note: dischargeCard?.surgery_note || "",
+  //       investigation: dischargeCard?.investigation || "",
+  //       chife_complaints: dischargeCard?.chife_complaints || "",
+  //       hb: dischargeCard?.hb || "",
+  //       wbc: dischargeCard?.wbc || "",
+  //       hiv: dischargeCard?.hiv || "",
+  //       hbsag: dischargeCard?.hbsag || "",
+  //       hcv: dischargeCard?.hcv || "",
+  //       plt: dischargeCard?.plt || "",
+  //       bsl: dischargeCard?.bsl || "",
+  //       creatinine: dischargeCard?.creatinine || "",
+  //       billirubin: dischargeCard?.billirubin || "",
+  //       urine: dischargeCard?.urine || "",
+  //       psa: dischargeCard?.psa || "",
+  //       bt: dischargeCard?.bt || "",
+  //       ct: dischargeCard?.ct || "",
+  //       pt: dischargeCard?.pt || "",
+  //       inr: dischargeCard?.inr || "",
+  //       diagnosis: dischargeCard?.diagnosis || "",
+  //       local_care: dischargeCard?.local_care || "",
+  //       carenote: dischargeCard?.carenote || "",
+  //       dateOfIssue: formatDate(dischargeCard?.dateOfIssue) || "",
+  //       Follow_date: formatDate(dischargeCard?.Follow_date) || "",
+  //       treatmentGiven: dischargeCard?.treatmentGiven || "",
+  //     }));
+
+  //     // Update selected options for dropdowns
+  //     setSelectedOptions({
+  //       prescription_type: dischargeCard?.prescription_type || "",
+  //       consultantName: dischargeCard?.consultant_name || "",
+  //       surgery_type: dischargeCard?.surgery_type
+  //         ? [dischargeCard.surgery_type]
+  //         : [],
+  //       assistanceDoctor: dischargeCard?.assistanceDoctor || "",
+  //       surgeonDoctor: dischargeCard?.surgeonDoctor || "",
+  //       madeby: dischargeCard?.madeby || "",
+  //       checkedby: dischargeCard?.checkedby || "",
+  //       treatingby: dischargeCard?.treatingby || "",
+  //       surgeryadvice: dischargeCard?.surgeryadvice || "",
+  //     });
+
+  //     // Update medicine-related dropdowns if available
+  //     if (result.data.medicineData?.length > 0) {
+  //       const medicineData = result.data.medicineData[0];
+  //       setFormData((prevData) => ({
+  //         ...prevData,
+  //         adviceMedicine: medicineData.medicine_name || "",
+  //         medicine_quantity: medicineData.quantity || "",
+  //         medicine_days: medicineData.days || "",
+  //         timings: medicineData.timings || {
+  //           BeforeBreakfast: false,
+  //           AfterBreakfast: false,
+  //           BeforeLunch: false,
+  //           AfterLunch: false,
+  //           BeforeDinner: false,
+  //           AfterDinner: false,
+  //           AfterEveningSnacks: false,
+  //         },
+  //       }));
+  //     }
+
+  //     // Update injection details if available
+  //     if (dischargeCard?.injectionDetails?.length > 0) {
+  //       setFormData((prevData) => ({
+  //         ...prevData,
+  //         injectionDetails: dischargeCard.injectionDetails,
+  //       }));
+  //     }
+
+  //     // Show the "Edit Diagnosis" button
+  //     setShowEditButton(true);
+  //     // Show Print button when previous records are fetched
+  //     setShowPrintButton(true);
+  //     // Disable "Previous Records" button after clicking it
+  //     setDisablePreviousButton(true);
+  //     // Disable form fields
+  //     setIsDisabled(true);
+
+  //     console.log("Updated form data:", formData);
+  //     console.log("Updated selected options:", selectedOptions);
+
+  //     setPreviousRecordDate(dischargeCard.dateOfIssue || "");
+  //   } catch (error) {
+  //     console.error("Error fetching previous records:", error);
+  //     alert("Failed to fetch previous records.");
+  //   }
+  // };
+
+  // Add the parseDate helper function at the top of your component:
+
+  // Modify fetchPreviousRecords to use stored data
   const fetchPreviousRecords = async () => {
     try {
-      console.log("Fetching previous records for patientId:", patientId);
+      if (!window.fullPatientData) {
+        console.error("No previous data available");
+        return;
+      }
 
       const response = await fetch(
         `${BASE_URL}/V1/dischargeCard/listDischargeCard/${patientId}`
@@ -489,7 +866,7 @@ export default function DischargeCard() {
         throw new Error("Failed to fetch previous records");
       }
 
-      const result = await response.json();
+      const result = window.fullPatientData;
       console.log("Previous Records Data:", result);
 
       if (!result?.data?.dischargeCardData) {
@@ -504,16 +881,16 @@ export default function DischargeCard() {
       console.log("Discharge Card Data:", dischargeCard);
       console.log("Patient Data:", patientData);
 
-      // Update form data
+      // Update form data with all fields
       setFormData((prevData) => ({
         ...prevData,
         // Patient basic details
         name: patientData?.name || "",
         age: patientData?.age || "",
-        gender: patientData?.sex || "",
+        sex: patientData?.sex || "",
         address: patientData?.address || "",
 
-        // Dropdown values
+        // All other fields from dischargeCard
         prescription_type: dischargeCard?.prescription_type || "",
         consultantName: dischargeCard?.consultant_name || "",
         surgery_type: dischargeCard?.surgery_type || "",
@@ -525,9 +902,9 @@ export default function DischargeCard() {
         surgeryadvice: dischargeCard?.surgeryadvice || "",
 
         // Other discharge card details
-        DOA: formatDate(dischargeCard?.DOA) || "",
+        // DOA: formatDate(dischargeCard?.DOA) || "",
         DOA_time: dischargeCard?.DOA_time || "",
-        DOD: formatDate(dischargeCard?.DOD) || "",
+        // DOD: formatDate(dischargeCard?.DOD) || "",
         DOD_time: dischargeCard?.DOD_time || "",
         IPDNo: dischargeCard?.IPDNo || "",
         sPO2: dischargeCard?.sPO2 || "",
@@ -539,15 +916,35 @@ export default function DischargeCard() {
         allergies: dischargeCard?.allergies || "",
         surgery_note: dischargeCard?.surgery_note || "",
         investigation: dischargeCard?.investigation || "",
+        chife_complaints: dischargeCard?.chife_complaints || "",
+        hb: dischargeCard?.hb || "",
+        wbc: dischargeCard?.wbc || "",
+        hiv: dischargeCard?.hiv || "",
+        hbsag: dischargeCard?.hbsag || "",
+        hcv: dischargeCard?.hcv || "",
+        plt: dischargeCard?.plt || "",
+        bsl: dischargeCard?.bsl || "",
+        creatinine: dischargeCard?.creatinine || "",
+        billirubin: dischargeCard?.billirubin || "",
+        urine: dischargeCard?.urine || "",
+        psa: dischargeCard?.psa || "",
+        bt: dischargeCard?.bt || "",
+        ct: dischargeCard?.ct || "",
+        pt: dischargeCard?.pt || "",
+        inr: dischargeCard?.inr || "",
         diagnosis: dischargeCard?.diagnosis || "",
         local_care: dischargeCard?.local_care || "",
         carenote: dischargeCard?.carenote || "",
-        dateOfIssue: formatDate(dischargeCard?.dateOfIssue) || "",
-        Follow_date: formatDate(dischargeCard?.Follow_date) || "",
+        // dateOfIssue: formatDate(dischargeCard?.dateOfIssue) || "",
+        // Follow_date: formatDate(dischargeCard?.Follow_date) || "",
         treatmentGiven: dischargeCard?.treatmentGiven || "",
+        DOA: formatDate(dischargeCard?.DOA), // ✅ Ensures valid date format
+        DOD: formatDate(dischargeCard?.DOD),
+        dateOfIssue: formatDate(dischargeCard?.dateOfIssue),
+        Follow_date: formatDate(dischargeCard?.Follow_date),
       }));
 
-      // Update selected options for dropdowns
+      // Update selected options and other states
       setSelectedOptions({
         prescription_type: dischargeCard?.prescription_type || "",
         consultantName: dischargeCard?.consultant_name || "",
@@ -590,11 +987,10 @@ export default function DischargeCard() {
         }));
       }
 
-      // Show the "Edit Diagnosis" button
+      // Show relevant buttons and disable form
       setShowEditButton(true);
-      // Disable "Previous Records" button after clicking it
+      setShowPrintButton(true);
       setDisablePreviousButton(true);
-      // Disable form fields
       setIsDisabled(true);
 
       console.log("Updated form data:", formData);
@@ -607,12 +1003,38 @@ export default function DischargeCard() {
     }
   };
 
+  const parseDate = (dateString) => {
+    if (!dateString) return null;
+
+    try {
+      const date = new Date(dateString);
+      return isNaN(date.getTime()) ? null : date;
+    } catch (error) {
+      console.error("Error parsing date:", error);
+      return null;
+    }
+  };
+
   // Helper function to format dates
   const formatDate = (dateString) => {
     if (!dateString) return "";
     try {
+      // Handle DD/MM/YYYY format
+      if (dateString.includes("/")) {
+        const [day, month, year] = dateString.split("/");
+        const date = new Date(year, month - 1, day);
+        if (!isNaN(date.getTime())) {
+          return date.toISOString().split("T")[0];
+        }
+      }
+      // Try parsing as regular date string
       const date = new Date(dateString);
-      return date.toISOString().split("T")[0]; // Converts to YYYY-MM-DD format
+      if (!isNaN(date.getTime())) {
+        return date.toISOString().split("T")[0];
+      }
+
+      console.error("Invalid date:", dateString);
+      return "";
     } catch (error) {
       console.error("Date formatting error:", error);
       return "";
@@ -626,7 +1048,24 @@ export default function DischargeCard() {
   };
 
   const handleNewRecord = () => {
+    // Preserve patient basic details
+    const basicDetails = {
+      name: formData.name,
+      age: formData.age,
+      address: formData.address,
+      sex: formData.sex,
+      prescription_type: "", // Reset prescription type
+    };
+
+    // Reset form but keep basic details
     setFormData({
+      ...basicDetails,
+      consultantName: "",
+      DOA: "",
+      DOD: "",
+      DOD_time: "",
+      DOA_time: "",
+      surgery_type: "",
       chife_complaints: "",
       past_history: "",
       surgical_history: "",
@@ -636,6 +1075,7 @@ export default function DischargeCard() {
       diagnosis: "",
       local_care: "",
       carenote: "",
+      dateOfIssue: "",
       assistanceDoctor: "",
       Follow_date: "",
       surgeonDoctor: "",
@@ -643,6 +1083,10 @@ export default function DischargeCard() {
       checkedby: "",
       treatingby: "",
       surgeryadvice: "",
+      adviceMedicine: "",
+      medicine_quantity: "",
+      injectionDetails: [],
+      dischargeTreat: [],
       investigation: "",
       IPDNo: "",
       sPO2: "",
@@ -650,20 +1094,57 @@ export default function DischargeCard() {
       pulse: "",
       rr: "",
       temp: "",
+      treatmentGiven: "",
+      times: "",
+      medicineRoute: "",
+      timings: {
+        BeforeBreakfast: false,
+        AfterBreakfast: false,
+        BeforeLunch: false,
+        AfterLunch: false,
+        BeforeDinner: false,
+        AfterDinner: false,
+        AfterEveningSnacks: false,
+      },
     });
+    // Reset selected options
+    setSelectedOptions({});
 
-    // Hide "Edit Diagnosis" button when creating a new record
+    // Reset UI states
     setShowEditButton(false);
-    // Enable the "Previous Records" button when creating a new record
     setDisablePreviousButton(false);
-    setIsDisabled(false); // Allow editing for a new record
+    setIsDisabled(false);
     alert("New Record: You can now enter new data.");
+    setShowPrintButton(false);
   };
 
+  const generateTimeSlots = () => {
+    const slots = [];
+    const startTime = new Date();
+    startTime.setHours(5, 0, 0); // 5:00 AM
+    const endTime = new Date();
+    endTime.setHours(23, 45, 0); // 11:45 PM
+
+    while (startTime <= endTime) {
+      // Format time in 12-hour format with AM/PM
+      const timeString = startTime.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+      slots.push(timeString);
+
+      // Add 15 minutes
+      startTime.setMinutes(startTime.getMinutes() + 15);
+    }
+
+    return slots;
+  };
+
+  const timeSlots = generateTimeSlots();
   const handlePrint = () => {
     window.print();
   };
-
   return (
     <div
       className="themebody-wrap"
@@ -682,8 +1163,8 @@ export default function DischargeCard() {
               borderRadius: "12px",
               boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
               borderColor: "#00bcd4",
-              background: "white",
-              border: "1px solid #00bcd4",
+              background: "#f8f9fa",
+              border: "3px solid #00bcd4",
               padding: "20px",
             }}
           >
@@ -697,16 +1178,6 @@ export default function DischargeCard() {
                     onClick={handleNewRecord}
                   >
                     New Record
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    style={{
-                      float: "right",
-                    }}
-                    onClick={handlePrint}
-                  >
-                    Print
                   </button>
                   <button
                     type="button"
@@ -728,6 +1199,17 @@ export default function DischargeCard() {
                       Edit Discharge Card
                     </button>
                   )}
+                  {/* Print Button - Only Visible After Clicking "Previous Records" */}
+                  {showPrintButton && (
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      style={{ float: "right", marginRight: "7px" }}
+                      onClick={handlePrint}
+                    >
+                      Print
+                    </button>
+                  )}
                 </div>
                 {/* Show the previous record date when available */}
                 {previousRecordDate && (
@@ -738,7 +1220,7 @@ export default function DischargeCard() {
                 )}
                 <br />
                 <Row>
-                  <Col md={4} className="mb-4">
+                  <Col md={3} className="mb-4">
                     <Form.Group className="mb-3">
                       <Form.Label>Prescription Type</Form.Label>
                       <Form.Control
@@ -786,7 +1268,7 @@ export default function DischargeCard() {
                 </Row>
                 <br />
                 <Row>
-                  <Col md={4} className="mb-4">
+                  <Col md={2} className="mb-4">
                     <Form.Group className="mb-3">
                       <Form.Label>Age</Form.Label>
                       <Form.Control
@@ -799,23 +1281,23 @@ export default function DischargeCard() {
                       />
                     </Form.Group>
                   </Col>
-                  {/* Gender */}
-                  <Col md={4} className="mb-4">
+                  {/* sex */}
+                  <Col md={3} className="mb-4">
                     <Form.Group className="mb-3">
                       <Form.Label>Gender</Form.Label>
-                      <Form.Select
-                        as="select"
-                        name="gender"
-                        value={selectedOptions?.sex}
-                        onChange={handleInputChange}
+                      <Form.Control
+                        type="text"
+                        name="sex"
+                        value={formData.sex || ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (/^[A-Za-z]*$/.test(value)) {
+                            handleInputChange(e);
+                          }
+                        }}
                         style={{ borderRadius: "6px" }}
                         disabled={isDisabled}
-                      >
-                        <option value="">Select Gender</option>
-                        <option value="MALE">MALE</option>
-                        <option value="FEMALE">FEMALE</option>
-                        <option value="OTHER">OTHER</option>
-                      </Form.Select>
+                      />
                     </Form.Group>
                   </Col>
 
@@ -852,31 +1334,54 @@ export default function DischargeCard() {
                   {/* DOA */}
                   <Col md={2} className="mb-4">
                     <Form.Group className="mb-3">
-                      <Form.Label>DOA</Form.Label>
-                      <Form.Control
-                        type="date"
-                        name="DOA"
-                        value={formData.DOA}
-                        onChange={handleInputChange}
-                        style={{ borderRadius: "6px" }}
+                      <Form.Label className="d-block">DOA</Form.Label>
+                      <DatePicker
+                        // selected={formData?.DOA ? new Date(formData.DOA) : null}
+                        selected={parseDate(formData?.DOA)}
+                        onChange={(date) => {
+                          handleInputChange({
+                            target: {
+                              name: "DOA",
+                              value: date
+                                ? date.toISOString().split("T")[0]
+                                : null,
+                            },
+                          });
+                        }}
+                        className="form-control"
+                        placeholderText="Select DOA"
+                        maxDate={new Date()}
+                        showMonthDropdown
+                        showYearDropdown
+                        dropdownMode="select"
+                        style={{
+                          height: "38px",
+                          width: "100%",
+                        }}
                       />
                     </Form.Group>
                   </Col>
                   {/* Time */}
-                  <Col md={2} className="mb-4">
+                  {/* <Col md={2} className="mb-4">
                     <Form.Group className="mb-3">
-                      <Form.Label>Time</Form.Label>
+                      <Form.Label className="d-block">Time</Form.Label>
                       <Form.Control
-                        type="time"
+                        as="select"
                         name="DOA_time"
                         value={formData.DOA_time}
                         onChange={handleInputChange}
                         style={{ borderRadius: "6px" }}
-                      />
+                      >
+                        <option value="">Time</option>
+                        {timeSlots.map((slot, index) => (
+                          <option key={index} value={slot}>
+                            {slot}
+                          </option>
+                        ))}
+                      </Form.Control>
                     </Form.Group>
-                  </Col>
-                  {/* Test Type Dropdown with Multiple Checkboxes */}
-                  <Col md={4} className="mb-4">
+                  </Col> */}
+                  <Col md={2} className="mb-4">
                     <Form.Group controlId="surgery_type">
                       <Form.Label>Surgery Type</Form.Label>
                       <Dropdown>
@@ -884,22 +1389,26 @@ export default function DischargeCard() {
                           variant="secondary"
                           id="dropdown-basic"
                         >
-                          {Array.isArray(selectedOptions.surgery_type) &&
-                          selectedOptions.surgery_type.length > 0
-                            ? selectedOptions.surgery_type.join(", ")
-                            : "Select surgery types"}
+                          {Array.isArray(formData.surgery_type) &&
+                          formData.surgery_type.length > 0
+                            ? formData.surgery_type.join(", ")
+                            : "Select Surgery Types"}
                         </Dropdown.Toggle>
 
                         <Dropdown.Menu style={{ padding: "10px" }}>
                           {[
-                            ...new Set([
-                              ...(Array.isArray(discharge)
-                                ? discharge.map((option) => option.surgery_type)
-                                : []),
-                              ...(Array.isArray(types)
-                                ? types.map((type) => type.name)
-                                : []),
-                            ]),
+                            "LHP",
+                            "FILAC",
+                            "MIPH",
+                            "SPHINCTEROTOMY",
+                            "GYNAECOMASTIA",
+                            "PROCTITIS",
+                            "VARICOSE VEINS",
+                            "CIRCUMCISION",
+                            "HERNIA",
+                            "UROLOGY",
+                            "LAP CHOLECYSTECTOMY",
+                            "STARR",
                           ].map((surgery_type, index) => (
                             <Form.Check
                               key={index}
@@ -907,9 +1416,8 @@ export default function DischargeCard() {
                               label={surgery_type}
                               value={surgery_type}
                               checked={
-                                selectedOptions.surgery_type?.includes(
-                                  surgery_type
-                                ) || false
+                                formData.surgery_type?.includes(surgery_type) ||
+                                false
                               }
                               onChange={(e) =>
                                 handleSurgeryTypeChange(e, surgery_type)
@@ -926,13 +1434,30 @@ export default function DischargeCard() {
                   {/* DOD */}
                   <Col md={2} className="mb-4">
                     <Form.Group className="mb-3">
-                      <Form.Label>DOD</Form.Label>
-                      <Form.Control
-                        type="date"
-                        name="DOD"
-                        value={formData.DOD}
-                        onChange={handleInputChange}
-                        style={{ borderRadius: "6px" }}
+                      <Form.Label className="d-block">DOD</Form.Label>
+                      <DatePicker
+                        // selected={formData?.DOD ? new Date(formData.DOD) : null}
+                        selected={parseDate(formData?.DOD)}
+                        onChange={(date) => {
+                          handleInputChange({
+                            target: {
+                              name: "DOD",
+                              value: date
+                                ? date.toISOString().split("T")[0]
+                                : "",
+                            },
+                          });
+                        }}
+                        // dateFormat="yyyy-MM-dd"
+                        className="form-control"
+                        placeholderText="Select DOD"
+                        maxDate={new Date()}
+                        showYearDropdown
+                        dropdownMode="select"
+                        style={{
+                          height: "38px",
+                          width: "100%",
+                        }}
                       />
                     </Form.Group>
                   </Col>
@@ -941,15 +1466,22 @@ export default function DischargeCard() {
                     <Form.Group className="mb-3">
                       <Form.Label>Time</Form.Label>
                       <Form.Control
-                        type="time"
+                        as="select"
                         name="DOD_time"
                         value={formData.DOD_time}
                         onChange={handleInputChange}
                         style={{ borderRadius: "6px" }}
-                      />
+                      >
+                        <option value="">Time</option>
+                        {timeSlots.map((slot, index) => (
+                          <option key={index} value={slot}>
+                            {slot}
+                          </option>
+                        ))}
+                      </Form.Control>
                     </Form.Group>
                   </Col>
-                  <Col md={1} className="mb-4">
+                  <Col md={2} className="mb-4">
                     <Form.Group className="mb-3">
                       <Form.Label>IPD No</Form.Label>
                       <Form.Control
@@ -973,7 +1505,7 @@ export default function DischargeCard() {
                       />
                     </Form.Group>
                   </Col>
-                  <Col md={1} className="mb-4">
+                  <Col md={2} className="mb-4">
                     <Form.Group className="mb-3">
                       <Form.Label>BP</Form.Label>
                       <Form.Control
@@ -1088,8 +1620,8 @@ export default function DischargeCard() {
                       <Form.Label>Surgery Details</Form.Label>
                       <Form.Control
                         as="textarea"
-                        name="surgical_procedure"
-                        value={formData.surgical_procedure}
+                        name="surgery_procedure"
+                        value={formData.surgery_procedure}
                         onChange={handleInputChange}
                         style={{ borderRadius: "6px" }}
                         disabled={isDisabled}
@@ -1119,8 +1651,8 @@ export default function DischargeCard() {
                         <Form.Label>HB</Form.Label>
                         <Form.Control
                           type="text"
-                          name="surgeryNote"
-                          value={formData.hb}
+                          name="hb"
+                          value={formData.hb || ""}
                           onChange={handleInputChange}
                           style={{ borderRadius: "6px" }}
                         />
@@ -1237,8 +1769,6 @@ export default function DischargeCard() {
                             />
                           </Form.Group>
                         </Col>
-                      </Row>
-                      <Row>
                         <Col md={2} className="mb-4">
                           <Form.Group className="mb-3">
                             <Form.Label>PT</Form.Label>
@@ -1263,12 +1793,13 @@ export default function DischargeCard() {
                             />
                           </Form.Group>
                         </Col>
-                        <Col md={2} className="mb-4">
+                        <Col md={3} className="mb-4">
                           <Form.Group className="mb-3">
                             <Form.Label>HIV</Form.Label>
                             <Form.Control
                               type="text"
                               name="hiv"
+                              placeholder="negative"
                               value={formData.hiv}
                               onChange={handleInputChange}
                               style={{ borderRadius: "6px" }}
@@ -1329,16 +1860,36 @@ export default function DischargeCard() {
                         </Col>
                       </Row>
                       <br />
+                      <br />
                       <Row>
                         <Col md={6} className="mb-4">
                           <Form.Group className="mb-3">
-                            <Form.Label>Date Of Issue</Form.Label>
-                            <Form.Control
-                              type="date"
-                              name="dateOfissue"
-                              value={formData.dateOfIssue}
-                              onChange={handleInputChange}
-                              style={{ borderRadius: "6px" }}
+                            <Form.Label className="d-block">
+                              Date Of Issue
+                            </Form.Label>
+                            <DatePicker
+                              selected={parseDate(formData?.dateOfIssue)}
+                              onChange={(date) => {
+                                handleInputChange({
+                                  target: {
+                                    name: "dateOfIssue",
+                                    value: date
+                                      ? date.toISOString().split("T")[0]
+                                      : null,
+                                  },
+                                });
+                              }}
+                              dateFormat="yyyy-MM-dd"
+                              className="form-control"
+                              placeholderText="Select Date Of Issue"
+                              maxDate={new Date()}
+                              showMonthDropdown
+                              showYearDropdown
+                              dropdownMode="select"
+                              style={{
+                                height: "38px",
+                                width: "100%",
+                              }}
                             />
                           </Form.Group>
                         </Col>
@@ -1347,13 +1898,32 @@ export default function DischargeCard() {
                       <Row>
                         <Col md={6} className="mb-4">
                           <Form.Group className="mb-3">
-                            <Form.Label>Follow Up Date</Form.Label>
-                            <Form.Control
-                              type="date"
-                              name="Follow_date"
-                              value={formData.Follow_date}
-                              onChange={handleInputChange}
-                              style={{ borderRadius: "6px" }}
+                            <Form.Label className="d-block">
+                              Follow Up Date
+                            </Form.Label>
+                            <DatePicker
+                              selected={parseDate(formData?.Follow_date)}
+                              onChange={(date) => {
+                                handleInputChange({
+                                  target: {
+                                    name: "Follow_date",
+                                    value: date
+                                      ? date.toISOString().split("T")[0]
+                                      : null,
+                                  },
+                                });
+                              }}
+                              dateFormat="yyyy-MM-dd"
+                              className="form-control"
+                              placeholderText="Select Follow Date"
+                              maxDate={new Date()}
+                              showMonthDropdown
+                              showYearDropdown
+                              dropdownMode="select"
+                              style={{
+                                height: "38px",
+                                width: "100%",
+                              }}
                             />
                           </Form.Group>
                         </Col>
@@ -1457,6 +2027,10 @@ export default function DischargeCard() {
                     <br />
                     <br />
                     <br />
+                    <br />
+                    <br />
+                    <br />
+                    <br />
                     <Row>
                       <Col md={6} className="mb-4">
                         <Form.Group controlId="assistanceDoctor">
@@ -1540,7 +2114,6 @@ export default function DischargeCard() {
                               ]),
                             ].map((checkedby, index) => (
                               <option key={index} value={checkedby}>
-                                {" "}
                                 {checkedby}
                               </option>
                             ))}
@@ -1583,7 +2156,7 @@ export default function DischargeCard() {
                 <br />
                 <br />
                 <Row className="mb-3">
-                  <Col md={4}>
+                  <Col md={3}>
                     <Form.Group controlId="treatmentGiven">
                       <Form.Label>Treatment Given:</Form.Label>
                       <Form.Select
@@ -1605,7 +2178,7 @@ export default function DischargeCard() {
                     </Form.Group>
                   </Col>
 
-                  <Col>
+                  <Col md={2}>
                     <Form.Group>
                       <Form.Label>Times</Form.Label>
                       <Form.Select
@@ -1622,7 +2195,7 @@ export default function DischargeCard() {
                       </Form.Select>
                     </Form.Group>
                   </Col>
-                  <Col>
+                  <Col md={2}>
                     <Form.Group>
                       <Form.Label>Medicine Route</Form.Label>
                       <Form.Select
@@ -1748,8 +2321,8 @@ export default function DischargeCard() {
                             <label>
                               Select Gender:
                               <select
-                                name="gender"
-                                value={formData.gender}
+                                name="sex"
+                                value={formData.sex}
                                 onChange={handleChange}
                                 style={{ marginBottom: "10px" }}
                               >
@@ -1762,13 +2335,21 @@ export default function DischargeCard() {
                             <br />
                             <label>
                               Medicine Type:
-                              <input
-                                type="text"
+                              <select
                                 name="medicineType"
                                 value={formData.medicineType}
                                 onChange={handleChange}
                                 style={{ marginBottom: "10px" }}
-                              />
+                              >
+                                <option value="">Select</option>
+                                <option value="tab">TAB</option>
+                                <option value="cap">CAP</option>
+                                <option value="syp">SYP</option>
+                                <option value="spry">SPRY</option>
+                                <option value="cream">CREAM</option>
+                                <option value="inj">INJ</option>
+                                <option value="powder">POWDER</option>
+                              </select>
                             </label>
 
                             <br />
@@ -1793,9 +2374,13 @@ export default function DischargeCard() {
                                 style={{ marginBottom: "10px" }}
                               >
                                 <option value="">Select</option>
-                                <option value="mg">mg</option>
                                 <option value="g">g</option>
+                                <option value="mg">mg</option>
+                                <option value="mcg">mcg</option>
                                 <option value="ml">ml</option>
+                                <option value="cc">CC</option>
+                                <option value="iu">IU</option>
+                                <option value="mol">MOL</option>
                               </select>
                             </label>
 
@@ -1810,8 +2395,12 @@ export default function DischargeCard() {
                               >
                                 <option value="">Select</option>
                                 <option value="oral">Oral</option>
-                                <option value="injectable">Injectable</option>
-                                <option value="topical">Topical</option>
+                                <option value="iV">IV</option>
+                                <option value="im">IM</option>
+                                <option value="sc">SC</option>
+                                <option value="local application">
+                                  LOCAL APPICATION
+                                </option>
                               </select>
                             </label>
 
@@ -1825,29 +2414,19 @@ export default function DischargeCard() {
                                 style={{ marginBottom: "10px" }}
                               >
                                 <option value="">Select</option>
-                                <option value="available">Available</option>
-                                <option value="outOfStock">Out of Stock</option>
-                                <option value="discontinued">
-                                  Discontinued
-                                </option>
+                                <option value="proctology">Proctology</option>
+                                <option value="urology">urology</option>
                               </select>
                             </label>
 
                             <br />
-                            <button
-                              type="submit"
-                              style={{
-                                marginTop: "10px",
-                                backgroundColor: "#4CAF50",
-                                color: "white",
-                                border: "none",
-                                padding: "10px",
-                                borderRadius: "5px",
-                                cursor: "pointer",
-                              }}
+                            <Button
+                              variant="primary"
+                              onClick={handleSaveMedicine}
                             >
                               Save
-                            </button>
+                            </Button>
+
                             <button
                               onClick={() => setShowPopup(false)}
                               style={{
@@ -1872,9 +2451,9 @@ export default function DischargeCard() {
                 </Row>
                 <br />
                 <Row className="mb-3">
-                  <Col md={4}>
+                  <Col md={3}>
                     <Form.Group controlId="adviceMedicine">
-                      <Form.Label>Advice Medicine:</Form.Label>
+                      <Form.Label>Treatment On Discharge:</Form.Label>
                       <Form.Select
                         name="adviceMedicine"
                         value={formData.adviceMedicine || ""}
@@ -1882,7 +2461,7 @@ export default function DischargeCard() {
                       >
                         {formData.prescription_type === "Proctology" && (
                           <>
-                            <option value="">Select Treatment</option>
+                            <option value="">Select Medicine</option>
                             {adviceMedicineP.map((adviceMedicineP, index) => (
                               <option key={index} value={adviceMedicineP.name}>
                                 {adviceMedicineP.name}
@@ -1903,7 +2482,7 @@ export default function DischargeCard() {
                       </Form.Select>
                     </Form.Group>
                   </Col>
-                  <Col>
+                  <Col md={1}>
                     <Form.Group>
                       <Form.Label>Quantity:</Form.Label>
                       <Form.Select
@@ -1912,7 +2491,7 @@ export default function DischargeCard() {
                         onChange={handleInputChange}
                       >
                         <option value="" disabled>
-                          Select Quantity
+                          Qty
                         </option>
                         {Array.from({ length: 60 }, (_, i) => i + 1).map(
                           (num) => (
@@ -1924,31 +2503,7 @@ export default function DischargeCard() {
                       </Form.Select>
                     </Form.Group>
                   </Col>
-                  <Col>
-                    <Form.Group>
-                      <Form.Label>Days:</Form.Label>
-                      <Form.Select
-                        name="medicine_days"
-                        value={formData.medicine_days}
-                        onChange={handleInputChange}
-                      >
-                        <option value="" disabled>
-                          Select Days
-                        </option>
-                        {[1, 2, 3, 5, 7, 10, 15, 30, 45, 60, 90, 120].map(
-                          (num) => (
-                            <option key={num} value={num}>
-                              {num}
-                            </option>
-                          )
-                        )}
-                      </Form.Select>
-                    </Form.Group>
-                  </Col>
-                </Row>
-                <br />
-                <Row className="mb-3">
-                  <Col>
+                  <Col md={6}>
                     <Form.Group>
                       <Form.Label>Time Slot:</Form.Label>
                       <div>
@@ -1968,6 +2523,27 @@ export default function DischargeCard() {
                             />
                           ))}
                       </div>
+                    </Form.Group>
+                  </Col>
+                  <Col md={1}>
+                    <Form.Group>
+                      <Form.Label>Days:</Form.Label>
+                      <Form.Select
+                        name="medicine_days"
+                        value={formData.medicine_days}
+                        onChange={handleInputChange}
+                      >
+                        <option value="" disabled>
+                          Days
+                        </option>
+                        {[1, 2, 3, 5, 7, 10, 15, 30, 45, 60, 90, 120].map(
+                          (num) => (
+                            <option key={num} value={num}>
+                              {num}
+                            </option>
+                          )
+                        )}
+                      </Form.Select>
                     </Form.Group>
                   </Col>
                 </Row>
@@ -2040,6 +2616,144 @@ export default function DischargeCard() {
           </Card>
         </Col>
       </Container>
+      <style>
+        {`
+          .enquiry-card {
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border: none;
+            background: #f8f9fa;
+            overflow: hidden;
+            margin-bottom: 30px;
+          }
+
+          .card-body {
+            padding: 30px;
+          }
+
+          .form-section {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+          }
+
+          .form-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+          }
+
+          .form-control, .form-select {
+            border-radius: 8px;
+            border: 3px solid #dee2e6;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+            background-color: #ffffff;
+            color: #2c3e50;
+            font-size: 0.95rem;
+          }
+
+          .form-control:focus, .form-select:focus {
+            border-color: #00bcd4;
+            box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
+            background-color: #f8F9FA;
+          }
+
+          textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+          }
+
+          .form-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 16px 12px;
+          }
+
+          .btn-primary {
+            background:linear-gradient(45deg, #00bcd4, #00acc1);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 188, 212, 0.2);
+          }
+
+          .btn-primary:hover {
+            background: linear-gradient(45deg, #00acc1, #0097a7);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 188, 212, 0.3);
+          }
+
+          .btn-primary:disabled {
+            background: #bdc3c7;
+            transform: none;
+          }
+
+          /* Error message styling */
+          .error-message {
+            color: #e74c3c;
+            font-size: 0.85rem;
+            margin-top: 5px;
+          }
+
+          /* Responsive adjustments */
+          @media (max-width: 768px) {
+            .card-body {
+              padding: 20px;
+            }
+
+            .form-section {
+              padding: 15px;
+            }
+
+            .btn-primary {
+              width: 100%;
+              margin-top: 15px;
+            }
+          }
+
+          /* Row spacing */
+          .row {
+            margin-bottom: 20px;
+          }
+
+          /* Spinner styling */
+          .spinner-border {
+            margin-right: 8px;
+            width: 1.2rem;
+            height: 1.2rem;
+          }
+
+          /* Optional: Add animation for form elements */
+          .form-control, .form-select, .btn {
+            animation: fadeIn 0.5s ease-in-out;
+          }
+
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+              transform: translateY(10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          /* Optional: Add hover effect for form controls */
+          .form-control:hover, .form-select:hover {
+            border-color: #3498db;
+          }
+        `}
+      </style>
     </div>
   );
 }

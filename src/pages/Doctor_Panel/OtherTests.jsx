@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { Row, Col, Form, Container, Card, Dropdown } from "react-bootstrap";
 import NavBarD from "./NavbarD";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.158:5000/api"; // Update with your backend API base URL
+const BASE_URL = "http://192.168.90.238:5000/api"; // Update with your backend API base URL
 
 export default function OtherTests() {
   // const [dropdownOptions, setDropdownOptions] = useState([]); // Store API options
@@ -34,6 +36,7 @@ export default function OtherTests() {
     console.log("Retrieved from localStorage:", storedPatientId);
     if (storedPatientId) setPatientId(storedPatientId);
   }, []);
+
   useEffect(() => {
     if (!patientId) {
       console.warn("No patientId found, skipping fetch");
@@ -43,10 +46,12 @@ export default function OtherTests() {
       console.log(`Fetching data for patient ID: ${patientId}`);
       try {
         const response = await fetch(
-          `${BASE_URL}/V1/otherTests/listOtherTests/${patientId}`,
+          `${BASE_URL}/V1/patienttabs/listOtherTests/${patientId}`,
           {
             method: "GET",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+            },
           }
         );
 
@@ -60,8 +65,10 @@ export default function OtherTests() {
         }
 
         const data = await response.json();
-        console.log("Parsed API Response:", data);
+        console.log("Fetched Data:", data);
 
+        // if (data?.data?.patientData?.length > 0) {
+        //   setFormData(data.data.patientData[0]);
         if (data?.data?.otherTests) {
           const otherTests = data.data.otherTests;
 
@@ -105,7 +112,6 @@ export default function OtherTests() {
         console.error("Error fetching data:", error);
       }
     };
-
     fetchPatientData();
   }, [patientId]);
 
@@ -213,7 +219,7 @@ export default function OtherTests() {
   //   if (Object.keys(validationErrors).length === 0) {
   //     try {
   //       const response = await fetch(
-  //         ${BASE_URL}/V1/patienttabs/otherTests/${state.patient.patient_id},
+  //         `${BASE_URL}/V1/patienttabs/otherTests/${state.patient.patient_id}`,
   //         {
   //           method: "PUT",
   //           headers: { "Content-Type": "application/json" },
@@ -250,7 +256,7 @@ export default function OtherTests() {
   // useEffect(() => {
   //   if (state?.patient) {
   //     setLoading(true); // Start loading
-  //     fetch(${BASE_URL}/V1/patienttabs/otherTests/${state.patient.patient_id})
+  //     fetch(`${BASE_URL}/V1/patienttabs/otherTests/${state.patient.patient_id}`)
   //       .then((response) => {
   //         if (!response.ok) {
   //           throw new Error("Failed to fetch data");
@@ -363,6 +369,7 @@ export default function OtherTests() {
         return;
       }
 
+      // const otherTests = result.data.otherTests;
       const { otherTests, testDetails } = result.data;
       console.log("Other Tests Data:", otherTests);
 
@@ -394,6 +401,11 @@ export default function OtherTests() {
       // Show medical history table only after fetching previous records
       setShowMedicalHistory(true);
 
+      // Set previous record date
+      // const recordDate = otherTests.test_date || "";
+      // console.log("Setting previous record date:", recordDate);
+      // setPreviousRecordDate(recordDate);
+
       // Set previous record date for display
       setPreviousRecordDate(formattedDate);
 
@@ -402,6 +414,13 @@ export default function OtherTests() {
 
       // Show Edit button
       setShowEditButton(true);
+
+      // Reset selected options for test type
+      // setSelectedOptions((prev) => ({
+      //   ...prev,
+      //   test_type: [], // Reset to empty array
+      //   ref_doctor: otherTests.ref_doctor || "",
+      // }));
 
       // Disable form editing until Edit button is clicked
       setIsDisabled(true);
@@ -419,6 +438,38 @@ export default function OtherTests() {
     setIsDisabled(false);
     alert("Editing mode enabled. You can now modify the test details.");
   };
+
+  // const handleNewRecord = () => {
+  //   // Clear form data
+  //   setFormData({
+  //     test_date: "",
+  //     test_type: "",
+  //     ref_doctor: "",
+  //     fee_status: "",
+  //     visit_type: "",
+  //     test_comment: "",
+  //   });
+
+  //   // Reset selected options
+  //   setSelectedOptions({
+  //     test_type: [],
+  //     ref_doctor: "",
+  //   });
+
+  //   // Enable the "Previous Records" button
+  //   setDisablePreviousButton(false);
+
+  //   // Hide the Edit button
+  //   setShowEditButton(false);
+
+  //   // Enable form editing
+  //   setIsDisabled(false);
+
+  //   // Clear previous record date
+  //   setPreviousRecordDate("");
+
+  //   alert("New Record: You can now enter new data.");
+  // };
 
   return (
     <div
@@ -439,8 +490,8 @@ export default function OtherTests() {
                 borderRadius: "12px",
                 boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
                 borderColor: "#00bcd4",
-                background: "white",
-                border: "1px solid #00bcd4",
+                background: "#f8f9fa",
+                border: "3px solid #00bcd4",
               }}
             >
               <Card.Body>
@@ -487,21 +538,43 @@ export default function OtherTests() {
                     </div>
                   )}
                   <Row>
-                    <Col md={4} className="mb-4">
+                    <Col md={2} className="mb-4">
                       <Form.Group className="mb-3">
-                        <Form.Label>Date</Form.Label>
-                        <Form.Control
-                          type="date"
-                          name="test_date"
-                          value={formData.test_date || ""}
-                          onChange={handleInputChange}
-                          disabled={isDisabled}
+                        <Form.Label className="d-block">Date</Form.Label>
+                        <DatePicker
+                          selected={
+                            formData?.test_date
+                              ? new Date(formData.test_date)
+                              : null
+                          }
+                          onChange={(date) => {
+                            handleInputChange({
+                              target: {
+                                name: "test_date",
+                                value: date
+                                  ? date.toISOString().split("T")[0]
+                                  : "",
+                              },
+                            });
+                          }}
+                          dateFormat="yyyy-MM-dd"
+                          className="form-control"
+                          placeholderText="Select Date"
+                          maxDate={new Date()} // Prevent selecting future dates
+                          showMonthDropdown
+                          showYearDropdown
+                          dropdownMode="select"
+                          style={{
+                            height: "38px",
+                            width: "100%",
+                          }}
+                          wrapperClassName="date-picker-wrapper"
                         />
                       </Form.Group>
                     </Col>
 
                     {/* Test Type Dropdown with Multiple Checkboxes */}
-                    <Col md={4} className="mb-4">
+                    <Col md={2} className="mb-4">
                       <Form.Group controlId="test_type">
                         <Form.Label>Test Type</Form.Label>
                         <Dropdown>
@@ -542,6 +615,7 @@ export default function OtherTests() {
                                 onChange={(e) =>
                                   handleTestTypeChange(e, test_type)
                                 }
+                                // wrapperClassName="date-picker-wrapper"
                               />
                             ))}
                           </Dropdown.Menu>
@@ -617,23 +691,19 @@ export default function OtherTests() {
                         </Form.Select>
                       </Form.Group>
                     </Col>
-
-                    <Row>
-                      <Col md={6} className="mb-4">
-                        <Form.Group className="mb-3">
-                          <Form.Label>Comment</Form.Label>
-                          <Form.Control
-                            as="textarea"
-                            name="test_comment"
-                            value={formData.test_comment || ""}
-                            onChange={handleInputChange}
-                            placeholder="Enter Comments"
-                            disabled={isDisabled}
-                          />
-                        </Form.Group>
-                      </Col>
-                    </Row>
-
+                    <Col md={6} className="mb-4">
+                      <Form.Group className="mb-3">
+                        <Form.Label>Comment</Form.Label>
+                        <Form.Control
+                          as="textarea"
+                          name="test_comment"
+                          value={formData.test_comment || ""}
+                          onChange={handleInputChange}
+                          placeholder="Enter Comments"
+                          disabled={isDisabled}
+                        />
+                      </Form.Group>
+                    </Col>
                     {/* Medical History Table */}
                     {showMedicalHistory && (
                       <div className="mb-4">
@@ -666,11 +736,10 @@ export default function OtherTests() {
                         </div>
                       </div>
                     )}
-
                     <button
                       type="button"
                       className="btn btn-primary"
-                      style={{ marginTop: "30px" }}
+                      style={{ marginTop: "30px", float: "right" }}
                       onClick={handleSubmit}
                     >
                       Submit
@@ -682,6 +751,157 @@ export default function OtherTests() {
           </Col>
         </Row>
       </Container>
- </div>
-);
+      <style>
+        {`
+          .enquiry-card {
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border: none;
+            background: #f8f9fa;
+            overflow: hidden;
+            margin-bottom: 30px;
+          }
+
+          .card-body {
+            padding: 30px;
+          }
+
+          .form-section {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+          }
+
+          .form-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+          }
+
+          .form-control, .form-select {
+            border-radius: 8px;
+            border: 3px solid #dee2e6;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+            background-color: #ffffff;
+            color: #2c3e50;
+            font-size: 0.95rem;
+          }
+
+          .form-control:focus, .form-select:focus {
+            border-color: #00bcd4;
+            box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
+            background-color: #f8F9FA;
+          }
+
+          textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+          }
+
+          .form-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 16px 12px;
+          }
+
+          .btn-primary {
+            background:linear-gradient(45deg, #00bcd4, #00acc1);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 188, 212, 0.2);
+          }
+
+          .btn-primary:hover {
+            background: linear-gradient(45deg, #00acc1, #0097a7);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 188, 212, 0.3);
+          }
+
+          .btn-primary:disabled {
+            background: #bdc3c7;
+            transform: none;
+          }
+
+          /* Error message styling */
+          .error-message {
+            color: #e74c3c;
+            font-size: 0.85rem;
+            margin-top: 5px;
+          }
+
+          /* Responsive adjustments */
+          @media (max-width: 768px) {
+            .card-body {
+              padding: 20px;
+            }
+
+            .form-section {
+              padding: 15px;
+            }
+
+            .btn-primary {
+              width: 100%;
+              margin-top: 15px;
+            }
+          }
+
+          /* Row spacing */
+          .row {
+            margin-bottom: 20px;
+          }
+
+          /* Spinner styling */
+          .spinner-border {
+            margin-right: 8px;
+            width: 1.2rem;
+            height: 1.2rem;
+          }
+
+          /* Optional: Add animation for form elements */
+          .form-control, .form-select, .btn {
+            animation: fadeIn 0.5s ease-in-out;
+          }
+
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+              transform: translateY(10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          /* Optional: Add hover effect for form controls */
+          .form-control:hover, .form-select:hover {
+            border-color: #3498db;
+          }
+                 .date-picker-wrapper {
+            margin-bottom: 0 !important;
+          }
+
+          .react-datepicker-wrapper {
+            margin-bottom: 0 !important;
+            display: block;
+          }
+
+          .react-datepicker__input-container {
+            margin-bottom: 0 !important;
+            display: block;
+          }
+        `}
+      </style>
+    </div>
+  );
 }

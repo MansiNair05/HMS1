@@ -13,8 +13,9 @@ import {
   Modal,
 } from "react-bootstrap";
 import PageBreadcrumb from "../../componets/PageBreadcrumb";
+import * as XLSX from "xlsx";
 
-const BASE_URL = "http://192.168.90.158:5000/api";
+const BASE_URL = "http://192.168.90.203:5000/api";
 
 export default function OpdSurgeryReport() {
   const [showModal, setShowModal] = useState(false);
@@ -90,6 +91,18 @@ export default function OpdSurgeryReport() {
     } catch (error) {
       console.error("Error saving opd_feedback:", error);
     }
+  };
+
+  const exportToExcel = () => {
+    if (!filteredReports.length) {
+      alert("No data to export!");
+      return;
+    }
+
+    const worksheet = XLSX.utils.json_to_sheet(filteredReports);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Opd Surgery Reports");
+    XLSX.writeFile(workbook, "OpdSurgeryReports.xlsx");
   };
 
   const [reports, setReports] = useState([]);
@@ -178,42 +191,48 @@ export default function OpdSurgeryReport() {
           />
         </InputGroup>
       </Form.Group>
-      <div
-        className="d-flex align-items-center"
-        style={{
-          gap: "15px",
-          border: "2px solid #4dd0e1",
-          textAlign: "center",
-          borderRadius: "8px",
-          padding: "10px",
-          backgroundColor: "#e0f7fa",
-        }}
-      >
-        <Form.Group className="pe-3 mb-0">
-          From Date
-          <Form.Control
-            type="date"
-            value={fromDate}
-            onChange={(e) => {
-              setFromDate(e.target.value);
-              if (toDate) filterByVisitDate();
-            }}
-          />
-        </Form.Group>
-        <Form.Group className="pe-3 mb-0">
-          To Date
-          <Form.Control
-            type="date"
-            value={toDate}
-            onChange={(e) => {
-              setToDate(e.target.value);
-              if (fromDate) filterByVisitDate();
-            }}
-          />
-        </Form.Group>
-        <Button variant="primary" onClick={filterByVisitDate}>
-          Find Data
+
+      <div className="d-flex align-items-center" style={{ gap: "15px" }}>
+        <Button variant="success" onClick={exportToExcel}>
+          Export to Excel
         </Button>
+        <div
+          className="d-flex align-items-center"
+          style={{
+            gap: "15px",
+            border: "2px solid #4dd0e1",
+            textAlign: "center",
+            borderRadius: "8px",
+            padding: "10px",
+            backgroundColor: "#e0f7fa",
+          }}
+        >
+          <Form.Group className="pe-3 mb-0">
+            From Date
+            <Form.Control
+              type="date"
+              value={fromDate}
+              onChange={(e) => {
+                setFromDate(e.target.value);
+                if (toDate) filterByVisitDate();
+              }}
+            />
+          </Form.Group>
+          <Form.Group className="pe-3 mb-0">
+            To Date
+            <Form.Control
+              type="date"
+              value={toDate}
+              onChange={(e) => {
+                setToDate(e.target.value);
+                if (fromDate) filterByVisitDate();
+              }}
+            />
+          </Form.Group>
+          <Button variant="primary" onClick={filterByVisitDate}>
+            Find Data
+          </Button>
+        </div>
       </div>
     </div>
   );
