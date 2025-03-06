@@ -84,7 +84,7 @@ export default function OtherTests() {
           setFormData({
             test_date: otherTests.test_date?.split("T")[0] || "",
             ref_doctor: otherTests.ref_doctor || "",
-            fee_status: otherTests.fee_status === "true" ? "YES" : "NO",
+            fee_status: otherTests.fee_status || "",
             visit_type: otherTests.visit_type || "",
             test_comment: otherTests.test_comment || "",
           });
@@ -382,7 +382,7 @@ export default function OtherTests() {
       const updatedFormData = {
         test_date: formattedDate,
         ref_doctor: otherTests.ref_doctor || "",
-        fee_status: otherTests.fee_status === "true" ? "YES" : "NO",
+        fee_status: otherTests.fee_status || "",
         visit_type: otherTests.visit_type || "",
         test_comment: otherTests.test_comment || "",
       };
@@ -668,7 +668,7 @@ export default function OtherTests() {
                           disabled={isDisabled}
                         >
                           <option value="">SELECT FEE STATUS</option>
-                          <option value="YES">YES</option>
+                          <option value="true">YES</option>
                           <option value="NO">NO</option>
                           <option value="DUE">DUE</option>
                           <option value="DNC">DNC</option>
