@@ -34,7 +34,7 @@ const Surgery = () => {
   const [showEditButton, setShowEditButton] = useState(false);
   const [previousRecordDate, setPreviousRecordDate] = useState("");
 
-  const BASE_URL = "http://192.168.90.238:5000/api";
+  const BASE_URL = "http://192.168.90.223:5000/api";
 
   // Update the API endpoints constants
   const API_ENDPOINTS = {
@@ -231,12 +231,13 @@ const Surgery = () => {
       // Handle success response
       if (response.ok) {
         alert("Surgery details saved successfully!");
-        setIsDisabled(true);``
+        setIsDisabled(true);
+        ``;
         setShowEditButton(true);
         setPreviousRecordDate(formData.surgery_date);
         setDisablePreviousButton(true);
-      } else {                
-        throw new Error('Failed to save surgery details.');
+      } else {
+        throw new Error("Failed to save surgery details.");
       }
     } catch (error) {
       console.error("Error saving surgery details:", error);
@@ -662,7 +663,6 @@ const Surgery = () => {
                   >
                     Save
                   </Button>
-                  
                 </Form>
               </Card.Body>
             </Card>

@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.238:5000/api"; // Update with your backend API base URL
+const BASE_URL = "http://192.168.90.223:5000/api"; // Update with your backend API base URL
 
 export default function DischargeCard() {
   const [discharge, setDischarge] = useState([]);
@@ -686,18 +686,17 @@ export default function DischargeCard() {
   };
 
   // Handle checkbox selection change for test type
-const handleSurgeryTypeChange = (e, surgeryType) => {
-  const { checked } = e.target;
+  const handleSurgeryTypeChange = (e, surgeryType) => {
+    const { checked } = e.target;
 
-  setFormData((prevState) => {
-    const updatedSurgeryTypes = checked
-      ? [...prevState.surgery_type, surgeryType]
-      : prevState.surgery_type.filter((type) => type !== surgeryType);
+    setFormData((prevState) => {
+      const updatedSurgeryTypes = checked
+        ? [...prevState.surgery_type, surgeryType]
+        : prevState.surgery_type.filter((type) => type !== surgeryType);
 
-    return { ...prevState, surgery_type: updatedSurgeryTypes };
-  });
-};
-
+      return { ...prevState, surgery_type: updatedSurgeryTypes };
+    });
+  };
 
   const [previousRecordDate, setPreviousRecordDate] = useState("");
   // const fetchPreviousRecords = async () => {

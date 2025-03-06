@@ -4,7 +4,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.238:5000/api"; // Update with your backend API base URL
+const BASE_URL = "http://192.168.90.223:5000/api"; // Update with your backend API base URL
 
 export default function FollowUp() {
   const [patientId, setPatientId] = useState(
@@ -18,10 +18,11 @@ export default function FollowUp() {
     address: "",
     occupation: "",
     email: "",
-    reference_type: "",
+    ref: "",
     diagnosis: "",
     advice: "",
-    plan: "",
+    adviceComment: "",
+    diagnosisAdvice: "",
     present_complaints: "",
     firstVisitDate: "",
     followUpVisitNo: "0",
@@ -62,6 +63,10 @@ export default function FollowUp() {
         const data = await response.json();
         if (data?.data?.data) {
           const { patientData, diagnosisData, followUpData } = data.data.data;
+
+          const visitNumber = Array.isArray(diagnosisData)
+            ? diagnosisData.length
+            : 0;
           setFormData({
             Uid_no: patientData?.Uid_no || "",
             name: patientData?.name || "",
@@ -70,12 +75,15 @@ export default function FollowUp() {
             address: patientData?.address || "",
             occupation: patientData?.occupation || "",
             email: patientData?.email || "",
-            reference_type: patientData?.reference_type || "",
+            ref: patientData?.ref || "",
             diagnosis: diagnosisData?.diagnosis || "",
-            advice: diagnosisData?.advice || "",
+            advice: [diagnosisData?.advice, diagnosisData?.adviceComment]
+              .filter(Boolean)
+              .join("\n"),
+            diagnosisAdvice: diagnosisData?.diagnosisAdvice || "",
             present_complaints: followUpData?.present_complaints || "",
             firstVisitDate: patientData?.date || "",
-            followUpVisitNo: followUpData?.followUpVisitNo || "",
+            followUpVisitNo: visitNumber.toString(),
           });
         } else {
           console.warn("No patient data found in API response");
@@ -131,10 +139,11 @@ export default function FollowUp() {
       "address",
       "occupation",
       "email",
-      "reference_type",
+      "ref",
       "diagnosis",
       "advice",
-      "plan",
+      "adviceComment",
+      "diagnosisAdvice",
       "present_complaints",
       "firstVisitDate",
       "followUpVisitNo",
@@ -321,7 +330,7 @@ export default function FollowUp() {
                       <Form.Group className="mb-3">
                         <Form.Label>Referred By</Form.Label>
                         <Form.Control
-                          value={formData.reference_type || ""}
+                          value={formData.ref || ""}
                           readOnly
                           style={{
                             backgroundColor: "#e9ecef",
@@ -360,7 +369,7 @@ export default function FollowUp() {
                         <Form.Control
                           as="textarea"
                           name="advice"
-                          value={formData.advice || ""}
+                          value={(formData.advice || "")}
                           onChange={handleInputChange}
                         />
                       </Form.Group>
@@ -373,8 +382,8 @@ export default function FollowUp() {
                         <Form.Label>Plan</Form.Label>
                         <Form.Control
                           as="textarea"
-                          name="plan"
-                          value={formData.plan || ""}
+                          name="diagnosisAdvice"
+                          value={formData.diagnosisAdvice || ""}
                           onChange={handleInputChange}
                         />
                       </Form.Group>
@@ -417,7 +426,6 @@ export default function FollowUp() {
                           dateFormat="yyyy-MM-dd"
                           className="form-control"
                           placeholderText="Select First Visit Date"
-                          maxDate={new Date()} // Prevent selecting future dates
                           showMonthDropdown
                           showYearDropdown
                           dropdownMode="select"

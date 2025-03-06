@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.238:5000/api";
+const BASE_URL = "http://192.168.90.223:5000/api";
 
 const SurgeryTabs = ({
   selectedOptions,

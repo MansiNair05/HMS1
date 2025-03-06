@@ -19,7 +19,7 @@ import {
 // import NavBarD from "./NavbarD";
 import PageBreadcrumb from "../../componets/PageBreadcrumb";
 
-const BASE_URL = "http://192.168.90.238:5000/api"; // Update your API base URL here
+const BASE_URL = "http://192.168.90.223:5000/api"; // Update your API base URL here
 
 export default function Patient() {
   const [patients, setPatients] = useState([]);

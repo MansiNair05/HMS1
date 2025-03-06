@@ -7,7 +7,7 @@ import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.238:5000/api";
+const BASE_URL = "http://192.168.90.223:5000/api";
 
 export default function Personal() {
   const location = useLocation();
@@ -35,6 +35,7 @@ export default function Personal() {
     reference_doctor_no: "",
     reference_doctor_speciality: "",
     reference_doctor_location: "",
+    reference_doctor_id:"",
     patient_ref_no: "",
     old_patient_name: "",
     friendname: "",
@@ -178,38 +179,52 @@ export default function Personal() {
   };
 
   // Modify the handleInputChange function
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    const newValue = type === "checkbox" ? checked : value;
+const handleInputChange = (e) => {
+  
+  const { name, value, type, checked } = e.target;
+  const newValue = type === "checkbox" ? checked : value;
 
-    if (name === "birth_date") {
-      const formattedDate = formatDate(value);
-      const calculatedAge = calculateAge(formattedDate);
-      console.log("Birth Date Changed:", {
-        originalValue: value,
-        formattedDate: formattedDate,
-        calculatedAge: calculatedAge,
-      });
+  if (name === "birth_date") {
+    const formattedDate = formatDate(value);
+    const calculatedAge = calculateAge(formattedDate);
+    console.log("Birth Date Changed:", {
+      originalValue: value,
+      formattedDate: formattedDate,
+      calculatedAge: calculatedAge,
+    });
 
+    // Update rowData to include identity and identityNumber
+    if (name === "identity") {
       setRowData((prevState) => ({
         ...prevState,
-        [name]: formattedDate,
-        age: calculatedAge,
-      }));
-    } else {
-      setRowData((prevState) => ({
-        ...prevState,
-        [name]: newValue,
+        identity: `${value},${rowData.identityNumber || ""}`, // Concatenate identity and identityNumber
       }));
     }
 
-    // Log all form data after each change
-    console.log("Updated Form Data:", {
-      ...rowData,
+    setRowData((prevState) => ({
+      ...prevState,
+      [name]: formattedDate,
+      age: calculatedAge,
+    }));
+  } else if (name === "identityNumber") {
+    setRowData((prevState) => ({
+      ...prevState,
+      identity: `${rowData.identity || ""},${rowData.identityNumber || ""}.trim()`, // Concatenate identity and identityNumber
+      [name]: value,
+    }));
+  } else {
+    setRowData((prevState) => ({
+      ...prevState,
       [name]: newValue,
-    });
-  };
+    }));
+  }
 
+  // Log all form data after each change
+  console.log("Updated Form Data:", {
+    ...rowData,
+    [name]: newValue,
+  });
+};
   const handleReferenceChange = (e) => {
     const selectedValue = e.target.value;
     setSelectedReference(selectedValue);
@@ -236,50 +251,6 @@ export default function Personal() {
       ...prev,
       [name]: value,
     }));
-
-    // Check if HHC Board is selected and update the ref field
-    if (name === "HHC_board" && value === "HHC_board") {
-      setRowData((prev) => ({
-        ...prev,
-        ref: value, // Store the selected value in ref
-      }));
-    }
-    if (name === "HHF" && value === "HHF") {
-      setRowData((prev) => ({
-        ...prev,
-        ref: value, // Store the selected value in ref
-      }));
-    }
-
-    if (name === "other") {
-      setRowData((prev) => ({
-        ...prev,
-        ref: value, // Store the selected value in ref
-      }));
-    }
-
-    if (name === "WOM") {
-      setRowData((prev) => ({
-        ...prev,
-        ref: value, // Store the selected value in ref
-      }));
-    }
-
-    if (selectedReference === "family_friends") {
-      setRowData((prev) => ({
-        ...prev,
-        ref: `${referenceDetails.friendname || ""},${
-          referenceDetails.friendno || ""
-        }`,
-      }));
-    }
-
-    if (selectedReference === "old_ref") {
-      setRowData((prev) => ({
-        ...prev,
-        ref: `${oldPatientDetails.patient_ref_no || ""}`, // Store the pincode in ref
-      }));
-    }
   };
 
   const handleSubmit = async (e) => {
@@ -287,45 +258,62 @@ export default function Personal() {
 
     // Create a reference type string based on selected reference and its details
     let reference_type = "";
+    let ref = "";
 
     switch (selectedReference) {
       case "newspaper":
-        reference_type = `Newspaper`;
+        reference_type = `newspaper`;
+        ref = `${referenceDetails.newspaper || ""}`;
         break;
       case "dr_ref":
-        reference_type = `Doctor Reference: ${
-          referenceDetails.reference_doctor_name || ""
-        } - ${referenceDetails.reference_doctor_speciality || ""}`;
+        reference_type = `dr_ref`
+        ref = ` ${referenceDetails.reference_doctor_id || ""}`;
         break;
       case "internet":
-        reference_type = `Internet`;
+        reference_type = `internet`;
+        ref = `${referenceDetails.internet || ""}`;
         break;
+
       case "MediaRef":
-        reference_type = `Entertainment Media`;
+        reference_type = `MediaRef`;
+        ref = `${referenceDetails.MediaRef || ""}`;
         break;
       case "TVShow":
         reference_type = `TVShow`;
+        ref = `${referenceDetails.TVShow || ""}`;
         break;
       case "old_ref":
-        reference_type = `Patient Reference`;
+        reference_type = `old_ref`
+        ref = `${oldPatientDetails.patient_ref_no || ""},${
+          oldPatientDetails.old_patient_name || ""
+        },${oldPatientDetails.old_patient_id_value || ""},${
+          oldPatientDetails.old_patient_pincode || ""
+        }`;
         break;
       case "family_friends":
-        reference_type = `Family/Friends`;
+        reference_type = `family_friends`;
+        ref = `${referenceDetails.friendname || ""},${
+          referenceDetails.friendno || ""}`;
         break;
       case "hhc_board":
-        reference_type = "HHC Board";
+        reference_type = "hhc_board";
+        ref = `${referenceDetails.HHC_board || ""}`;
         break;
       case "HHF":
         reference_type = "HHF";
+        ref = `${referenceDetails.HHF || ""}`;
         break;
       case "other":
-        reference_type = `Other`;
+        reference_type = `other`;
+        ref = `${referenceDetails.other || ""}`;        
         break;
       case "WOM":
         reference_type = `WOM`;
+        ref = `${referenceDetails.WOM || ""}`;
         break;
       default:
-        reference_type = "";
+        reference_type = null;
+        ref = null;
     }
 
     try {
@@ -338,6 +326,7 @@ export default function Personal() {
             ...rowData,
             reference_type, // Add the reference_type field
             selectedReference,
+            ref,
             referenceDetails,
           }),
         }
@@ -527,7 +516,7 @@ export default function Personal() {
               }}
             >
               <Card.Body>
-                <Form onSubmit={handleSubmit}>
+                <Form>
                   <Row>{/* Add more form fields as needed */}</Row>
                   <button
                     type="button"
@@ -1105,6 +1094,8 @@ export default function Personal() {
                                               reference_doctor_speciality:
                                                 doctor.reference_doctor_speciality ||
                                                 "",
+                                              reference_doctor_id:
+                                                doctor.reference_doctor_id || "",
                                               reference_doctor_location:
                                                 doctor.reference_doctor_location ||
                                                 "",
