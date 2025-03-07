@@ -16,6 +16,8 @@ const Surgery = () => {
       SA: false,
       GA: false,
     },
+    anesthesiaDetails: "", // Add this line
+
     plan: "",
     surgery_remarks: "",
     surgery_note: "",
@@ -132,6 +134,7 @@ const Surgery = () => {
         plan: surgeryData.plan || "",
         surgery_note: surgeryData.surgery_note || "",
         additional_comment: surgeryData.additional_comment || "",
+        anesthesiaDetails: "", // Add this line
       });
     } catch (error) {
       console.error("Error fetching previous records:", error);
@@ -152,6 +155,8 @@ const Surgery = () => {
         SA: false,
         GA: false,
       },
+      anesthesiaDetails: "", // Add this line
+
       surgery_remarks: "",
       plan: "",
       surgery_note: "",
@@ -194,7 +199,9 @@ const Surgery = () => {
         assistanceDoctor:
           selectedOptions.assistanceDoctor || formData.assistanceDoctor || "",
         anaesthetist: selectedOptions.anaesthetist || "",
-        anesthesia: selectedAnesthesia, // Send as string instead of object
+        anesthesia:
+          selectedAnesthesia +
+          (formData.anesthesiaDetails ? `, ${formData.anesthesiaDetails}` : ""), // Include Other value
         surgery_remarks: formData.surgery_remarks,
         plan: formData.plan,
         surgery_note: formData.surgery_note,
@@ -269,7 +276,9 @@ const Surgery = () => {
         risk_consent: formData.risk_consent,
         assistanceDoctor: selectedOptions.assistanceDoctor || "",
         anaesthetist: selectedOptions.anaesthetist || "",
-        anesthesia: selectedAnesthesia,
+        anesthesia:
+          selectedAnesthesia +
+          (formData.anesthesiaDetails ? `, ${formData.anesthesiaDetails}` : ""), // Include Other value
         surgery_remarks: formData.surgery_remarks,
         plan: formData.plan,
         surgery_note: formData.surgery_note,
