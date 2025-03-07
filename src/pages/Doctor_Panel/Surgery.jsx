@@ -9,7 +9,7 @@ const Surgery = () => {
     admission_date: "",
     surgery_date: "",
     risk_consent: "",
-    assistantDoctor: "",
+    assistanceDoctor: "",
     anaesthetist: "",
     anesthesia: {
       LA: false,
@@ -33,6 +33,7 @@ const Surgery = () => {
   const [disablePreviousButton, setDisablePreviousButton] = useState(false);
   const [showEditButton, setShowEditButton] = useState(false);
   const [previousRecordDate, setPreviousRecordDate] = useState("");
+  const [isOtherSpecifyDisabled, setIsOtherSpecifyDisabled] = useState(false);
 
   const BASE_URL = "http://192.168.90.142:5000/api";
 
@@ -124,7 +125,7 @@ const Surgery = () => {
         admission_date: surgeryData.admission_date || "",
         surgery_date: surgeryData.surgery_date || "",
         risk_consent: surgeryData.risk_consent || "",
-        assistantDoctor: surgeryData.assistantDoctor || "",
+        assistanceDoctor: surgeryData.assistanceDoctor || "",
         anaesthetist: surgeryData.anaesthetist || "",
         anesthesia: anesthesiaObject, // Set the parsed object
         surgery_remarks: surgeryData.surgery_remarks || "",
@@ -144,7 +145,7 @@ const Surgery = () => {
       admission_date: "",
       surgery_date: "",
       risk_consent: "",
-      assistantDoctor: "",
+      assistanceDoctor: "",
       anaesthetist: "",
       anesthesia: {
         LA: false,
@@ -169,6 +170,7 @@ const Surgery = () => {
   // Function to handle edit
   const handleEditSurgery = () => {
     setIsDisabled(false);
+    setIsOtherSpecifyDisabled(true);
     alert("You can now edit the surgery details.");
   };
   const handleSubmit = async (e) => {
@@ -189,7 +191,8 @@ const Surgery = () => {
         admission_date: formData.admission_date,
         surgery_date: formData.surgery_date,
         risk_consent: formData.risk_consent,
-        assistantDoctor: selectedOptions.assistantsDoctorName || "",
+        assistanceDoctor:
+          selectedOptions.assistanceDoctor || formData.assistanceDoctor || "",
         anaesthetist: selectedOptions.anaesthetist || "",
         anesthesia: selectedAnesthesia, // Send as string instead of object
         surgery_remarks: formData.surgery_remarks,
@@ -236,6 +239,10 @@ const Surgery = () => {
         setShowEditButton(true);
         setPreviousRecordDate(formData.surgery_date);
         setDisablePreviousButton(true);
+
+        setSelectedOptions({
+          assistantsDoctor: "",
+        });
       } else {
         throw new Error("Failed to save surgery details.");
       }
@@ -260,7 +267,7 @@ const Surgery = () => {
         admission_date: formData.admission_date,
         surgery_date: formData.surgery_date,
         risk_consent: formData.risk_consent,
-        assistantDoctor: selectedOptions.assistantsDoctorName || "",
+        assistanceDoctor: selectedOptions.assistanceDoctor || "",
         anaesthetist: selectedOptions.anaesthetist || "",
         anesthesia: selectedAnesthesia,
         surgery_remarks: formData.surgery_remarks,
@@ -415,6 +422,7 @@ const Surgery = () => {
                               },
                             });
                           }}
+                          disabled={isDisabled}
                           dateFormat="yyyy-MM-dd"
                           className="form-control"
                           placeholderText="Select Admission Date"
@@ -490,11 +498,15 @@ const Surgery = () => {
                       <Form.Group>
                         <Form.Label>Assistant Doctor:</Form.Label>
                         <Form.Select
-                          value={selectedOptions?.assistantsDoctorName || ""}
+                          value={
+                            formData.assistanceDoctor ||
+                            selectedOptions?.assistanceDoctor ||
+                            ""
+                          }
                           onChange={(e) =>
                             setSelectedOptions({
                               ...selectedOptions,
-                              assistantsDoctorName: e.target.value,
+                              assistanceDoctor: e.target.value,
                             })
                           }
                           disabled={isDisabled}
@@ -503,15 +515,15 @@ const Surgery = () => {
                           {[
                             ...new Set([
                               ...surgery.map(
-                                (option) => option.assistantsDoctorName
+                                (option) => option.assistanceDoctor
                               ),
                               ...assistantsDoctor.map(
-                                (assistantsDoctor) => assistantsDoctor.name
+                                (assistantDoctor) => assistantDoctor.name
                               ),
                             ]),
-                          ].map((assistantsDoctorName, index) => (
-                            <option key={index} value={assistantsDoctorName}>
-                              {assistantsDoctorName}
+                          ].map((assistanceDoctor, index) => (
+                            <option key={index} value={assistanceDoctor}>
+                              {assistanceDoctor}
                             </option>
                           ))}
                         </Form.Select>
@@ -584,11 +596,11 @@ const Surgery = () => {
                           <Col xs={7}>
                             <Form.Control
                               as="textarea"
-                              placeholder="Any allergy"
+                              placeholder="Other (Specify)"
                               name="anesthesiaDetails"
                               value={formData.anesthesiaDetails || ""}
                               onChange={handleInputChange}
-                              disabled={isDisabled}
+                              disabled={isDisabled || isOtherSpecifyDisabled}
                             />
                           </Col>
                         </Row>
@@ -658,10 +670,12 @@ const Surgery = () => {
                   <br />
                   <Button
                     className="mt-4"
-                    onClick={handleSubmit}
+                    onClick={
+                      showEditButton ? handleUpdateSurgery : handleSubmit
+                    }
                     disabled={isDisabled}
                   >
-                    Save
+                    {showEditButton ? "Update" : "Save"}
                   </Button>
                 </Form>
               </Card.Body>

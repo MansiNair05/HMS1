@@ -212,80 +212,6 @@ export default function OtherTests() {
     }
   };
 
-  // const handleSubmit = async (saveType) => {
-  //   const validationErrors = validate();
-  //   console.log("Form Data:", formData);
-  //   setErrors(validationErrors);
-
-  //   if (Object.keys(validationErrors).length === 0) {
-  //     try {
-  //       const response = await fetch(
-  //         `${BASE_URL}/V1/patienttabs/otherTests/${state.patient.patient_id}`,
-  //         {
-  //           method: "PUT",
-  //           headers: { "Content-Type": "application/json" },
-  //           body: JSON.stringify({ ...formData, saveType }),
-  //         }
-  //       );
-
-  //       console.log("Response received:", response);
-
-  //       if (response.ok) {
-  //         alert("Appointment added successfully");
-
-  //         setFormData({
-  //           patient_id: "",
-  //           test_date: state?.test_date || "",
-  //           test_type: state?.test_type || "",
-  //           ref_doctor: state?.ref_doctor || "",
-  //           fee_status: state?.fee_status || "",
-  //           visit_type: state?.visit_type || "",
-  //           test_comment: state?.test_comment || "",
-  //         });
-  //       } else {
-  //         const errorData = await response.json();
-  //         console.error("Error response from API:", errorData);
-  //         alert("Failed to add appointment");
-  //       }
-  //     } catch (error) {
-  //       console.error("Error adding appointment:", error);
-  //       alert("An error occurred while adding the appointment");
-  //     }
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   if (state?.patient) {
-  //     setLoading(true); // Start loading
-  //     fetch(`${BASE_URL}/V1/patienttabs/otherTests/${state.patient.patient_id}`)
-  //       .then((response) => {
-  //         if (!response.ok) {
-  //           throw new Error("Failed to fetch data");
-  //         }
-  //         return response.json();
-  //       })
-  //       .then((data) => {
-  //         console.log("API Response:", data); // Log the API response
-  //         if (data?.data) {
-  //           // Check if data exists
-  //           // Prefill the form with the fetched data
-  //           setFormData({
-  //             test_date: data.data.test_date || "", // Ensure this is correctly populated
-  //             test_type: data.data.test_type || "",
-  //             ref_doctor: data.data.ref_doctor || "",
-  //             fee_status: data.data.fee_status || "",
-  //             visit_type: data.data.visit_type || "",
-  //             test_comment: data.data.test_comment || "",
-  //           });
-  //         }
-  //       })
-  //       .catch((error) => {
-  //         console.error("Error fetching data:", error);
-  //       })
-  //       .finally(() => setLoading(false)); // Stop loading
-  //   }
-  // }, [state?.patient]); // Depend on the patient data to refetch when needed
-
   // Handle checkbox selection change for test type
   const handleTestTypeChange = (e, test_type) => {
     if (isDisabled) return; // Don't update if form is disabled
@@ -402,11 +328,6 @@ export default function OtherTests() {
       // Show medical history table only after fetching previous records
       setShowMedicalHistory(true);
 
-      // Set previous record date
-      // const recordDate = otherTests.test_date || "";
-      // console.log("Setting previous record date:", recordDate);
-      // setPreviousRecordDate(recordDate);
-
       // Set previous record date for display
       setPreviousRecordDate(formattedDate);
 
@@ -415,13 +336,6 @@ export default function OtherTests() {
 
       // Show Edit button
       setShowEditButton(true);
-
-      // Reset selected options for test type
-      // setSelectedOptions((prev) => ({
-      //   ...prev,
-      //   test_type: [], // Reset to empty array
-      //   ref_doctor: otherTests.ref_doctor || "",
-      // }));
 
       // Disable form editing until Edit button is clicked
       setIsDisabled(true);
@@ -440,38 +354,6 @@ export default function OtherTests() {
     setIsDisabled(false);
     alert("Editing mode enabled. You can now modify the test details.");
   };
-
-  // const handleNewRecord = () => {
-  //   // Clear form data
-  //   setFormData({
-  //     test_date: "",
-  //     test_type: "",
-  //     ref_doctor: "",
-  //     fee_status: "",
-  //     visit_type: "",
-  //     test_comment: "",
-  //   });
-
-  //   // Reset selected options
-  //   setSelectedOptions({
-  //     test_type: [],
-  //     ref_doctor: "",
-  //   });
-
-  //   // Enable the "Previous Records" button
-  //   setDisablePreviousButton(false);
-
-  //   // Hide the Edit button
-  //   setShowEditButton(false);
-
-  //   // Enable form editing
-  //   setIsDisabled(false);
-
-  //   // Clear previous record date
-  //   setPreviousRecordDate("");
-
-  //   alert("New Record: You can now enter new data.");
-  // };
 
   return (
     <div
