@@ -4,7 +4,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.223:5000/api"; // Update with your backend API base URL
+const BASE_URL = "http://192.168.90.142:5000/api"; // Update with your backend API base URL
 
 export default function OtherTests() {
   // const [dropdownOptions, setDropdownOptions] = useState([]); // Store API options
@@ -30,6 +30,7 @@ export default function OtherTests() {
   const [showEditButton, setShowEditButton] = useState(false);
   const [showMedicalHistory, setShowMedicalHistory] = useState(false);
   const [medicalHistory, setMedicalHistory] = useState([]);
+  const [isPreviousRecordsFetched, setIsPreviousRecordsFetched] = useState(false);
 
   useEffect(() => {
     const storedPatientId = localStorage.getItem("selectedPatientId");
@@ -424,6 +425,7 @@ export default function OtherTests() {
 
       // Disable form editing until Edit button is clicked
       setIsDisabled(true);
+      setIsPreviousRecordsFetched(true);
     } catch (error) {
       console.error("Error in fetchPreviousRecords:", error);
       alert(`Failed to fetch previous records: ${error.message}`);
@@ -557,6 +559,7 @@ export default function OtherTests() {
                               },
                             });
                           }}
+                          disabled={isDisabled}
                           dateFormat="yyyy-MM-dd"
                           className="form-control"
                           placeholderText="Select Date"
@@ -574,74 +577,79 @@ export default function OtherTests() {
                     </Col>
 
                     {/* Test Type Dropdown with Multiple Checkboxes */}
-                    <Col md={2} className="mb-4">
-                      <Form.Group controlId="test_type">
-                        <Form.Label>Test Type</Form.Label>
-                        <Dropdown>
-                          <Dropdown.Toggle
-                            variant="primary"
-                            id="dropdown-basic"
-                            disabled={isDisabled}
-                          >
-                            {selectedOptions.test_type.length === 0
-                              ? "Select test types"
-                              : selectedOptions.test_type.length === 1
-                              ? selectedOptions.test_type[0]
-                              : `${selectedOptions.test_type.length} Tests Selected`}
-                          </Dropdown.Toggle>
+                    {!isPreviousRecordsFetched && (
+                      <Col md={2} className="mb-4">
+                        <Form.Group controlId="test_type">
+                          <Form.Label>Test Type</Form.Label>
+                          <Dropdown>
+                            <Dropdown.Toggle
+                              variant="primary"
+                              id="dropdown-basic"
+                              disabled={isDisabled}
+                            >
+                              {selectedOptions.test_type.length === 0
+                                ? "Select test types"
+                                : selectedOptions.test_type.length === 1
+                                ? selectedOptions.test_type[0]
+                                : `${selectedOptions.test_type.length} Tests Selected`}
+                            </Dropdown.Toggle>
 
-                          <Dropdown.Menu
-                            style={{
-                              backgroundColor: "white",
-                              padding: "10px",
-                              maxHeight: "300px",
-                              overflowY: "auto",
-                            }}
-                          >
-                            {[
-                              ...new Set([
-                                ...tests.map((option) => option.test_type),
-                                ...types.map((type) => type.name),
-                              ]),
-                            ].map((test_type, index) => (
-                              <Form.Check
-                                key={index}
-                                type="checkbox"
-                                label={test_type}
-                                value={test_type}
-                                checked={selectedOptions.test_type?.includes(
-                                  test_type
-                                )}
-                                onChange={(e) =>
-                                  handleTestTypeChange(e, test_type)
-                                }
-                                // wrapperClassName="date-picker-wrapper"
-                              />
-                            ))}
-                          </Dropdown.Menu>
-                        </Dropdown>
-                        {/* Show selected items below only when multiple are selected */}
-                        {selectedOptions.test_type.length > 1 && (
-                          <div
-                            className="mt-2"
-                            style={{ fontSize: "0.9em", color: "#666" }}
-                          ></div>
-                        )}
-                      </Form.Group>
-                    </Col>
+                            <Dropdown.Menu
+                              style={{
+                                backgroundColor: "white",
+                                padding: "10px",
+                                maxHeight: "300px",
+                                overflowY: "auto",
+                              }}
+                            >
+                              {[
+                                ...new Set([
+                                  ...tests.map((option) => option.test_type),
+                                  ...types.map((type) => type.name),
+                                ]),
+                              ].map((test_type, index) => (
+                                <Form.Check
+                                  key={index}
+                                  type="checkbox"
+                                  label={test_type}
+                                  value={test_type}
+                                  checked={selectedOptions.test_type?.includes(
+                                    test_type
+                                  )}
+                                  onChange={(e) =>
+                                    handleTestTypeChange(e, test_type)
+                                  }
+                                  // wrapperClassName="date-picker-wrapper"
+                                />
+                              ))}
+                            </Dropdown.Menu>
+                          </Dropdown>
+                          {/* Show selected items below only when multiple are selected */}
+                          {selectedOptions.test_type.length > 1 && (
+                            <div
+                              className="mt-2"
+                              style={{ fontSize: "0.9em", color: "#666" }}
+                            ></div>
+                          )}
+                        </Form.Group>
+                      </Col>
+                    )}
 
                     <Col md={4} className="mb-4">
                       <Form.Group controlId="ref_doctor">
                         <Form.Label>Ref. Doctor Name</Form.Label>
                         <Form.Select
-                          value={selectedOptions?.ref_doctor || ""}
+                          value={
+                            formData.ref_doctor ||
+                            selectedOptions?.ref_doctor ||
+                            ""
+                          }
                           onChange={(e) =>
                             setSelectedOptions({
                               ...selectedOptions,
                               ref_doctor: e.target.value,
                             })
                           }
-                          disabled={isDisabled}
                         >
                           <option value="">Assistant Doctor</option>
                           {[
@@ -665,7 +673,6 @@ export default function OtherTests() {
                           name="fee_status"
                           value={formData.fee_status || ""}
                           onChange={handleInputChange}
-                          disabled={isDisabled}
                         >
                           <option value="">SELECT FEE STATUS</option>
                           <option value="true">YES</option>
@@ -683,7 +690,6 @@ export default function OtherTests() {
                           name="visit_type"
                           value={formData.visit_type || ""}
                           onChange={handleInputChange}
-                          disabled={isDisabled}
                         >
                           <option value="">SELECT VISIT TYPE</option>
                           <option value="OPD">OPD</option>

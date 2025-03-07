@@ -34,7 +34,7 @@ const Surgery = () => {
   const [showEditButton, setShowEditButton] = useState(false);
   const [previousRecordDate, setPreviousRecordDate] = useState("");
 
-  const BASE_URL = "http://192.168.90.223:5000/api";
+  const BASE_URL = "http://192.168.90.142:5000/api";
 
   // Update the API endpoints constants
   const API_ENDPOINTS = {

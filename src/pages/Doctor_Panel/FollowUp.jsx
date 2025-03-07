@@ -4,7 +4,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.223:5000/api"; // Update with your backend API base URL
+const BASE_URL = "http://192.168.90.142:5000/api"; // Update with your backend API base URL
 
 export default function FollowUp() {
   const [patientId, setPatientId] = useState(
@@ -369,7 +369,7 @@ export default function FollowUp() {
                         <Form.Control
                           as="textarea"
                           name="advice"
-                          value={(formData.advice || "")}
+                          value={formData.advice || ""}
                           onChange={handleInputChange}
                         />
                       </Form.Group>
