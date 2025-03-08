@@ -37,7 +37,7 @@ const Surgery = () => {
   const [previousRecordDate, setPreviousRecordDate] = useState("");
   const [isOtherSpecifyDisabled, setIsOtherSpecifyDisabled] = useState(false);
 
-  const BASE_URL = "http://192.168.90.142:5000/api";
+  const BASE_URL = "http://192.168.90.137:5000/api";
 
   // Update the API endpoints constants
   const API_ENDPOINTS = {
@@ -115,6 +115,9 @@ const Surgery = () => {
         SA: anesthesiaTypes.includes("SA"),
         GA: anesthesiaTypes.includes("GA"),
       };
+      const otherAnesthesiaValues = anesthesiaTypes
+        .filter((type) => !["LA", "SA", "GA"].includes(type))
+        .join(", ");
 
       // Update states
       setDisablePreviousButton(true);
@@ -134,7 +137,7 @@ const Surgery = () => {
         plan: surgeryData.plan || "",
         surgery_note: surgeryData.surgery_note || "",
         additional_comment: surgeryData.additional_comment || "",
-        anesthesiaDetails: "", // Add this line
+        anesthesiaDetails: otherAnesthesiaValues, // Store other values separately
       });
     } catch (error) {
       console.error("Error fetching previous records:", error);
@@ -186,9 +189,16 @@ const Surgery = () => {
 
       // Convert anesthesia object to string
       const selectedAnesthesia = Object.entries(formData.anesthesia)
-        .filter(([_, value]) => value === true)
+        .filter(([_, value]) => value)
         .map(([key]) => key)
         .join(", ");
+
+      // Include only new values in anesthesiaDetails
+      const otherAnesthesia = formData.anesthesiaDetails
+        .split(", ")
+        .filter((type) => !selectedAnesthesia.includes(type))
+        .join(", ");
+
 
       // Construct the request body
       const requestBody = {
@@ -199,9 +209,9 @@ const Surgery = () => {
         assistanceDoctor:
           selectedOptions.assistanceDoctor || formData.assistanceDoctor || "",
         anaesthetist: selectedOptions.anaesthetist || "",
-        anesthesia:
-          selectedAnesthesia +
-          (formData.anesthesiaDetails ? `, ${formData.anesthesiaDetails}` : ""), // Include Other value
+        anesthesia: selectedAnesthesia, // Only LA, SA, GA
+        anesthesiaDetails: otherAnesthesia, // Store remaining values separately
+
         surgery_remarks: formData.surgery_remarks,
         plan: formData.plan,
         surgery_note: formData.surgery_note,
@@ -248,7 +258,7 @@ const Surgery = () => {
         setDisablePreviousButton(true);
 
         setSelectedOptions({
-          assistantsDoctor: "",
+          assistantsDoctor: requestBody.assistanceDoctor,
         });
       } else {
         throw new Error("Failed to save surgery details.");
@@ -265,8 +275,14 @@ const Surgery = () => {
 
       // Convert anesthesia object to string
       const selectedAnesthesia = Object.entries(formData.anesthesia)
-        .filter(([_, value]) => value === true)
+        .filter(([_, value]) => value)
         .map(([key]) => key)
+        .join(", ");
+
+      // Include only new values in anesthesiaDetails
+      const otherAnesthesia = formData.anesthesiaDetails
+        .split(", ")
+        .filter((type) => !selectedAnesthesia.includes(type))
         .join(", ");
 
       const requestBody = {
@@ -276,9 +292,8 @@ const Surgery = () => {
         risk_consent: formData.risk_consent,
         assistanceDoctor: selectedOptions.assistanceDoctor || "",
         anaesthetist: selectedOptions.anaesthetist || "",
-        anesthesia:
-          selectedAnesthesia +
-          (formData.anesthesiaDetails ? `, ${formData.anesthesiaDetails}` : ""), // Include Other value
+        anesthesia: selectedAnesthesia, // Only LA, SA, GA
+  anesthesiaDetails: otherAnesthesia, 
         surgery_remarks: formData.surgery_remarks,
         plan: formData.plan,
         surgery_note: formData.surgery_note,
@@ -435,7 +450,7 @@ const Surgery = () => {
                           dateFormat="yyyy-MM-dd"
                           className="form-control"
                           placeholderText="Select Admission Date"
-                          maxDate={new Date()} // Prevent selecting future dates
+                         
                           showMonthDropdown
                           showYearDropdown
                           dropdownMode="select"
@@ -459,13 +474,17 @@ const Surgery = () => {
                           }
                           onChange={(date) => {
                             handleInputChange({
-                              target: { name: "surgery_date", value: date },
+                              target: {
+                                name: "surgery_date",
+                                value: date
+                                  ? date.toISOString().split("T")[0]
+                                  : "",
+                              },
                             });
                           }}
                           dateFormat="yyyy-MM-dd"
                           className="form-control"
                           placeholderText="Select Surgery Date"
-                          maxDate={new Date()} // Prevent selecting future dates
                           showMonthDropdown
                           showYearDropdown
                           dropdownMode="select"
@@ -508,10 +527,8 @@ const Surgery = () => {
                         <Form.Label>Assistant Doctor:</Form.Label>
                         <Form.Select
                           value={
-                            formData.assistanceDoctor ||
-                            selectedOptions?.assistanceDoctor ||
-                            ""
-                          }
+                            formData?.assistanceDoctor ||
+                            selectedOptions?.assistanceDoctor || handleInputChange||""                          }
                           onChange={(e) =>
                             setSelectedOptions({
                               ...selectedOptions,

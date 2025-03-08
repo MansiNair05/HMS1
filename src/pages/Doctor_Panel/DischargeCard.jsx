@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.142:5000/api"; // Update with your backend API base URL
+const BASE_URL = "http://192.168.90.137:5000/api"; // Update with your backend API base URL
 
 export default function DischargeCard() {
   const [discharge, setDischarge] = useState([]);
@@ -36,6 +36,8 @@ export default function DischargeCard() {
   );
   const [showEditButton, setShowEditButton] = useState(false); // Controls visibility of "Edit Diagnosis"
   const [isDisabled, setIsDisabled] = useState(false); // Controls edit mode
+  const [isAddressDisabled, setAddressIsDisabled] = useState(false); // Controls edit mode
+
   const [disablePreviousButton, setDisablePreviousButton] = useState(false); // Disables "Previous Records" after clicking
   const [formData, setFormData] = useState({
     prescription_type: "",
@@ -495,6 +497,8 @@ export default function DischargeCard() {
         console.error("Error fetching data:", error);
       }
     };
+    setIsDisabled(true);
+    setAddressIsDisabled(false);
 
     fetchPatientData();
   }, [patientId]);
@@ -535,7 +539,7 @@ export default function DischargeCard() {
     const { name, value } = e.target;
 
     // Fields that should only accept numbers
-    const numericFields = ["age", "IPDNo", "sPO2", "BP", "pulse", "rr", "temp"];
+    const numericFields = ["age", "sPO2", "BP", "pulse", "rr", "temp"];
 
     if (numericFields.includes(name)) {
       // Allow only numbers using regex
@@ -889,6 +893,7 @@ export default function DischargeCard() {
         sex: patientData?.sex || "",
         address: patientData?.address || "",
 
+        referralDoctor: patientData?.referralDoctor || "",
         // All other fields from dischargeCard
         prescription_type: dischargeCard?.prescription_type || "",
         consultantName: dischargeCard?.consultant_name || "",
@@ -991,6 +996,7 @@ export default function DischargeCard() {
       setShowPrintButton(true);
       setDisablePreviousButton(true);
       setIsDisabled(true);
+      setAddressIsDisabled(true);
 
       console.log("Updated form data:", formData);
       console.log("Updated selected options:", selectedOptions);
@@ -1042,7 +1048,8 @@ export default function DischargeCard() {
 
   // Enable form editing when "Edit Diagnosis" is clicked
   const handleEditDischargeCard = () => {
-    setIsDisabled(false);
+    setIsDisabled(true);
+    
     alert("Editing mode enabled. You can now modify the diagnosis details.");
   };
 
@@ -1112,7 +1119,8 @@ export default function DischargeCard() {
     // Reset UI states
     setShowEditButton(false);
     setDisablePreviousButton(false);
-    setIsDisabled(false);
+    setIsDisabled(true);
+    setAddressIsDisabled(false);
     alert("New Record: You can now enter new data.");
     setShowPrintButton(false);
   };
@@ -1249,6 +1257,7 @@ export default function DischargeCard() {
                       />
                     </Form.Group>
                   </Col>
+
                   {/* Address */}
                   <Col md={4} className="mb-4">
                     <Form.Group className="mb-3">
@@ -1260,7 +1269,7 @@ export default function DischargeCard() {
                         onChange={handleInputChange}
                         placeholder="Enter Address"
                         style={{ borderRadius: "6px" }}
-                        disabled={isDisabled}
+                        disabled={isAddressDisabled}
                       />
                     </Form.Group>
                   </Col>
@@ -1311,7 +1320,6 @@ export default function DischargeCard() {
                             consultantName: e.target.value,
                           })
                         }
-                        disabled={isDisabled}
                       >
                         <option value="">Select Consultant</option>
                         {[
@@ -1349,7 +1357,6 @@ export default function DischargeCard() {
                         }}
                         className="form-control"
                         placeholderText="Select DOA"
-                        maxDate={new Date()}
                         showMonthDropdown
                         showYearDropdown
                         dropdownMode="select"
@@ -1361,7 +1368,7 @@ export default function DischargeCard() {
                     </Form.Group>
                   </Col>
                   {/* Time */}
-                  {/* <Col md={2} className="mb-4">
+                  <Col md={2} className="mb-4">
                     <Form.Group className="mb-3">
                       <Form.Label className="d-block">Time</Form.Label>
                       <Form.Control
@@ -1379,7 +1386,7 @@ export default function DischargeCard() {
                         ))}
                       </Form.Control>
                     </Form.Group>
-                  </Col> */}
+                  </Col>
                   <Col md={2} className="mb-4">
                     <Form.Group controlId="surgery_type">
                       <Form.Label>Surgery Type</Form.Label>
@@ -1427,7 +1434,20 @@ export default function DischargeCard() {
                       </Dropdown>
                     </Form.Group>
                   </Col>
+                  <Col md={3} className="mb-4">
+                    <Form.Group className="mb-3">
+                      <Form.Label>Referral Doctor</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="referralDoctor"
+                        value={formData.referralDoctor}
+                        onChange={handleInputChange}
+                        style={{ borderRadius: "6px" }}
+                      />
+                    </Form.Group>
+                  </Col>
                 </Row>
+
                 <br />
                 <Row>
                   {/* DOD */}
@@ -1450,7 +1470,6 @@ export default function DischargeCard() {
                         // dateFormat="yyyy-MM-dd"
                         className="form-control"
                         placeholderText="Select DOD"
-                        maxDate={new Date()}
                         showYearDropdown
                         dropdownMode="select"
                         style={{
@@ -1565,7 +1584,6 @@ export default function DischargeCard() {
                         value={formData.chife_complaints}
                         onChange={handleInputChange}
                         style={{ borderRadius: "6px" }}
-                        disabled={isDisabled}
                       />
                     </Form.Group>
                   </Col>
@@ -1578,7 +1596,6 @@ export default function DischargeCard() {
                         value={formData.past_history}
                         onChange={handleInputChange}
                         style={{ borderRadius: "6px" }}
-                        disabled={isDisabled}
                       />
                     </Form.Group>
                   </Col>
@@ -1594,7 +1611,6 @@ export default function DischargeCard() {
                         value={formData.surgical_history}
                         onChange={handleInputChange}
                         style={{ borderRadius: "6px" }}
-                        disabled={isDisabled}
                       />
                     </Form.Group>
                   </Col>
@@ -1607,7 +1623,6 @@ export default function DischargeCard() {
                         value={formData.allergies}
                         onChange={handleInputChange}
                         style={{ borderRadius: "6px" }}
-                        disabled={isDisabled}
                       />
                     </Form.Group>
                   </Col>
@@ -1623,7 +1638,6 @@ export default function DischargeCard() {
                         value={formData.surgery_procedure}
                         onChange={handleInputChange}
                         style={{ borderRadius: "6px" }}
-                        disabled={isDisabled}
                       />
                     </Form.Group>
                   </Col>
@@ -1636,7 +1650,6 @@ export default function DischargeCard() {
                         value={formData.surgery_note}
                         onChange={handleInputChange}
                         style={{ borderRadius: "6px" }}
-                        disabled={isDisabled}
                       />
                     </Form.Group>
                   </Col>
@@ -1837,7 +1850,6 @@ export default function DischargeCard() {
                               as="textarea"
                               onChange={handleInputChange}
                               style={{ borderRadius: "6px" }}
-                              disabled={isDisabled}
                             />
                           </Form.Group>
                         </Col>
@@ -1853,7 +1865,6 @@ export default function DischargeCard() {
                               value={formData.carenote || ""}
                               onChange={handleInputChange}
                               style={{ borderRadius: "6px" }}
-                              disabled={isDisabled}
                             />
                           </Form.Group>
                         </Col>
@@ -1997,7 +2008,6 @@ export default function DischargeCard() {
                           value={formData.diagnosis}
                           onChange={handleInputChange}
                           style={{ borderRadius: "6px" }}
-                          disabled={isDisabled}
                         />
                       </Form.Group>
                     </Col>
@@ -2011,7 +2021,6 @@ export default function DischargeCard() {
                           value={formData.local_care || ""}
                           onChange={handleInputChange}
                           style={{ borderRadius: "6px" }}
-                          disabled={isDisabled}
                         />
                       </Form.Group>
                     </Col>

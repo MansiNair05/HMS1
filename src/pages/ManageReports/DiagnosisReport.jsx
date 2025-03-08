@@ -15,7 +15,7 @@ import {
 import PageBreadcrumb from "../../componets/PageBreadcrumb";
 import * as XLSX from "xlsx";
 
-const BASE_URL = "http://192.168.90.142:5000/api";
+const BASE_URL = "http://192.168.90.137:5000/api";
 
 export default function DiagnosisReport() {
   const [showModal, setShowModal] = useState(false);

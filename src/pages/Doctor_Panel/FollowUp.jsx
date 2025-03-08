@@ -4,7 +4,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.142:5000/api"; // Update with your backend API base URL
+const BASE_URL = "http://192.168.90.137:5000/api"; // Update with your backend API base URL
 
 export default function FollowUp() {
   const [patientId, setPatientId] = useState(
@@ -76,11 +76,11 @@ export default function FollowUp() {
             occupation: patientData?.occupation || "",
             email: patientData?.email || "",
             ref: patientData?.ref || "",
-            diagnosis: diagnosisData?.diagnosis || "",
-            advice: [diagnosisData?.advice, diagnosisData?.adviceComment]
+            diagnosis: diagnosisData[0]?.diagnosis || "",
+            advice: [diagnosisData[0]?.advice, diagnosisData[0]?.adviceComment]
               .filter(Boolean)
               .join("\n"),
-            diagnosisAdvice: diagnosisData?.diagnosisAdvice || "",
+            diagnosisAdvice: diagnosisData[0]?.diagnosisAdvice || "",
             present_complaints: followUpData?.present_complaints || "",
             firstVisitDate: patientData?.date || "",
             followUpVisitNo: visitNumber.toString(),

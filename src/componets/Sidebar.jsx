@@ -48,7 +48,7 @@ const menuPaths = {
     "/oPDIDCollGraph",
     "/oPDReceiptsReport",
   ],
-  Patient: [
+  DoctorPanel: [
     "/navbar",
     "/patient",
     "/personal",
@@ -471,59 +471,14 @@ export default function Sidebar() {
             >
               <Link>
                 <div className="icon-item">
-                  <FeatherIcon icon="men" />
+                  <FeatherIcon icon="user" />
                 </div>
-                <span>Patient</span>
+                <span>Doctor Panel</span>
                 <i className="fa fa-angle-down"></i>
               </Link>
               <ul className="submenu-list">
                 <li>
-                  <Link to="/navbar">Navbar</Link>
-                </li>
-              </ul>
-              <ul className="submenu-list">
-                <li>
                   <Link to="/patient">Patient</Link>
-                </li>
-              </ul>
-              <ul className="submenu-list">
-                <li>
-                  <Link to="/personal">Personal</Link>
-                </li>
-              </ul>
-              <ul className="submenu-list">
-                <li>
-                  <Link to="/patientHistory">Patient History</Link>
-                </li>
-              </ul>
-              <ul className="submenu-list">
-                <li>
-                  <Link to="/diagnosis">Diagnosis</Link>
-                </li>
-              </ul>
-              <ul className="submenu-list">
-                <li>
-                  <Link to="/followUp">Follow Up</Link>
-                </li>
-              </ul>
-              <ul className="submenu-list">
-                <li>
-                  <Link to="/otherTests">Other Tests</Link>
-                </li>
-              </ul>
-              <ul className="submenu-list">
-                <li>
-                  <Link to="/opdPrescription">OPD Prescription</Link>
-                </li>
-              </ul>
-              <ul className="submenu-list">
-                <li>
-                  <Link to="/surgery">Surgery Details</Link>
-                </li>
-              </ul>
-              <ul className="submenu-list">
-                <li>
-                  <Link to="/dischargeCard">Discharge Card</Link>
                 </li>
               </ul>
             </li>
