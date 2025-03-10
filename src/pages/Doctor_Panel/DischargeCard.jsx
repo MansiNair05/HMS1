@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.137:5000/api"; // Update with your backend API base URL
+const BASE_URL = "http://192.168.90.158:5000/api"; // Update with your backend API base URL
 
 export default function DischargeCard() {
   const [discharge, setDischarge] = useState([]);
@@ -31,10 +31,13 @@ export default function DischargeCard() {
   const [tableData, setTableData] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
   const [showPrintButton, setShowPrintButton] = useState(false);
+  const [showSaveButton, setShowSaveButton] = useState(false);
   const [patientId, setPatientId] = useState(
     localStorage.getItem("selectedPatientId")
   );
+
   const [showEditButton, setShowEditButton] = useState(false); // Controls visibility of "Edit Diagnosis"
+  const [showUpdateButton, setShowUpdateButton] = useState(false); // Controls visibility of "Update Diagnosis"
   const [isDisabled, setIsDisabled] = useState(false); // Controls edit mode
   const [isAddressDisabled, setAddressIsDisabled] = useState(false); // Controls edit mode
 
@@ -61,13 +64,13 @@ export default function DischargeCard() {
     past_history: "",
     surgical_history: "",
     allergies: "",
-    surgery_procedure: "",
+    surgery_remarks: "",
     surgery_note: "",
     investigation: "",
     diagnosis: "",
     local_care: "",
     carenote: "",
-    dateOfIssue: "",
+    creation_timestamp: "",
     assistanceDoctor: "",
     Follow_date: "",
     surgeonDoctor: "",
@@ -178,189 +181,6 @@ export default function DischargeCard() {
     console.log("Retrieved from localStorage:", storedPatientId);
     if (storedPatientId) setPatientId(storedPatientId);
   }, []);
-
-  // Initial useEffect to fetch basic patient details
-  // useEffect(() => {
-  //   if (!patientId) {
-  //     console.warn("No patientId found, skipping fetch");
-  //     return;
-  //   }
-
-  //   const fetchInitialPatientData = async () => {
-  //     try {
-  //       console.log("Fetching initial patient data for ID:", patientId);
-
-  //       const response = await fetch(
-  //         `${BASE_URL}/V1/dischargeCard/listDischargeCard/${patientId}`
-  //       );
-
-  //       if (!response.ok) {
-  //         throw new Error("Failed to fetch patient details");
-  //       }
-
-  //       const result = await response.json();
-  //       console.log("Initial patient data response:", result);
-
-  //       // Extract patient data from the response
-  //       const patientData = result.data?.patientData?.[0];
-
-  //       if (patientData) {
-  //         // Set only the basic patient details
-  //         setFormData((prevState) => ({
-  //           ...prevState,
-  //           name: patientData.name || "",
-  //           age: patientData.age || "",
-  //           sex: patientData.sex || "", // Note: API uses 'sex' instead of 'sex'
-  //           address: patientData.address || "",
-
-  //           consultantName: "",
-  //           DOA: "",
-  //           DOA_time: "",
-  //           DOD: "",
-  //           DOD_time: "",
-  //           IPDNo: "",
-  //           sPO2: "",
-  //           BP: "",
-  //           pulse: "",
-  //           rr: "",
-  //           temp: "",
-  //           surgery_type: "",
-  //           chife_complaints: "",
-  //           past_history: "",
-  //           surgical_history: "",
-  //           allergies: "",
-  //           surgery_procedure: "",
-  //           surgery_note: "",
-  //           investigation: "",
-  //           diagnosis: "",
-  //           local_care: "",
-  //           carenote: "",
-  //           dateOfIssue: "",
-  //           assistanceDoctor: "",
-  //           Follow_date: "",
-  //           surgeonDoctor: "",
-  //           madeby: "",
-  //           checkedby: "",
-  //           treatingby: "",
-  //           surgeryadvice: "",
-  //           treatmentGiven: "",
-  //           adviceMedicine: "",
-  //           medicine_quantity: "",
-  //           injectionDetails: [],
-  //           dischargeTreat: [],
-  //           timings: {
-  //             BeforeBreakfast: false,
-  //             AfterBreakfast: false,
-  //             BeforeLunch: false,
-  //             AfterLunch: false,
-  //             BeforeDinner: false,
-  //             AfterDinner: false,
-  //             AfterEveningSnacks: false,
-  //           },
-  //         }));
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching initial patient data:", error);
-  //     }
-  //   };
-
-  //   fetchInitialPatientData();
-  // }, [patientId]);
-
-  // useEffect(() => {
-  //   if (!patientId) {
-  //     console.warn("No patientId found, skipping fetch");
-  //     return;
-  //   }
-  //   const fetchPatientData = async () => {
-  //     if (!patientId) {
-  //       console.error("No patient ID available for fetching data.");
-  //       return;
-  //     }
-
-  //     try {
-  //       console.log("Fetching data for patient ID:", patientId);
-
-  //       const response = await fetch(
-  //         `${BASE_URL}/V1/dischargeCard/listDischargeCard/${patientId}`,
-  //         {
-  //           method: "GET",
-  //           headers: {
-  //             "Content-Type": "application/json",
-  //           },
-  //         }
-  //       );
-
-  //       if (!response.ok) {
-  //         console.error(
-  //           "API Response Error:",
-  //           response.status,
-  //           await response.text()
-  //         );
-  //         return;
-  //       }
-
-  //       if (response.ok) {
-  //         const data = await response.json();
-  //         // Initialize form data with properly formatted dates
-  //         const formattedData = {
-  //           ...data,
-  //           birth_date: data.birth_date
-  //             ? new Date(data.birth_date).toISOString().split("T")[0]
-  //             : null,
-  //           DOA: data.DOA
-  //             ? new Date(data.DOA).toISOString().split("T")[0]
-  //             : null,
-  //           DOD: data.DOD
-  //             ? new Date(data.DOD).toISOString().split("T")[0]
-  //             : null,
-  //           dateOfIssue: data.dateOfIssue
-  //             ? new Date(data.dateOfIssue).toISOString().split("T")[0]
-  //             : null,
-  //           Follow_date: data.Follow_date
-  //             ? new Date(data.Follow_date).toISOString().split("T")[0]
-  //             : null,
-  //         };
-  //         setFormData(formattedData);
-  //       }
-
-  //       const data = await response.json();
-  //       console.log("Fetched Data:", data);
-
-  //       if (data?.data?.patientData) {
-  //         // Set basic patient details
-  //         setFormData((prevState) => ({
-  //           ...prevState,
-  //           name: data.data.patientData.name || "",
-  //           age: data.data.patientData.age || "",
-  //           sex: data.data.patientData.sex || "",
-  //           address: data.data.patientData.address || "",
-  //         }));
-  //       }
-
-  //       // Set discharge card data if available
-  //       if (data?.data?.dischargeCardData) {
-  //         setFormData((prevState) => ({
-  //           ...prevState,
-  //           ...data.data.dischargeCardData,
-  //           timings: data.data.dischargeCardData.timings || {
-  //             BeforeBreakfast: false,
-  //             AfterBreakfast: false,
-  //             BeforeLunch: false,
-  //             AfterLunch: false,
-  //             BeforeDinner: false,
-  //             AfterDinner: false,
-  //             AfterEveningSnacks: false,
-  //           },
-  //         }));
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching data:", error);
-  //     }
-  //   };
-
-  //   fetchPatientData();
-  // }, [patientId]);
   const handleSaveMedicine = async () => {
     try {
       console.log("Submitting medicine data:", formData); // ✅ Check if formData has the correct fields
@@ -429,58 +249,64 @@ export default function DischargeCard() {
         console.log("Fetched Data:", data);
 
         // Extract patient data
-        const patientData = data?.data?.patientData?.[0];
-
-        // Set only basic patient details initially
-        const basicDetails = {
-          name: patientData?.name || "",
-          age: patientData?.age || "",
-          sex: patientData?.sex || "",
-          address: patientData?.address || "",
-          prescription_type: "",
-        };
+        const patientData = data?.data?.patientData;
+        const dischargeCardData = data?.data?.dischargeCardData;
+        const surgeryData = data?.data?.surgeryData;
+        const urologyData = data?.data?.urologyData;
+        const dischargeCardDetails = data?.data?.dischargeCardDetailsData;
+        const medicineData = data?.data?.medicineData;
+        const prescriptionOpdData = data?.data?.prescriptionOpdData;
 
         // Set form data with only basic details
         setFormData((prevState) => ({
           ...prevState,
-          ...basicDetails,
-          // Reset all other fields
-          consultantName: "",
-          DOA: "",
-          DOA_time: "",
-          DOD: "",
-          DOD_time: "",
-          IPDNo: "",
-          sPO2: "",
-          BP: "",
-          pulse: "",
-          rr: "",
-          temp: "",
-          surgery_type: "",
-          chife_complaints: "",
-          past_history: "",
-          surgical_history: "",
-          allergies: "",
-          surgery_procedure: "",
-          surgery_note: "",
-          investigation: "",
-          diagnosis: "",
-          local_care: "",
-          carenote: "",
-          dateOfIssue: "",
-          assistanceDoctor: "",
-          Follow_date: "",
-          surgeonDoctor: "",
-          madeby: "",
-          checkedby: "",
-          treatingby: "",
-          surgeryadvice: "",
-          treatmentGiven: "",
-          adviceMedicine: "",
-          medicine_quantity: "",
-          injectionDetails: [],
-          dischargeTreat: [],
-          timings: {
+          name: patientData?.name || "",
+          age: patientData?.age || "",
+          sex: patientData?.sex || "",
+          address: patientData?.address || "",
+          ref: patientData?.ref || "",
+
+          surgery_type: dischargeCardDetails?.surgery_type || [],
+
+          prescription_type: "", // Reset all other fields
+          consultantName: dischargeCardData?.consultant_name || "",
+          DOA: dischargeCardData?.DOA || "",
+          DOA_time: dischargeCardData?.DOA_time || "",
+          DOD: dischargeCardData?.DOD || "",
+          DOD_time: dischargeCardData?.DOD_time || "",
+          IPDNo: dischargeCardData?.IPDNo || "",
+          sPO2: urologyData?.sPO2 || "",
+          BP: dischargeCardData?.BP || "",
+          pulse: urologyData?.pulse || "",
+          RR: urologyData?.RR || "",
+          temperature: urologyData?.temperature || "",
+          surgery_type: dischargeCardDetails?.surgery_type || [],
+          chife_complaints: dischargeCardData?.chife_complaints || "",
+          past_history: dischargeCardData?.past_history || "",
+          surgical_history: dischargeCardData?.surgical_history || "",
+          allergies: dischargeCardData?.allergies || "",
+          surgery_note: dischargeCardData?.surgery_note || "",
+          investigation: dischargeCardData?.investigation || "",
+          diagnosis: dischargeCardData?.diagnosis || "",
+          local_care: dischargeCardData?.local_care || "",
+          carenote: dischargeCardData?.carenote || "",
+          creation_timestamp: dischargeCardData?.creation_timestamp || "",
+          assistanceDoctor: dischargeCardData?.assistanceDoctor || "",
+          Follow_date: dischargeCardData?.Follow_date || "",
+          surgeonDoctor: dischargeCardData?.surgeonDoctor || "",
+          admission_reason: dischargeCardData?.admission_reason || "",
+          findings: dischargeCardData?.findings || "",
+          surgical_procedure: dischargeCardData?.surgical_procedure || "",
+          madeby: dischargeCardData?.madeby || "",
+          checkedby: dischargeCardData?.checkedby || "",
+          treatingby: dischargeCardData?.treatingby || "",
+          surgeryadvice: dischargeCardData?.surgeryadvice || "",
+          treatmentGiven: dischargeCardData?.treatmentGiven || "",
+          adviceMedicine: dischargeCardData?.adviceMedicine || "",
+          medicine_quantity: dischargeCardData?.medicine_quantity || "",
+          injectionDetails: dischargeCardData?.injectionDetails || [],
+          dischargeTreat: dischargeCardData?.dischargeTreat || [],
+          timings: dischargeCardData?.timings || {
             BeforeBreakfast: false,
             AfterBreakfast: false,
             BeforeLunch: false,
@@ -489,6 +315,19 @@ export default function DischargeCard() {
             AfterDinner: false,
             AfterEveningSnacks: false,
           },
+          surgery_remarks: surgeryData[0]?.surgery_remarks || "",
+
+          name: medicineData.name || "",
+          gender_type: medicineData.gender_type || "",
+          medicine_type: medicineData.medicine_type || "",
+          status: medicineData.status || "",
+          medicine_dosage: medicineData.medicine_dosage || "",
+
+          prescription_type: prescriptionOpdData.prescription_type || "",
+          medicine_name: prescriptionOpdData.medicine_name || "",
+          medicine_quantity: prescriptionOpdData.medicine_quantity || "",
+          medicine_time: prescriptionOpdData.medicine_time || "",
+          medicine_days: prescriptionOpdData.medicine_days || "",
         }));
 
         // Store the full response data for use in fetchPreviousRecords
@@ -499,6 +338,7 @@ export default function DischargeCard() {
     };
     setIsDisabled(true);
     setAddressIsDisabled(false);
+    setShowSaveButton(true);
 
     fetchPatientData();
   }, [patientId]);
@@ -680,6 +520,8 @@ export default function DischargeCard() {
       // First update the states
       setIsDisabled(true);
       setShowEditButton(true);
+      setShowSaveButton(false); 
+      setShowUpdateButton(true);
       setDisablePreviousButton(true);
 
       // Then show the alert
@@ -688,6 +530,46 @@ export default function DischargeCard() {
       console.error("Error saving discharge card:", error);
     }
   };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+
+    try {
+      const requestBody = {
+        patientId: patientId,
+        ...formData,
+        is_deleted: 0,
+        doctor_id: localStorage.getItem("doctor_id") || "",
+        creation_timestamp: new Date().toISOString(),
+      };
+
+      const response = await fetch(
+        `${BASE_URL}/V1/dischargeCard/updateDischargeCard/${patientId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
+
+      const data = await response.json();
+
+      // First update the states
+      setIsDisabled(false);
+      setShowEditButton(true);
+      setShowSaveButton(false);
+      setShowUpdateButton(true);
+      setDisablePreviousButton(false);
+
+      // Then show the alert
+      alert("Discharge Card submitted successfully!");
+    } catch (error) {
+      console.error("Error saving discharge card:", error);
+    }
+  };
+
 
   // Handle checkbox selection change for test type
   const handleSurgeryTypeChange = (e, surgeryType) => {
@@ -703,157 +585,6 @@ export default function DischargeCard() {
   };
 
   const [previousRecordDate, setPreviousRecordDate] = useState("");
-  // const fetchPreviousRecords = async () => {
-  //   try {
-  //     console.log("Fetching previous records for patientId:", patientId);
-
-  //     const response = await fetch(
-  //       `${BASE_URL}/V1/dischargeCard/listDischargeCard/${patientId}`
-  //     );
-
-  //     if (!response.ok) {
-  //       throw new Error("Failed to fetch previous records");
-  //     }
-
-  //     const result = await response.json();
-  //     console.log("Previous Records Data:", result);
-
-  //     if (!result?.data?.dischargeCardData) {
-  //       alert("No previous records found.");
-  //       return;
-  //     }
-
-  //     const dischargeCard = result.data.dischargeCardData;
-  //     const patientData = result.data.patientData?.[0];
-
-  //     // Log the data we're working with
-  //     console.log("Discharge Card Data:", dischargeCard);
-  //     console.log("Patient Data:", patientData);
-
-  //     // Update form data
-  //     setFormData((prevData) => ({
-  //       ...prevData,
-  //       // Patient basic details
-  //       name: patientData?.name || "",
-  //       age: patientData?.age || "",
-  //       sex: patientData?.sex || "",
-  //       address: patientData?.address || "",
-
-  //       // Dropdown values
-  //       prescription_type: dischargeCard?.prescription_type || "",
-  //       consultantName: dischargeCard?.consultant_name || "",
-  //       surgery_type: dischargeCard?.surgery_type || "",
-  //       assistanceDoctor: dischargeCard?.assistanceDoctor || "",
-  //       surgeonDoctor: dischargeCard?.surgeonDoctor || "",
-  //       madeby: dischargeCard?.madeby || "",
-  //       checkedby: dischargeCard?.checkedby || "",
-  //       treatingby: dischargeCard?.treatingby || "",
-  //       surgeryadvice: dischargeCard?.surgeryadvice || "",
-
-  //       // Other discharge card details
-  //       DOA: formatDate(dischargeCard?.DOA) || "",
-  //       DOA_time: dischargeCard?.DOA_time || "",
-  //       DOD: formatDate(dischargeCard?.DOD) || "",
-  //       DOD_time: dischargeCard?.DOD_time || "",
-  //       IPDNo: dischargeCard?.IPDNo || "",
-  //       sPO2: dischargeCard?.sPO2 || "",
-  //       BP: dischargeCard?.BP || "",
-  //       pulse: dischargeCard?.pulse || "",
-  //       rr: dischargeCard?.rr || "",
-  //       temp: dischargeCard?.temp || "",
-  //       past_history: dischargeCard?.past_history || "",
-  //       allergies: dischargeCard?.allergies || "",
-  //       surgery_note: dischargeCard?.surgery_note || "",
-  //       investigation: dischargeCard?.investigation || "",
-  //       chife_complaints: dischargeCard?.chife_complaints || "",
-  //       hb: dischargeCard?.hb || "",
-  //       wbc: dischargeCard?.wbc || "",
-  //       hiv: dischargeCard?.hiv || "",
-  //       hbsag: dischargeCard?.hbsag || "",
-  //       hcv: dischargeCard?.hcv || "",
-  //       plt: dischargeCard?.plt || "",
-  //       bsl: dischargeCard?.bsl || "",
-  //       creatinine: dischargeCard?.creatinine || "",
-  //       billirubin: dischargeCard?.billirubin || "",
-  //       urine: dischargeCard?.urine || "",
-  //       psa: dischargeCard?.psa || "",
-  //       bt: dischargeCard?.bt || "",
-  //       ct: dischargeCard?.ct || "",
-  //       pt: dischargeCard?.pt || "",
-  //       inr: dischargeCard?.inr || "",
-  //       diagnosis: dischargeCard?.diagnosis || "",
-  //       local_care: dischargeCard?.local_care || "",
-  //       carenote: dischargeCard?.carenote || "",
-  //       dateOfIssue: formatDate(dischargeCard?.dateOfIssue) || "",
-  //       Follow_date: formatDate(dischargeCard?.Follow_date) || "",
-  //       treatmentGiven: dischargeCard?.treatmentGiven || "",
-  //     }));
-
-  //     // Update selected options for dropdowns
-  //     setSelectedOptions({
-  //       prescription_type: dischargeCard?.prescription_type || "",
-  //       consultantName: dischargeCard?.consultant_name || "",
-  //       surgery_type: dischargeCard?.surgery_type
-  //         ? [dischargeCard.surgery_type]
-  //         : [],
-  //       assistanceDoctor: dischargeCard?.assistanceDoctor || "",
-  //       surgeonDoctor: dischargeCard?.surgeonDoctor || "",
-  //       madeby: dischargeCard?.madeby || "",
-  //       checkedby: dischargeCard?.checkedby || "",
-  //       treatingby: dischargeCard?.treatingby || "",
-  //       surgeryadvice: dischargeCard?.surgeryadvice || "",
-  //     });
-
-  //     // Update medicine-related dropdowns if available
-  //     if (result.data.medicineData?.length > 0) {
-  //       const medicineData = result.data.medicineData[0];
-  //       setFormData((prevData) => ({
-  //         ...prevData,
-  //         adviceMedicine: medicineData.medicine_name || "",
-  //         medicine_quantity: medicineData.quantity || "",
-  //         medicine_days: medicineData.days || "",
-  //         timings: medicineData.timings || {
-  //           BeforeBreakfast: false,
-  //           AfterBreakfast: false,
-  //           BeforeLunch: false,
-  //           AfterLunch: false,
-  //           BeforeDinner: false,
-  //           AfterDinner: false,
-  //           AfterEveningSnacks: false,
-  //         },
-  //       }));
-  //     }
-
-  //     // Update injection details if available
-  //     if (dischargeCard?.injectionDetails?.length > 0) {
-  //       setFormData((prevData) => ({
-  //         ...prevData,
-  //         injectionDetails: dischargeCard.injectionDetails,
-  //       }));
-  //     }
-
-  //     // Show the "Edit Diagnosis" button
-  //     setShowEditButton(true);
-  //     // Show Print button when previous records are fetched
-  //     setShowPrintButton(true);
-  //     // Disable "Previous Records" button after clicking it
-  //     setDisablePreviousButton(true);
-  //     // Disable form fields
-  //     setIsDisabled(true);
-
-  //     console.log("Updated form data:", formData);
-  //     console.log("Updated selected options:", selectedOptions);
-
-  //     setPreviousRecordDate(dischargeCard.dateOfIssue || "");
-  //   } catch (error) {
-  //     console.error("Error fetching previous records:", error);
-  //     alert("Failed to fetch previous records.");
-  //   }
-  // };
-
-  // Add the parseDate helper function at the top of your component:
-
-  // Modify fetchPreviousRecords to use stored data
   const fetchPreviousRecords = async () => {
     try {
       if (!window.fullPatientData) {
@@ -877,8 +608,13 @@ export default function DischargeCard() {
         return;
       }
 
-      const dischargeCard = result.data.dischargeCardData;
-      const patientData = result.data.patientData?.[0];
+      const dischargeCardData = result.data.dischargeCardData;
+      const patientData = result.data.patientData;
+      const surgeryData = result.data.surgeryData;
+      const urologyData = result.data.urologyData;
+      const dischargeCardDetails = result?.data?.dischargeCardDetailsData;
+      const medicineData = result?.data?.medicineData;
+      const prescriptionOpdData = result?.data?.prescriptionOpdData;
 
       // Log the data we're working with
       console.log("Discharge Card Data:", dischargeCard);
@@ -892,60 +628,69 @@ export default function DischargeCard() {
         age: patientData?.age || "",
         sex: patientData?.sex || "",
         address: patientData?.address || "",
+        ref: patientData?.ref || "",
 
-        referralDoctor: patientData?.referralDoctor || "",
-        // All other fields from dischargeCard
-        prescription_type: dischargeCard?.prescription_type || "",
-        consultantName: dischargeCard?.consultant_name || "",
-        surgery_type: dischargeCard?.surgery_type || "",
-        assistanceDoctor: dischargeCard?.assistanceDoctor || "",
-        surgeonDoctor: dischargeCard?.surgeonDoctor || "",
-        madeby: dischargeCard?.madeby || "",
-        checkedby: dischargeCard?.checkedby || "",
-        treatingby: dischargeCard?.treatingby || "",
-        surgeryadvice: dischargeCard?.surgeryadvice || "",
+        surgery_type: dischargeCardDetails?.surgery_type || [],
 
-        // Other discharge card details
-        // DOA: formatDate(dischargeCard?.DOA) || "",
-        DOA_time: dischargeCard?.DOA_time || "",
-        // DOD: formatDate(dischargeCard?.DOD) || "",
-        DOD_time: dischargeCard?.DOD_time || "",
-        IPDNo: dischargeCard?.IPDNo || "",
-        sPO2: dischargeCard?.sPO2 || "",
-        BP: dischargeCard?.BP || "",
-        pulse: dischargeCard?.pulse || "",
-        rr: dischargeCard?.rr || "",
-        temp: dischargeCard?.temp || "",
-        past_history: dischargeCard?.past_history || "",
-        allergies: dischargeCard?.allergies || "",
-        surgery_note: dischargeCard?.surgery_note || "",
-        investigation: dischargeCard?.investigation || "",
-        chife_complaints: dischargeCard?.chife_complaints || "",
-        hb: dischargeCard?.hb || "",
-        wbc: dischargeCard?.wbc || "",
-        hiv: dischargeCard?.hiv || "",
-        hbsag: dischargeCard?.hbsag || "",
-        hcv: dischargeCard?.hcv || "",
-        plt: dischargeCard?.plt || "",
-        bsl: dischargeCard?.bsl || "",
-        creatinine: dischargeCard?.creatinine || "",
-        billirubin: dischargeCard?.billirubin || "",
-        urine: dischargeCard?.urine || "",
-        psa: dischargeCard?.psa || "",
-        bt: dischargeCard?.bt || "",
-        ct: dischargeCard?.ct || "",
-        pt: dischargeCard?.pt || "",
-        inr: dischargeCard?.inr || "",
-        diagnosis: dischargeCard?.diagnosis || "",
-        local_care: dischargeCard?.local_care || "",
-        carenote: dischargeCard?.carenote || "",
-        // dateOfIssue: formatDate(dischargeCard?.dateOfIssue) || "",
-        // Follow_date: formatDate(dischargeCard?.Follow_date) || "",
-        treatmentGiven: dischargeCard?.treatmentGiven || "",
-        DOA: formatDate(dischargeCard?.DOA), // ✅ Ensures valid date format
-        DOD: formatDate(dischargeCard?.DOD),
-        dateOfIssue: formatDate(dischargeCard?.dateOfIssue),
-        Follow_date: formatDate(dischargeCard?.Follow_date),
+        prescription_type: "", // Reset all other fields
+        consultantName: dischargeCardData?.consultant_name || "",
+        DOA: dischargeCardData?.DOA || "",
+        DOA_time: dischargeCardData?.DOA_time || "",
+        DOD: dischargeCardData?.DOD || "",
+        DOD_time: dischargeCardData?.DOD_time || "",
+        IPDNo: dischargeCardData?.IPDNo || "",
+        sPO2: urologyData?.sPO2 || "",
+        BP: dischargeCardData?.BP || "",
+        pulse: urologyData?.pulse || "",
+        RR: urologyData?.RR || "",
+        temperature: urologyData?.temperature || "",
+        surgery_type: dischargeCardDetails?.surgery_type || [],
+        chife_complaints: dischargeCardData?.chife_complaints || "",
+        past_history: dischargeCardData?.past_history || "",
+        surgical_history: dischargeCardData?.surgical_history || "",
+        allergies: dischargeCardData?.allergies || "",
+        surgery_note: dischargeCardData?.surgery_note || "",
+        investigation: dischargeCardData?.investigation || "",
+        diagnosis: dischargeCardData?.diagnosis || "",
+        local_care: dischargeCardData?.local_care || "",
+        carenote: dischargeCardData?.carenote || "",
+        creation_timestamp: dischargeCardData?.creation_timestamp || "",
+        assistanceDoctor: dischargeCardData?.assistanceDoctor || "",
+        Follow_date: dischargeCardData?.Follow_date || "",
+        surgeonDoctor: dischargeCardData?.surgeonDoctor || "",
+        admission_reason: dischargeCardData?.admission_reason || "",
+        findings: dischargeCardData?.findings || "",
+        surgical_procedure: dischargeCardData?.surgical_procedure || "",
+        madeby: dischargeCardData?.madeby || "",
+        checkedby: dischargeCardData?.checkedby || "",
+        treatingby: dischargeCardData?.treatingby || "",
+        surgeryadvice: dischargeCardData?.surgeryadvice || "",
+        adviceMedicine: dischargeCardData?.adviceMedicine || "",
+        medicine_quantity: dischargeCardData?.medicine_quantity || "",
+        injectionDetails: dischargeCardData?.injectionDetails || [],
+        dischargeTreat: dischargeCardData?.dischargeTreat || [],
+        timings: dischargeCardData?.timings || {
+          BeforeBreakfast: false,
+          AfterBreakfast: false,
+          BeforeLunch: false,
+          AfterLunch: false,
+          BeforeDinner: false,
+          AfterDinner: false,
+          AfterEveningSnacks: false,
+        },
+        surgery_remarks: surgeryData[0]?.surgery_remarks || "",
+
+        name: medicineData.name || "",
+        gender_type: medicineData.gender_type || "",
+        medicine_type: medicineData.medicine_type || "",
+        status: medicineData.status || "",
+        medicine_dosage: medicineData.medicine_dosage || "",
+
+        prescription_type: prescriptionOpdData.prescription_type || "",
+        medicine_name: prescriptionOpdData.medicine_name || "",
+        medicine_quantity: prescriptionOpdData.medicine_quantity || "",
+        medicine_time: prescriptionOpdData.medicine_time || "",
+        medicine_days: prescriptionOpdData.medicine_days || "",
       }));
 
       // Update selected options and other states
@@ -993,7 +738,9 @@ export default function DischargeCard() {
 
       // Show relevant buttons and disable form
       setShowEditButton(true);
+      setShowUpdateButton(false);
       setShowPrintButton(true);
+      setShowSaveButton(false);
       setDisablePreviousButton(true);
       setIsDisabled(true);
       setAddressIsDisabled(true);
@@ -1001,7 +748,7 @@ export default function DischargeCard() {
       console.log("Updated form data:", formData);
       console.log("Updated selected options:", selectedOptions);
 
-      setPreviousRecordDate(dischargeCard.dateOfIssue || "");
+      setPreviousRecordDate(dischargeCard.creation_timestamp || "");
     } catch (error) {
       console.error("Error fetching previous records:", error);
       alert("Failed to fetch previous records.");
@@ -1049,7 +796,8 @@ export default function DischargeCard() {
   // Enable form editing when "Edit Diagnosis" is clicked
   const handleEditDischargeCard = () => {
     setIsDisabled(true);
-    
+    setShowUpdateButton(true);
+    setShowSaveButton(false);
     alert("Editing mode enabled. You can now modify the diagnosis details.");
   };
 
@@ -1074,14 +822,18 @@ export default function DischargeCard() {
       surgery_type: "",
       chife_complaints: "",
       past_history: "",
+      surgery_type: [],
       surgical_history: "",
       allergies: "",
       surgical_procedure: "",
-      surgeryNote: "",
+      surgery_note: "",
       diagnosis: "",
       local_care: "",
       carenote: "",
-      dateOfIssue: "",
+      creation_timestamp: "",
+      admission_reason: "",
+      findings: "",
+      surgery_procedure: "",
       assistanceDoctor: "",
       Follow_date: "",
       surgeonDoctor: "",
@@ -1089,6 +841,7 @@ export default function DischargeCard() {
       checkedby: "",
       treatingby: "",
       surgeryadvice: "",
+      surgery_remarks:"",
       adviceMedicine: "",
       medicine_quantity: "",
       injectionDetails: [],
@@ -1098,8 +851,8 @@ export default function DischargeCard() {
       sPO2: "",
       BP: "",
       pulse: "",
-      rr: "",
-      temp: "",
+      RR: "",
+      temperature: "",
       treatmentGiven: "",
       times: "",
       medicineRoute: "",
@@ -1112,17 +865,30 @@ export default function DischargeCard() {
         AfterDinner: false,
         AfterEveningSnacks: false,
       },
+      name: "",
+      gender_type: "",
+      medicine_type: "",
+      status: "",
+      medicine_dosage: "",
+      medicine_days: "",
+      medicine_name: "",
+      medicine_time: "",
+      prescription_type: "",
+      medicine_quantity: "",
+      
     });
     // Reset selected options
     setSelectedOptions({});
 
     // Reset UI states
     setShowEditButton(false);
+    setShowUpdateButton(false);
     setDisablePreviousButton(false);
     setIsDisabled(true);
     setAddressIsDisabled(false);
     alert("New Record: You can now enter new data.");
     setShowPrintButton(false);
+    setShowSaveButton(true);
   };
 
   const generateTimeSlots = () => {
@@ -1344,6 +1110,7 @@ export default function DischargeCard() {
                       <Form.Label className="d-block">DOA</Form.Label>
                       <DatePicker
                         // selected={formData?.DOA ? new Date(formData.DOA) : null}
+                        value={formData.DOA}
                         selected={parseDate(formData?.DOA)}
                         onChange={(date) => {
                           handleInputChange({
@@ -1439,8 +1206,8 @@ export default function DischargeCard() {
                       <Form.Label>Referral Doctor</Form.Label>
                       <Form.Control
                         type="text"
-                        name="referralDoctor"
-                        value={formData.referralDoctor}
+                        name="ref"
+                        value={formData.ref}
                         onChange={handleInputChange}
                         style={{ borderRadius: "6px" }}
                       />
@@ -1456,6 +1223,7 @@ export default function DischargeCard() {
                       <Form.Label className="d-block">DOD</Form.Label>
                       <DatePicker
                         // selected={formData?.DOD ? new Date(formData.DOD) : null}
+                        value={formData.DOD}
                         selected={parseDate(formData?.DOD)}
                         onChange={(date) => {
                           handleInputChange({
@@ -1634,8 +1402,8 @@ export default function DischargeCard() {
                       <Form.Label>Surgery Details</Form.Label>
                       <Form.Control
                         as="textarea"
-                        name="surgery_procedure"
-                        value={formData.surgery_procedure}
+                        name="surgery_remarks"
+                        value={formData.surgery_remarks}
                         onChange={handleInputChange}
                         style={{ borderRadius: "6px" }}
                       />
@@ -1811,7 +1579,7 @@ export default function DischargeCard() {
                             <Form.Control
                               type="text"
                               name="hiv"
-                              placeholder="negative"
+                              // placeholder="negative"
                               value={formData.hiv}
                               onChange={handleInputChange}
                               style={{ borderRadius: "6px" }}
@@ -1878,11 +1646,12 @@ export default function DischargeCard() {
                               Date Of Issue
                             </Form.Label>
                             <DatePicker
-                              selected={parseDate(formData?.dateOfIssue)}
+                              value={formData.creation_timestamp}
+                              selected={parseDate(formData?.creation_timestamp)}
                               onChange={(date) => {
                                 handleInputChange({
                                   target: {
-                                    name: "dateOfIssue",
+                                    name: "creation_timestamp",
                                     value: date
                                       ? date.toISOString().split("T")[0]
                                       : null,
@@ -1912,6 +1681,7 @@ export default function DischargeCard() {
                               Follow Up Date
                             </Form.Label>
                             <DatePicker
+                              value={formData.Follow_date}
                               selected={parseDate(formData?.Follow_date)}
                               onChange={(date) => {
                                 handleInputChange({
@@ -2612,13 +2382,23 @@ export default function DischargeCard() {
                       </tbody>
                     </Table>
                   )}
+                  { showSaveButton && (
                 <Button
                   variant="primary"
                   className="mt-4"
                   onClick={handleSubmit}
                 >
                   Save Discharge Card
-                </Button>
+                </Button>)}
+                { showUpdateButton && (
+                  <Button
+                    variant="primary"
+                    className="mt-4"
+                    onClick={handleUpdate}
+                  >
+                    Update Discharge Card
+                  </Button>
+                )}
               </Form>
             </Card.Body>
           </Card>

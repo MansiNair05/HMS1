@@ -37,7 +37,7 @@ const Surgery = () => {
   const [previousRecordDate, setPreviousRecordDate] = useState("");
   const [isOtherSpecifyDisabled, setIsOtherSpecifyDisabled] = useState(false);
 
-  const BASE_URL = "http://192.168.90.137:5000/api";
+  const BASE_URL = "http://192.168.90.158:5000/api";
 
   // Update the API endpoints constants
   const API_ENDPOINTS = {
@@ -199,7 +199,6 @@ const Surgery = () => {
         .filter((type) => !selectedAnesthesia.includes(type))
         .join(", ");
 
-
       // Construct the request body
       const requestBody = {
         patientId: patientId,
@@ -293,7 +292,7 @@ const Surgery = () => {
         assistanceDoctor: selectedOptions.assistanceDoctor || "",
         anaesthetist: selectedOptions.anaesthetist || "",
         anesthesia: selectedAnesthesia, // Only LA, SA, GA
-  anesthesiaDetails: otherAnesthesia, 
+        anesthesiaDetails: otherAnesthesia,
         surgery_remarks: formData.surgery_remarks,
         plan: formData.plan,
         surgery_note: formData.surgery_note,
@@ -450,7 +449,6 @@ const Surgery = () => {
                           dateFormat="yyyy-MM-dd"
                           className="form-control"
                           placeholderText="Select Admission Date"
-                         
                           showMonthDropdown
                           showYearDropdown
                           dropdownMode="select"
@@ -528,7 +526,10 @@ const Surgery = () => {
                         <Form.Select
                           value={
                             formData?.assistanceDoctor ||
-                            selectedOptions?.assistanceDoctor || handleInputChange||""                          }
+                            selectedOptions?.assistanceDoctor ||
+                            handleInputChange ||
+                            ""
+                          }
                           onChange={(e) =>
                             setSelectedOptions({
                               ...selectedOptions,

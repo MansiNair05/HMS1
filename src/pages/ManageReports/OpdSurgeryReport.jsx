@@ -15,7 +15,7 @@ import {
 import PageBreadcrumb from "../../componets/PageBreadcrumb";
 import * as XLSX from "xlsx";
 
-const BASE_URL = "http://192.168.90.203:5000/api";
+const BASE_URL = "http://192.168.90.158:5000/api";
 
 export default function OpdSurgeryReport() {
   const [showModal, setShowModal] = useState(false);
