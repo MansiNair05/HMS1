@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.158:5000/api";
+const BASE_URL = "http://192.168.90.198:5000/api";
 
 const SurgeryTabs = ({
   selectedOptions,
@@ -1179,52 +1179,49 @@ export default function PatientHistory() {
                     <Col>
                       <Form.Group>
                         <Form.Label>Family History:</Form.Label>
-                        <div>
-                          <Form.Check
-                            inline
-                            label="Piles"
-                            name="family_history.piles"
-                            checked={formData.family_history.piles}
-                            onChange={handleCheckboxChange}
-                          />
-                          <Form.Check
-                            inline
-                            label="Constipation"
-                            name="family_history.constipation"
-                            checked={formData.family_history.constipation}
-                            onChange={handleCheckboxChange}
-                          />
-                          <Form.Check
-                            inline
-                            label="DM"
-                            name="family_history.dm"
-                            checked={formData.family_history.dm}
-                            onChange={handleCheckboxChange}
-                          />
-                          <Form.Check
-                            inline
-                            label="HTN"
-                            name="family_history.htn"
-                            checked={formData.family_history.htn}
-                            onChange={handleCheckboxChange}
-                          />
-                          <Form.Check
-                            inline
-                            label="Heart Disease"
-                            name="family_history.heartDisease"
-                            checked={formData.family_history.heartDisease}
-                            onChange={handleCheckboxChange}
-                          />
-                          <Col xs={7}>
-                            <Form.Control
-                              as="textarea"
-                              placeholder="Other"
-                              name="family_history"
-                              value={formData.family_history?.other}
-                              onChange={handleInputChange}
-                            />
-                          </Col>
+                        <div className="d-flex flex-wrap">
+                          {[
+                            { label: "Piles", name: "family_history.piles" },
+                            {
+                              label: "Constipation",
+                              name: "family_history.constipation",
+                            },
+                            { label: "DM", name: "family_history.dm" },
+                            { label: "HTN", name: "family_history.htn" },
+                            {
+                              label: "Heart Disease",
+                              name: "family_history.heartDisease",
+                            },
+                          ].map(({ label, name }) => (
+                            <label
+                              key={name}
+                              className="d-flex align-items-center me-3"
+                            >
+                              <Form.Check
+                                inline
+                                name={name}
+                                checked={
+                                  formData.family_history?.[
+                                    name.split(".")[1]
+                                  ] || false
+                                }
+                                onChange={handleCheckboxChange}
+                                id={name}
+                                style={{ marginRight: "5px" }}
+                              />
+                              {label}
+                            </label>
+                          ))}
                         </div>
+                        <Col xs={7} className="mt-2">
+                          <Form.Control
+                            as="textarea"
+                            placeholder="Other"
+                            name="family_history.other"
+                            value={formData.family_history?.other || ""}
+                            onChange={handleInputChange}
+                          />
+                        </Col>
                       </Form.Group>
                     </Col>
                   </Row>
@@ -1234,51 +1231,49 @@ export default function PatientHistory() {
                     <Col>
                       <Form.Group>
                         <Form.Label>General History:</Form.Label>
-                        <div>
-                          <Form.Check
-                            inline
-                            label="H/o Wt Loss"
-                            name="general_history.hoWtLoss"
-                            checked={formData.general_history.hoWtLoss}
-                            onChange={handleCheckboxChange}
-                          />
-                          <Form.Check
-                            inline
-                            label="Dec Appetite"
-                            name="general_history.decAppetite"
-                            checked={formData.general_history.decAppetite}
-                            onChange={handleCheckboxChange}
-                          />
-                          <Form.Check
-                            inline
-                            label="H/O Straining for urination"
-                            name="general_history.hoStrainingForurination"
-                            checked={
-                              formData.general_history.hoStrainingForurination
-                            }
-                            onChange={handleCheckboxChange}
-                          />
-                          <Form.Check
-                            inline
-                            label="Acidity"
-                            name="general_history.acidity"
-                            checked={formData.general_history.acidity}
-                            onChange={handleCheckboxChange}
-                          />
-                          <Form.Check
-                            inline
-                            label="Bloating"
-                            name="general_history.bloating"
-                            checked={formData.general_history.bloating}
-                            onChange={handleCheckboxChange}
-                          />
-                          <Form.Check
-                            inline
-                            label="Gas"
-                            name="general_history.gas"
-                            checked={formData.general_history.gas}
-                            onChange={handleCheckboxChange}
-                          />
+                        <div className="d-flex flex-wrap">
+                          {[
+                            {
+                              label: "H/o Wt Loss",
+                              name: "general_history.hoWtLoss",
+                            },
+                            {
+                              label: "Dec Appetite",
+                              name: "general_history.decAppetite",
+                            },
+                            {
+                              label: "H/O Straining for urination",
+                              name: "general_history.hoStrainingForurination",
+                            },
+                            {
+                              label: "Acidity",
+                              name: "general_history.acidity",
+                            },
+                            {
+                              label: "Bloating",
+                              name: "general_history.bloating",
+                            },
+                            { label: "Gas", name: "general_history.gas" },
+                          ].map(({ label, name }) => (
+                            <label
+                              key={name}
+                              className="d-flex align-items-center me-3"
+                            >
+                              <Form.Check
+                                inline
+                                name={name}
+                                checked={
+                                  formData.general_history?.[
+                                    name.split(".")[1]
+                                  ] || false
+                                }
+                                onChange={handleCheckboxChange}
+                                id={name}
+                                style={{ marginRight: "5px" }}
+                              />
+                              {label}
+                            </label>
+                          ))}
                         </div>
                       </Form.Group>
                     </Col>
@@ -1286,52 +1281,72 @@ export default function PatientHistory() {
                   <br />
                   <Row className="mb-3">
                     <Form.Label>Past Medical History:</Form.Label>
+
                     <Col>
                       <Form.Group>
-                        <Form.Check
-                          inline
-                          type="checkbox"
-                          label="DM"
-                          name="past_history.dm"
-                          checked={formData.past_history.dm}
-                          onChange={handleCheckboxChange}
-                        />
+                        <label className="d-flex align-items-center">
+                          <Form.Check
+                            inline
+                            type="checkbox"
+                            name="past_history.dm"
+                            checked={formData.past_history.dm}
+                            onChange={handleCheckboxChange}
+                            id="past_history_dm"
+                            style={{ marginRight: "5px" }}
+                          />
+                          DM
+                        </label>
                       </Form.Group>
                     </Col>
+
                     <Col>
                       <Form.Group>
-                        <Form.Check
-                          inline
-                          type="checkbox"
-                          label="HTN"
-                          name="past_history.htn"
-                          checked={formData.past_history.htn}
-                          onChange={handleCheckboxChange}
-                        />
+                        <label className="d-flex align-items-center">
+                          <Form.Check
+                            inline
+                            type="checkbox"
+                            name="past_history.htn"
+                            checked={formData.past_history.htn}
+                            onChange={handleCheckboxChange}
+                            id="past_history_htn"
+                            style={{ marginRight: "5px" }}
+                          />
+                          HTN
+                        </label>
                       </Form.Group>
                     </Col>
+
                     <Col>
                       <Form.Group>
-                        <Form.Check
-                          inline
-                          type="checkbox"
-                          label="Br Asthma"
-                          name="past_history.brAsthma"
-                          checked={formData.past_history.brAsthma}
-                          onChange={handleCheckboxChange}
-                        />
+                        <label className="d-flex align-items-center">
+                          <Form.Check
+                            inline
+                            type="checkbox"
+                            name="past_history.brAsthma"
+                            checked={formData.past_history.brAsthma}
+                            onChange={handleCheckboxChange}
+                            id="past_history_brAsthma"
+                            style={{ marginRight: "5px" }}
+                          />
+                          Br Asthma
+                        </label>
                       </Form.Group>
                     </Col>
+
                     <Col>
                       <Form.Group>
-                        <Form.Check
-                          inline
-                          type="checkbox"
-                          label="Thyroid"
-                          name="past_history.thyroid"
-                          checked={formData.past_history.thyroid}
-                          onChange={handleCheckboxChange}
-                        />
+                        <label className="d-flex align-items-center">
+                          <Form.Check
+                            inline
+                            type="checkbox"
+                            name="past_history.thyroid"
+                            checked={formData.past_history.thyroid}
+                            onChange={handleCheckboxChange}
+                            id="past_history_thyroid"
+                            style={{ marginRight: "5px" }}
+                          />
+                          Thyroid
+                        </label>
                       </Form.Group>
                     </Col>
                   </Row>
@@ -1359,50 +1374,69 @@ export default function PatientHistory() {
                   <Row className="mb-3">
                     <Col>
                       <Form.Group>
-                        <Form.Check
-                          inline
-                          type="checkbox"
-                          label="Smoking"
-                          name="habits.smoking"
-                          checked={formData.habits.smoking}
-                          onChange={handleCheckboxChange}
-                        />
+                        <label className="d-flex align-items-center">
+                          <Form.Check
+                            inline
+                            type="checkbox"
+                            name="habits.smoking"
+                            checked={formData.habits.smoking}
+                            onChange={handleCheckboxChange}
+                            id="habits_smoking"
+                            style={{ marginRight: "5px" }}
+                          />
+                          Smoking
+                        </label>
                       </Form.Group>
                     </Col>
+
                     <Col>
                       <Form.Group>
-                        <Form.Check
-                          inline
-                          type="checkbox"
-                          label="Alcohol"
-                          name="habits.alcohol"
-                          checked={formData.habits.alcohol}
-                          onChange={handleCheckboxChange}
-                        />
+                        <label className="d-flex align-items-center">
+                          <Form.Check
+                            inline
+                            type="checkbox"
+                            name="habits.alcohol"
+                            checked={formData.habits.alcohol}
+                            onChange={handleCheckboxChange}
+                            id="habits_alcohol"
+                            style={{ marginRight: "5px" }}
+                          />
+                          Alcohol
+                        </label>
                       </Form.Group>
                     </Col>
+
                     <Col>
                       <Form.Group>
-                        <Form.Check
-                          inline
-                          type="checkbox"
-                          label="Tobacco"
-                          name="habits.tobacco"
-                          checked={formData.habits.tobacco}
-                          onChange={handleCheckboxChange}
-                        />
+                        <label className="d-flex align-items-center">
+                          <Form.Check
+                            inline
+                            type="checkbox"
+                            name="habits.tobacco"
+                            checked={formData.habits.tobacco}
+                            onChange={handleCheckboxChange}
+                            id="habits_tobacco"
+                            style={{ marginRight: "5px" }}
+                          />
+                          Tobacco
+                        </label>
                       </Form.Group>
                     </Col>
+
                     <Col>
                       <Form.Group>
-                        <Form.Check
-                          inline
-                          type="checkbox"
-                          label="Drugs"
-                          name="habits.drugs"
-                          checked={formData.habits.drugs}
-                          onChange={handleCheckboxChange}
-                        />
+                        <label className="d-flex align-items-center">
+                          <Form.Check
+                            inline
+                            type="checkbox"
+                            name="habits.drugs"
+                            checked={formData.habits.drugs}
+                            onChange={handleCheckboxChange}
+                            id="habits_drugs"
+                            style={{ marginRight: "5px" }}
+                          />
+                          Drugs
+                        </label>
                       </Form.Group>
                     </Col>
                   </Row>
@@ -1546,43 +1580,66 @@ export default function PatientHistory() {
                       <Form.Label>Ongoing Medicines:</Form.Label>
                       <Row>
                         <Col>
-                          <Form.Check
-                            inline
-                            type="checkbox"
-                            label="Clopidogrel"
-                            name="ongoing_medicines.Clopidogrel"
-                            checked={formData.ongoing_medicines.Clopidogrel}
-                            onChange={handleCheckboxChange}
-                          />
+                          <Form.Group>
+                            <label className="d-flex align-items-center">
+                              <Form.Check
+                                inline
+                                type="checkbox"
+                                name="ongoing_medicines.Clopidogrel"
+                                checked={formData.ongoing_medicines.Clopidogrel}
+                                onChange={handleCheckboxChange}
+                                id="ongoing_medicines_Clopidogrel"
+                                style={{ marginRight: "5px" }}
+                              />
+                              Clopidogrel
+                            </label>
+                          </Form.Group>
                         </Col>
+
                         <Col>
-                          <Form.Check
-                            inline
-                            type="checkbox"
-                            label="Aspirin"
-                            name="ongoing_medicines.aspirin"
-                            checked={formData.ongoing_medicines.aspirin}
-                            onChange={handleCheckboxChange}
-                          />
+                          <Form.Group>
+                            <label className="d-flex align-items-center">
+                              <Form.Check
+                                inline
+                                type="checkbox"
+                                name="ongoing_medicines.aspirin"
+                                checked={formData.ongoing_medicines.aspirin}
+                                onChange={handleCheckboxChange}
+                                id="ongoing_medicines_aspirin"
+                                style={{ marginRight: "5px" }}
+                              />
+                              Aspirin
+                            </label>
+                          </Form.Group>
                         </Col>
+
                         <Col>
-                          <Form.Check
-                            inline
-                            type="checkbox"
-                            label="Warfarin"
-                            name="ongoing_medicines.warfarin"
-                            checked={formData.ongoing_medicines.warfarin}
-                            onChange={handleCheckboxChange}
-                          />
+                          <Form.Group>
+                            <label className="d-flex align-items-center">
+                              <Form.Check
+                                inline
+                                type="checkbox"
+                                name="ongoing_medicines.warfarin"
+                                checked={formData.ongoing_medicines.warfarin}
+                                onChange={handleCheckboxChange}
+                                id="ongoing_medicines_warfarin"
+                                style={{ marginRight: "5px" }}
+                              />
+                              Warfarin
+                            </label>
+                          </Form.Group>
                         </Col>
+
                         <Col xs={3}>
-                          <Form.Control
-                            as="textarea"
-                            placeholder="Any Other"
-                            name="otherongoingmedi"
-                            value={formData.otherongoingmedi || ""}
-                            onChange={handleInputChange}
-                          />
+                          <Form.Group>
+                            <Form.Control
+                              as="textarea"
+                              placeholder="Any Other"
+                              name="otherongoingmedi"
+                              value={formData.otherongoingmedi || ""}
+                              onChange={handleInputChange}
+                            />
+                          </Form.Group>
                         </Col>
                       </Row>
                     </Col>
@@ -1595,51 +1652,46 @@ export default function PatientHistory() {
                         <Col>
                           <div className="d-flex flex-wrap">
                             {[
-                              { label: "HB", name: "investigation.hb" },
-                              { label: "BSL-R", name: "investigation.bslr" },
+                              { label: "HB", name: "hb" },
+                              { label: "BSL-R", name: "bslr" },
                               {
                                 label: "Bleeding Time-BT",
-                                name: "investigation.bleedingTimeBt",
+                                name: "bleedingTimeBt",
                               },
                               {
                                 label: "Clotting Time-BT",
-                                name: "investigation.clottingTimeBt",
+                                name: "clottingTimeBt",
                               },
-                              {
-                                label: "PT INR",
-                                name: "investigation.ptInr",
-                              },
-                              { label: "HIV", name: "investigation.hiv" },
-                              { label: "Hbsag", name: "investigation.hbsag" },
-                              {
-                                label: "SR.Creatinine",
-                                name: "investigation.srCreatinine",
-                              },
-                              {
-                                label: "VIT B12",
-                                name: "investigation.vitB",
-                              },
-                            ].map((item, index) => (
-                              <div key={index} className="me-3">
+                              { label: "PT INR", name: "ptInr" },
+                              { label: "HIV", name: "hiv" },
+                              { label: "Hbsag", name: "hbsag" },
+                              { label: "SR.Creatinine", name: "srCreatinine" },
+                              { label: "VIT B12", name: "vitB" },
+                            ].map(({ label, name }) => (
+                              <label
+                                key={name}
+                                className="d-flex align-items-center me-3"
+                              >
                                 <Form.Check
                                   inline
                                   type="checkbox"
-                                  label={item.label}
-                                  name={item.name}
+                                  name={`investigation.${name}`}
                                   checked={
-                                    formData.investigation[
-                                      item.name.split(".")[1]
-                                    ]
+                                    formData.investigation?.[name] || false
                                   }
                                   onChange={handleCheckboxChange}
                                   disabled={isDisabled}
+                                  id={`investigation_${name}`}
+                                  style={{ marginRight: "5px" }}
                                 />
-                              </div>
+                                {label}
+                              </label>
                             ))}
                           </div>
                         </Col>
+
+                        {/* Upload File Section */}
                         <Col>
-                          {/* Upload File Section */}
                           <div className="mt-3">
                             <input
                               type="file"
@@ -1663,9 +1715,9 @@ export default function PatientHistory() {
                         </Col>
                       </Row>
                     </Col>
+
                     <Col md={8}>
                       <Form.Group>
-                        {/* <Form.Label>Investigation Details:</Form.Label> */}
                         <Form.Control
                           as="textarea"
                           name="investigationDetails"
@@ -1676,6 +1728,7 @@ export default function PatientHistory() {
                       </Form.Group>
                     </Col>
                   </Row>
+
                   <br />
                   <Row>
                     <Col md={10}>
@@ -1696,76 +1749,30 @@ export default function PatientHistory() {
                     <Col>
                       <Form.Label>Advice:</Form.Label>
                       <Row>
-                        <Col>
-                          <Form.Check
-                            inline
-                            type="checkbox"
-                            label="MRD"
-                            name="advice.mrd"
-                            checked={formData.advice.mrd}
-                            onChange={handleCheckboxChange}
-                          />
-                        </Col>
-                        <Col>
-                          <Form.Check
-                            inline
-                            type="checkbox"
-                            label="Mano/BF"
-                            name="advice.manoBf"
-                            checked={formData.advice.manoBf}
-                            onChange={handleCheckboxChange}
-                          />
-                        </Col>
-                        <Col>
-                          <Form.Check
-                            inline
-                            type="checkbox"
-                            label="Colo/Gstro"
-                            name="advice.coloGastro"
-                            checked={formData.advice.coloGastro}
-                            onChange={handleCheckboxChange}
-                          />
-                        </Col>
-                        <Col>
-                          <Form.Check
-                            inline
-                            type="checkbox"
-                            label="MCDPA"
-                            name="advice.mcdpa"
-                            checked={formData.advice.mcdpa}
-                            onChange={handleCheckboxChange}
-                          />
-                        </Col>
-                        <Col>
-                          <Form.Check
-                            inline
-                            type="checkbox"
-                            label="Diet"
-                            name="advice.diet"
-                            checked={formData.advice.diet}
-                            onChange={handleCheckboxChange}
-                          />
-                        </Col>
-                        <Col>
-                          <Form.Check
-                            inline
-                            type="checkbox"
-                            label="B12"
-                            name="advice.b"
-                            checked={formData.advice.b}
-                            onChange={handleCheckboxChange}
-                          />
-                        </Col>
-                        <Col>
-                          <Form.Check
-                            inline
-                            type="checkbox"
-                            label="D3"
-                            name="advice.d"
-                            checked={formData.advice.d}
-                            onChange={handleCheckboxChange}
-                          />
-                        </Col>
+                        {[
+                          { label: "MRD", name: "mrd" },
+                          { label: "Mano/BF", name: "manoBf" },
+                          { label: "Colo/Gastro", name: "coloGastro" },
+                          { label: "MCDPA", name: "mcdpa" },
+                          { label: "Diet", name: "diet" },
+                          { label: "B12", name: "b" },
+                          { label: "D3", name: "d" },
+                        ].map(({ label, name }) => (
+                          <Col key={name}>
+                            <label className="d-flex align-items-center">
+                              <Form.Check
+                                inline
+                                type="checkbox"
+                                name={`advice.${name}`}
+                                checked={formData.advice?.[name] || false}
+                                onChange={handleCheckboxChange}
+                                id={`advice_${name}`}
+                                style={{ marginRight: "5px" }}
+                              />
+                              {label}
+                            </label>
+                          </Col>
+                        ))}
                       </Row>
                     </Col>
                   </Row>

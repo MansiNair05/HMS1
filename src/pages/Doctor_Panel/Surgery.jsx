@@ -37,7 +37,7 @@ const Surgery = () => {
   const [previousRecordDate, setPreviousRecordDate] = useState("");
   const [isOtherSpecifyDisabled, setIsOtherSpecifyDisabled] = useState(false);
 
-  const BASE_URL = "http://192.168.90.158:5000/api";
+  const BASE_URL = "http://192.168.90.198:5000/api";
 
   // Update the API endpoints constants
   const API_ENDPOINTS = {
@@ -492,27 +492,36 @@ const Surgery = () => {
                     <Col>
                       <Form.Group>
                         <Form.Label>High Risk Consent:</Form.Label>
-                        <div>
-                          <Form.Check
-                            inline
-                            type="radio"
-                            label="Yes"
-                            name="risk_consent"
-                            value="Yes"
-                            checked={formData.risk_consent === "Yes"}
-                            onChange={handleInputChange}
-                            disabled={isDisabled}
-                          />
-                          <Form.Check
-                            inline
-                            type="radio"
-                            label="No"
-                            name="risk_consent"
-                            value="No"
-                            checked={formData.risk_consent === "No"}
-                            onChange={handleInputChange}
-                            disabled={isDisabled}
-                          />
+                        <div className="d-flex">
+                          <label className="d-flex align-items-center me-3">
+                            <Form.Check
+                              inline
+                              type="radio"
+                              name="risk_consent"
+                              value="Yes"
+                              checked={formData.risk_consent === "Yes"}
+                              onChange={handleInputChange}
+                              disabled={isDisabled}
+                              id="risk_consent_yes"
+                              style={{ marginRight: "5px" }}
+                            />
+                            Yes
+                          </label>
+
+                          <label className="d-flex align-items-center">
+                            <Form.Check
+                              inline
+                              type="radio"
+                              name="risk_consent"
+                              value="No"
+                              checked={formData.risk_consent === "No"}
+                              onChange={handleInputChange}
+                              disabled={isDisabled}
+                              id="risk_consent_no"
+                              style={{ marginRight: "5px" }}
+                            />
+                            No
+                          </label>
                         </div>
                       </Form.Group>
                     </Col>
@@ -590,34 +599,48 @@ const Surgery = () => {
                         <Form.Label>Anesthesia:</Form.Label>
                         <Row>
                           <Col xs={5}>
-                            <div>
-                              <Form.Check
-                                inline
-                                type="checkbox"
-                                label="LA"
-                                name="LA"
-                                checked={formData.anesthesia.LA}
-                                onChange={handleCheckboxChange}
-                                disabled={isDisabled}
-                              />
-                              <Form.Check
-                                inline
-                                type="checkbox"
-                                label="SA"
-                                name="SA"
-                                checked={formData.anesthesia.SA}
-                                onChange={handleCheckboxChange}
-                                disabled={isDisabled}
-                              />
-                              <Form.Check
-                                inline
-                                type="checkbox"
-                                label="GA"
-                                name="GA"
-                                checked={formData.anesthesia.GA}
-                                onChange={handleCheckboxChange}
-                                disabled={isDisabled}
-                              />
+                            <div className="d-flex flex-wrap">
+                              <label className="d-flex align-items-center me-3">
+                                <Form.Check
+                                  inline
+                                  type="checkbox"
+                                  name="LA"
+                                  checked={formData.anesthesia.LA}
+                                  onChange={handleCheckboxChange}
+                                  disabled={isDisabled}
+                                  id="LA"
+                                  style={{ marginRight: "5px" }}
+                                />
+                                LA
+                              </label>
+
+                              <label className="d-flex align-items-center me-3">
+                                <Form.Check
+                                  inline
+                                  type="checkbox"
+                                  name="SA"
+                                  checked={formData.anesthesia.SA}
+                                  onChange={handleCheckboxChange}
+                                  disabled={isDisabled}
+                                  id="SA"
+                                  style={{ marginRight: "5px" }}
+                                />
+                                SA
+                              </label>
+
+                              <label className="d-flex align-items-center">
+                                <Form.Check
+                                  inline
+                                  type="checkbox"
+                                  name="GA"
+                                  checked={formData.anesthesia.GA}
+                                  onChange={handleCheckboxChange}
+                                  disabled={isDisabled}
+                                  id="GA"
+                                  style={{ marginRight: "5px" }}
+                                />
+                                GA
+                              </label>
                             </div>
                           </Col>
                           <Col xs={7}>

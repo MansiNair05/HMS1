@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-const BASE_URL = "http://192.168.90.158:5000/api";
+const BASE_URL = "http://192.168.90.198:5000/api";
 
 export default function Personal() {
   const location = useLocation();
@@ -610,7 +610,7 @@ export default function Personal() {
                               cursor: "pointer",
                             }}
                           >
-                            <option value="PREFIX">PREFIX</option>
+                            <option value="PREFIX" disabled>PREFIX</option>
                             <option value="MR">MR</option>
                             <option value="MS">MS</option>
                             <option value="MRS">MRS</option>
@@ -659,19 +659,23 @@ export default function Personal() {
                             marginTop: "1.6rem",
                           }}
                         >
-                          <input
-                            type="checkbox"
-                            id="isVIP"
-                            name="isVIP"
-                            checked={rowData.isVIP}
-                            onChange={handleInputChange}
-                            style={{
-                              cursor: "pointer",
-                              marginRight: "0.5rem",
-                            }}
-                          />
-                          <label htmlFor="isVIP" style={{ fontSize: "0.9rem" }}>
-                            VIP
+                          <label
+                            htmlFor="isVIP"
+                            className="d-flex align-items-center"
+                            style={{ cursor: "pointer" }}
+                          >
+                            <input
+                              type="checkbox"
+                              id="isVIP"
+                              name="isVIP"
+                              checked={rowData.isVIP}
+                              onChange={handleInputChange}
+                              style={{
+                                cursor: "pointer",
+                                marginRight: "0.5rem",
+                              }}
+                            />
+                            <span style={{ fontSize: "0.9rem" }}>VIP</span>
                           </label>
                         </div>
                       </div>
@@ -711,7 +715,7 @@ export default function Personal() {
                           value={rowData.sex || rowData?.sex}
                           onChange={handleInputChange}
                         >
-                          <option value="">Select Gender</option>
+                          <option value="" disabled>Select Gender</option>
                           <option value="Male">Male</option>
                           <option value="Female">Female</option>
                         </Form.Control>
@@ -793,7 +797,7 @@ export default function Personal() {
                           value={rowData.identity}
                           onChange={handleInputChange}
                         >
-                          <option value="">Select Identity</option>
+                          <option value="" disabled>Select Identity</option>
                           <option value="Passport">Passport No</option>
                           <option value="Aadhaar">Aadhaar No</option>
                           <option value="Voter">Voter No</option>
@@ -903,46 +907,60 @@ export default function Personal() {
                         <div className="checkbox-grid">
                           <Row>
                             <Col md={2}>
-                              <Form.Check
-                                type="checkbox"
-                                id="workPattern-sedentary"
-                                label="Sedentary"
-                                name="Sedentary"
-                                checked={workPatterns.Sedentary}
-                                onChange={handleWorkPatternChange}
-                              />
+                              <label htmlFor="workPattern-sedentary">
+                                <input
+                                  type="checkbox"
+                                  id="workPattern-sedentary"
+                                  name="Sedentary"
+                                  checked={workPatterns.Sedentary}
+                                  onChange={handleWorkPatternChange}
+                                  style={{ marginRight: "5px" }}
+                                />
+                                Sedentary
+                              </label>
                             </Col>
                             <Col md={2}>
-                              <Form.Check
-                                type="checkbox"
-                                id="workPattern-travelling"
-                                label="Travelling"
-                                name="Travelling"
-                                checked={workPatterns.Travelling}
-                                onChange={handleWorkPatternChange}
-                              />
+                              <label htmlFor="workPattern-travelling">
+                                <input
+                                  type="checkbox"
+                                  id="workPattern-travelling"
+                                  name="Travelling"
+                                  checked={workPatterns.Travelling}
+                                  onChange={handleWorkPatternChange}
+                                  style={{ marginRight: "5px" }}
+                                />
+                                Travelling
+                              </label>
                             </Col>
                             <Col md={3}>
-                              <Form.Check
-                                type="checkbox"
-                                id="workPattern-strenuous"
-                                label="Strenuous (Physical Activity)"
-                                name="Strenuous (Physical Activity)"
-                                checked={
-                                  workPatterns["Strenuous (Physical Activity)"]
-                                }
-                                onChange={handleWorkPatternChange}
-                              />
+                              <label htmlFor="workPattern-strenuous">
+                                <input
+                                  type="checkbox"
+                                  id="workPattern-strenuous"
+                                  name="Strenuous (Physical Activity)"
+                                  checked={
+                                    workPatterns[
+                                      "Strenuous (Physical Activity)"
+                                    ]
+                                  }
+                                  onChange={handleWorkPatternChange}
+                                  style={{ marginRight: "5px" }}
+                                />
+                                Strenuous (Physical Activity)
+                              </label>
                             </Col>
                             <Col md={2}>
-                              <Form.Check
-                                type="checkbox"
-                                id="workPattern-mental"
-                                label="Mentally Stressful"
-                                name="Mentally Stressful"
-                                checked={workPatterns["Mentally Stressful"]}
-                                onChange={handleWorkPatternChange}
-                              />
+                              <label htmlFor="workPattern-mental">
+                                <input
+                                  type="checkbox"
+                                  id="workPattern-mental"
+                                  name="Mentally Stressful"
+                                  checked={workPatterns["Mentally Stressful"]}
+                                  onChange={handleWorkPatternChange}
+                                  style={{ marginRight: "5px" }}
+                                />
+                                Mentally Stressful
+                              </label>
                             </Col>
                           </Row>
                         </div>
@@ -958,7 +976,7 @@ export default function Personal() {
                           onChange={handleReferenceChange}
                           className="mb-3"
                         >
-                          <option value="">Choose Reference</option>
+                          <option value="" disabled>Choose Reference</option>
                           <option value="newspaper">Newspaper</option>
                           <option value="dr_ref">Doctor Reference</option>
                           <option value="internet">Internet</option>

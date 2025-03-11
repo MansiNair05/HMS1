@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.158:5000/api";
+const BASE_URL = "http://192.168.90.198:5000/api";
 
 export default function OpdPrescription() {
   const [formData, setFormData] = useState({
@@ -662,7 +662,7 @@ export default function OpdPrescription() {
                           onChange={handleInputChange}
                           disabled={isDisabled}
                         >
-                          <option value="">Select an option</option>
+                          <option value=""  disabled>Select an option</option>
                           <option value="PROCTOLOGY">PROCTOLOGY</option>
                           <option value="UROLOGY">UROLOGY</option>
                         </Form.Select>
@@ -1053,26 +1053,32 @@ export default function OpdPrescription() {
                   <Col>
                     <Form.Group>
                       <Form.Label>Time Slot:</Form.Label>
-                      <div>
+                      <div className="d-flex flex-wrap">
                         {Object.keys(formData?.medicine_time).map((timings) => (
-                          <Form.Check
+                          <label
                             key={timings}
-                            inline
-                            type="checkbox"
-                            label={timings.replace(/([A-Z])/g, " $1").trim()}
-                            name={timings}
-                            checked={formData.medicine_time[timings]}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                medicine_time: {
-                                  ...formData.medicine_time,
-                                  [timings]: e.target.checked,
-                                },
-                              })
-                            }
-                            disabled={isDisabled}
-                          />
+                            className="d-flex align-items-center me-3"
+                          >
+                            <Form.Check
+                              inline
+                              type="checkbox"
+                              name={timings}
+                              checked={formData.medicine_time[timings]}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  medicine_time: {
+                                    ...formData.medicine_time,
+                                    [timings]: e.target.checked,
+                                  },
+                                })
+                              }
+                              disabled={isDisabled}
+                              id={timings}
+                              style={{ marginRight: "5px" }}
+                            />
+                            {timings.replace(/([A-Z])/g, " $1").trim()}
+                          </label>
                         ))}
                       </div>
                     </Form.Group>

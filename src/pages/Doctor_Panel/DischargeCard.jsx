@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.158:5000/api"; // Update with your backend API base URL
+const BASE_URL = "http://192.168.90.198:5000/api"; // Update with your backend API base URL
 
 export default function DischargeCard() {
   const [discharge, setDischarge] = useState([]);
@@ -317,7 +317,7 @@ export default function DischargeCard() {
           },
           surgery_remarks: surgeryData[0]?.surgery_remarks || "",
 
-          name: medicineData.name || "",
+          // name: medicineData.name || "",
           gender_type: medicineData.gender_type || "",
           medicine_type: medicineData.medicine_type || "",
           status: medicineData.status || "",
@@ -520,7 +520,7 @@ export default function DischargeCard() {
       // First update the states
       setIsDisabled(true);
       setShowEditButton(true);
-      setShowSaveButton(false); 
+      setShowSaveButton(false);
       setShowUpdateButton(true);
       setDisablePreviousButton(true);
 
@@ -570,7 +570,6 @@ export default function DischargeCard() {
     }
   };
 
-
   // Handle checkbox selection change for test type
   const handleSurgeryTypeChange = (e, surgeryType) => {
     const { checked } = e.target;
@@ -617,7 +616,7 @@ export default function DischargeCard() {
       const prescriptionOpdData = result?.data?.prescriptionOpdData;
 
       // Log the data we're working with
-      console.log("Discharge Card Data:", dischargeCard);
+      console.log("Discharge Card Data:", dischargeCardData);
       console.log("Patient Data:", patientData);
 
       // Update form data with all fields
@@ -680,32 +679,32 @@ export default function DischargeCard() {
         },
         surgery_remarks: surgeryData[0]?.surgery_remarks || "",
 
-        name: medicineData.name || "",
+        // name: medicineData.name || "",
         gender_type: medicineData.gender_type || "",
         medicine_type: medicineData.medicine_type || "",
         status: medicineData.status || "",
         medicine_dosage: medicineData.medicine_dosage || "",
 
-        prescription_type: prescriptionOpdData.prescription_type || "",
+        // prescription_type: prescriptionOpdData.prescription_type || "",
         medicine_name: prescriptionOpdData.medicine_name || "",
-        medicine_quantity: prescriptionOpdData.medicine_quantity || "",
+        // medicine_quantity: prescriptionOpdData.medicine_quantity || "",
         medicine_time: prescriptionOpdData.medicine_time || "",
         medicine_days: prescriptionOpdData.medicine_days || "",
       }));
 
       // Update selected options and other states
       setSelectedOptions({
-        prescription_type: dischargeCard?.prescription_type || "",
-        consultantName: dischargeCard?.consultant_name || "",
-        surgery_type: dischargeCard?.surgery_type
-          ? [dischargeCard.surgery_type]
+        prescription_type: dischargeCardData?.prescription_type || "",
+        consultantName: dischargeCardData?.consultant_name || "",
+        surgery_type: dischargeCardData?.surgery_type
+          ? [dischargeCardData.surgery_type]
           : [],
-        assistanceDoctor: dischargeCard?.assistanceDoctor || "",
-        surgeonDoctor: dischargeCard?.surgeonDoctor || "",
-        madeby: dischargeCard?.madeby || "",
-        checkedby: dischargeCard?.checkedby || "",
-        treatingby: dischargeCard?.treatingby || "",
-        surgeryadvice: dischargeCard?.surgeryadvice || "",
+        assistanceDoctor: dischargeCardData?.assistanceDoctor || "",
+        surgeonDoctor: dischargeCardData?.surgeonDoctor || "",
+        madeby: dischargeCardData?.madeby || "",
+        checkedby: dischargeCardData?.checkedby || "",
+        treatingby: dischargeCardData?.treatingby || "",
+        surgeryadvice: dischargeCardData?.surgeryadvice || "",
       });
 
       // Update medicine-related dropdowns if available
@@ -729,10 +728,10 @@ export default function DischargeCard() {
       }
 
       // Update injection details if available
-      if (dischargeCard?.injectionDetails?.length > 0) {
+      if (dischargeCardData?.injectionDetails?.length > 0) {
         setFormData((prevData) => ({
           ...prevData,
-          injectionDetails: dischargeCard.injectionDetails,
+          injectionDetails: dischargeCardData.injectionDetails,
         }));
       }
 
@@ -748,7 +747,7 @@ export default function DischargeCard() {
       console.log("Updated form data:", formData);
       console.log("Updated selected options:", selectedOptions);
 
-      setPreviousRecordDate(dischargeCard.creation_timestamp || "");
+      setPreviousRecordDate(dischargeCardData.creation_timestamp || "");
     } catch (error) {
       console.error("Error fetching previous records:", error);
       alert("Failed to fetch previous records.");
@@ -841,7 +840,7 @@ export default function DischargeCard() {
       checkedby: "",
       treatingby: "",
       surgeryadvice: "",
-      surgery_remarks:"",
+      surgery_remarks: "",
       adviceMedicine: "",
       medicine_quantity: "",
       injectionDetails: [],
@@ -875,7 +874,6 @@ export default function DischargeCard() {
       medicine_time: "",
       prescription_type: "",
       medicine_quantity: "",
-      
     });
     // Reset selected options
     setSelectedOptions({});
@@ -1168,7 +1166,10 @@ export default function DischargeCard() {
                             : "Select Surgery Types"}
                         </Dropdown.Toggle>
 
-                        <Dropdown.Menu style={{ padding: "10px" }}>
+                        <Dropdown.Menu
+                          style={{ padding: "10px" }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           {[
                             "LHP",
                             "FILAC",
@@ -1183,24 +1184,31 @@ export default function DischargeCard() {
                             "LAP CHOLECYSTECTOMY",
                             "STARR",
                           ].map((surgery_type, index) => (
-                            <Form.Check
+                            <label
                               key={index}
-                              type="checkbox"
-                              label={surgery_type}
-                              value={surgery_type}
-                              checked={
-                                formData.surgery_type?.includes(surgery_type) ||
-                                false
-                              }
-                              onChange={(e) =>
-                                handleSurgeryTypeChange(e, surgery_type)
-                              }
-                            />
+                              className="d-flex align-items-center"
+                            >
+                              <Form.Check
+                                type="checkbox"
+                                value={surgery_type}
+                                checked={
+                                  formData.surgery_type?.includes(
+                                    surgery_type
+                                  ) || false
+                                }
+                                onChange={(e) =>
+                                  handleSurgeryTypeChange(e, surgery_type)
+                                }
+                                style={{ marginRight: "5px" }}
+                              />
+                              {surgery_type}
+                            </label>
                           ))}
                         </Dropdown.Menu>
                       </Dropdown>
                     </Form.Group>
                   </Col>
+
                   <Col md={3} className="mb-4">
                     <Form.Group className="mb-3">
                       <Form.Label>Referral Doctor</Form.Label>
@@ -1964,7 +1972,7 @@ export default function DischargeCard() {
                         value={formData.times}
                         onChange={handleInputChange}
                       >
-                        <option value="">Times</option>
+                        <option value="" disabled>Times</option>
                         <option value="Once">Once</option>
                         <option value="Twice">Twice</option>
                         <option value="Three Times">Three Times</option>
@@ -1981,7 +1989,7 @@ export default function DischargeCard() {
                         value={formData.medicineRoute || ""}
                         onChange={handleInputChange}
                       >
-                        <option value="">Medicine Route</option>
+                        <option value="" disabled>Medicine Route</option>
                         <option value="IV">IV</option>
                         <option value="IM">IM</option>
                         <option value="ORAL">ORAL</option>
@@ -2284,21 +2292,27 @@ export default function DischargeCard() {
                   <Col md={6}>
                     <Form.Group>
                       <Form.Label>Time Slot:</Form.Label>
-                      <div>
+                      <div className="d-flex flex-wrap">
                         {formData.timings &&
                           typeof formData.timings === "object" &&
                           Object.keys(formData.timings).map((timing) => (
-                            <Form.Check
+                            <label
                               key={timing}
-                              inline
-                              type="checkbox"
-                              label={timing.replace(/([A-Z])/g, " $1").trim()}
-                              name={timing}
-                              checked={formData.timings?.[timing] || false}
-                              onChange={(e) =>
-                                handleCheckboxChange(e, "timings")
-                              }
-                            />
+                              className="d-flex align-items-center me-3"
+                            >
+                              <Form.Check
+                                inline
+                                type="checkbox"
+                                name={timing}
+                                checked={formData.timings?.[timing] || false}
+                                onChange={(e) =>
+                                  handleCheckboxChange(e, "timings")
+                                }
+                                id={`timing-${timing}`}
+                                style={{ marginRight: "5px" }}
+                              />
+                              {timing.replace(/([A-Z])/g, " $1").trim()}
+                            </label>
                           ))}
                       </div>
                     </Form.Group>
@@ -2382,15 +2396,16 @@ export default function DischargeCard() {
                       </tbody>
                     </Table>
                   )}
-                  { showSaveButton && (
-                <Button
-                  variant="primary"
-                  className="mt-4"
-                  onClick={handleSubmit}
-                >
-                  Save Discharge Card
-                </Button>)}
-                { showUpdateButton && (
+                {showSaveButton && (
+                  <Button
+                    variant="primary"
+                    className="mt-4"
+                    onClick={handleSubmit}
+                  >
+                    Save Discharge Card
+                  </Button>
+                )}
+                {showUpdateButton && (
                   <Button
                     variant="primary"
                     className="mt-4"

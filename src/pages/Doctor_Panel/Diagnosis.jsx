@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.158:5000/api"; // Replace with your actual backend URL
+const BASE_URL = "http://192.168.90.198:5000/api"; // Replace with your actual backend URL
 
 const DiagnosisTabs = () => {
   const [key, setKey] = useState("piles");
@@ -22,103 +22,82 @@ const DiagnosisTabs = () => {
     {
       id: "piles",
       title: "Piles",
-      checkboxes: [
-        "PR Bleeding: Painless",
-        "PR Bleeding: Painful",
-        "Burning",
-        "Pricking",
-        "Itching",
-        "Incomplete Evacuation",
-        "Prolapse",
-        "Swelling",
-        "Pain at Anal Region",
-        "Mucus Mixed Blood",
-      ],
-      textarea: "piles_duration",
+      checkboxes: ["GRADE 1", "GRADE 2", "GRADE 3", "GRADE 4"],
     },
     {
       id: "fistula",
       title: "Fistula",
       checkboxes: [
-        "Pus Discharge",
-        "Boil",
-        "Watery Discharge",
-        "Swelling near anal region",
-        "Discharge from vagina gases/ stool",
+        "GLUTEAL",
+        "HIGH",
+        "HORSESHOE",
+        "NIDAL",
+        "SCROTAL",
+        "SUPRALEVATOR",
+        "TRANSPHINCTERIC",
+        "INTERSPHINCTERIC",
+        "VAGINAL",
+        "VULVAL",
+        "COMPLEX",
+        "RECURRENT",
       ],
-      textarea: "fistula_duration",
     },
     {
       id: "hernia",
       title: "Hernia",
       checkboxes: [
-        "Swelling:Umbilical",
-        "Right Inguinal",
-        "Left Inguinal",
-        "Swelling:Abdominal",
-        "Reducible",
-        "Nonreducible",
-        "Past Sx",
+        "VENTRAL",
+        "INCISIONAL",
+        "EPIGASTRIC",
+        "RIGHT INGUINAL",
+        "LEFT INGUINAL",
+        "BILATERAL INGUINAL",
+        "SUPRA UMBILICAL",
+        "PARA UMBILICAL",
+        "MULTIPLE DEFECTS UMBILICAL",
+        "INFRA UMBILICAL",
       ],
-      textarea: "hernia_duration",
     },
     {
       id: "varicoseVeins",
       title: "Varicose Veins",
-      checkboxes: ["Varicose Veins"],
-      textarea: "varicose_duration",
+      checkboxes: ["RIGHT", "LEFT", "BILATERAL"],
     },
     {
-      id: "incontinence",
-      title: "Urinary Incontinence",
-      checkboxes: ["Urinary Incontinence"],
-      textarea: "urinary_incontinence_duration",
-    },
-    {
-      id: "fecalIncontinence",
-      title: "Fecal Incontinence",
-      checkboxes: ["Fecal Incontinence"],
-      textarea: "fecal_incontinence_duration",
-    },
-    {
-      id: "urology",
-      title: "Urology",
-      checkboxes: [
-        "Pain",
-        "Burning urination",
-        "Nausea",
-        "Vomiting",
-        "LUTS",
-        "Urgency of urination",
-        "Incomplete evacuation",
-        "Stream of urine",
-        "Nocturia",
-      ],
-      textarea: "urology_duration",
-    },
-    {
-      id: "ods",
-      title: "ODS",
-      checkboxes: [
-        "Excessive Straining",
-        "Digitation",
-        "Hard Stools",
-        "Enema/laxative",
-        "Fragmented Defecation",
-      ],
-      textarea: "ods_duration",
-    },
-    {
-      id: "sinus",
-      title: "Pilonidal Sinus",
-      checkboxes: [],
-      textarea: "pilonidalsinus",
+      id: "prolapse",
+      title: "Prolapse",
+      checkboxes: ["MUCOSAL", "INCOMPLETE", "PROCIDENTIA"],
+     
     },
     {
       id: "circumcision",
       title: "Circumcision",
       checkboxes: [],
-      textarea: "circumcision",
+      textarea: "circumcision_duration",
+    },
+    {
+      id: "abscess",
+      title: "Abscess",
+      checkboxes: [],
+      textarea: "abscess_duration",
+    },
+    {
+      id: "fissure",
+      title: "Fissure",
+      checkboxes: [],
+      textarea: "fissure_duration",
+    },
+    {
+      id: "ibs",
+      title: "IBS",
+      checkboxes: [],
+      textarea: "ibs_duration",
+    },
+    {
+      id: "urology",
+      title: "Urology",
+      checkboxes: [],
+      textarea: "urology_duration",
     },
   ];
 
@@ -822,7 +801,7 @@ export default function Diagnosis() {
                           dateFormat="yyyy-MM-dd"
                           className="form-control"
                           placeholderText="Select Appointment Date"
-                          minDate={new Date()} // Ensures only today and future dates are selectable
+                     
                           showMonthDropdown
                           showYearDropdown
                           dropdownMode="select"
@@ -879,44 +858,58 @@ export default function Diagnosis() {
                   <Row className="mb-3">
                     <Col md={8}>
                       <Form.Label>Advice Type:</Form.Label>
-                      <Row>
-                        <Col>
+                      <div className="d-flex flex-wrap">
+                        <label className="d-flex align-items-center me-3">
                           <Form.Check
                             inline
                             type="checkbox"
-                            label="Medication"
                             name="diagnosisAdvice.medication"
                             checked={formData.diagnosisAdvice?.medication}
                             onChange={handleCheckboxChange}
                             disabled={isDisabled}
+                            id="diagnosisAdvice_medication"
+                            style={{ marginRight: "5px" }}
                           />
+                          Medication
+                        </label>
+
+                        <label className="d-flex align-items-center me-3">
                           <Form.Check
                             inline
                             type="checkbox"
-                            label="Surgery"
                             name="diagnosisAdvice.surgery"
                             checked={formData.diagnosisAdvice?.surgery}
                             onChange={handleCheckboxChange}
                             disabled={isDisabled}
+                            id="diagnosisAdvice_surgery"
+                            style={{ marginRight: "5px" }}
                           />
+                          Surgery
+                        </label>
+
+                        <label className="d-flex align-items-center">
                           <Form.Check
                             inline
                             type="checkbox"
-                            label="Test"
                             name="diagnosisAdvice.test"
                             checked={formData.diagnosisAdvice?.test}
                             onChange={handleCheckboxChange}
                             disabled={isDisabled}
+                            id="diagnosisAdvice_test"
+                            style={{ marginRight: "5px" }}
                           />
-                          {/* Show textarea only when "Test" is checked */}
-                          {formData.diagnosisAdvice?.test && (
-                            <Form.Control
-                              as="textarea"
-                              placeholder="Enter test details"
-                            />
-                          )}
-                        </Col>
-                      </Row>
+                          Test
+                        </label>
+                      </div>
+
+                      {/* Show textarea only when "Test" is checked */}
+                      {formData.diagnosisAdvice?.test && (
+                        <Form.Control
+                          as="textarea"
+                          placeholder="Enter test details"
+                          className="mt-2"
+                        />
+                      )}
                     </Col>
                   </Row>
                   <br />
@@ -926,66 +919,48 @@ export default function Diagnosis() {
                   <Row className="mb-3">
                     <Col md={10}>
                       <Form.Label>Medicines Prescribed:</Form.Label>
-                      <Row>
-                        <Col>
-                          <Form.Check
-                            inline
-                            type="checkbox"
-                            label="AAC"
-                            name="medicinesPrescribed.AAC"
-                            checked={formData.medicinesPrescribed?.AAC}
-                            onChange={handleCheckboxChange}
-                            disabled={isDisabled}
-                          />
-                          <Form.Check
-                            inline
-                            type="checkbox"
-                            label="ANTACID"
-                            name="medicinesPrescribed.ANTACID"
-                            checked={formData.medicinesPrescribed?.ANTACID}
-                            onChange={handleCheckboxChange}
-                            disabled={isDisabled}
-                          />
-                          <Form.Check
-                            inline
-                            type="checkbox"
-                            label="PROBIOTICS"
-                            name="medicinesPrescribed.PROBIOTICS"
-                            checked={formData.medicinesPrescribed?.PROBIOTICS}
-                            onChange={handleCheckboxChange}
-                            disabled={isDisabled}
-                          />
-                          <Form.Check
-                            inline
-                            type="checkbox"
-                            label="NSAIDS"
-                            name="medicinesPrescribed.NSAIDS"
-                            checked={formData.medicinesPrescribed?.NSAIDS}
-                            onChange={handleCheckboxChange}
-                            disabled={isDisabled}
-                          />
-                          <Form.Check
-                            inline
-                            type="checkbox"
-                            label="ANTIBIOTICS"
-                            name="medicinesPrescribed.ANTIBIOTICS"
-                            checked={formData.medicinesPrescribed?.ANTIBIOTICS}
-                            onChange={handleCheckboxChange}
-                            disabled={isDisabled}
-                          />
+                      <div className="d-flex flex-wrap">
+                        {[
+                          { label: "AAC", name: "AAC" },
+                          { label: "ANTACID", name: "ANTACID" },
+                          { label: "PROBIOTICS", name: "PROBIOTICS" },
+                          { label: "NSAIDS", name: "NSAIDS" },
+                          { label: "ANTIBIOTICS", name: "ANTIBIOTICS" },
+                        ].map(({ label, name }) => (
+                          <label
+                            key={name}
+                            className="d-flex align-items-center me-3"
+                          >
+                            <Form.Check
+                              inline
+                              type="checkbox"
+                              name={`medicinesPrescribed.${name}`}
+                              checked={
+                                formData.medicinesPrescribed?.[name] || false
+                              }
+                              onChange={handleCheckboxChange}
+                              disabled={isDisabled}
+                              id={`medicinesPrescribed_${name}`}
+                              style={{ marginRight: "5px" }}
+                            />
+                            {label}
+                          </label>
+                        ))}
+                      </div>
 
-                          <Form.Control
-                            as="textarea"
-                            placeholder="Other"
-                            name="medicinesPrescribed"
-                            value={formData.medicinesPrescribed?.other || ""}
-                            onChange={handleInputChange}
-                            disabled={isDisabled}
-                          />
-                        </Col>
-                      </Row>
+                      {/* Textarea for Other Medicines */}
+                      <Form.Control
+                        as="textarea"
+                        placeholder="Other"
+                        name="medicinesPrescribed.other"
+                        value={formData.medicinesPrescribed?.other || ""}
+                        onChange={handleInputChange}
+                        disabled={isDisabled}
+                        className="mt-2"
+                      />
                     </Col>
                   </Row>
+
                   <br />
                   <Row>
                     <Col md={4}>
@@ -1171,142 +1146,50 @@ export default function Diagnosis() {
                   <Row className="mb-3">
                     <Col md={12}>
                       <Form.Group>
-                        <Form.Label>Advice</Form.Label>
+                        <Form.Label>Advice:</Form.Label>
                         <Row>
-                          <Col md={4}>
-                            <Form.Check
-                              type="checkbox"
-                              label="MCDPA"
-                              name="advice.mcdpa"
-                              checked={formData.advice?.mcdpa}
-                              onChange={handleCheckboxChange}
-                              disabled={isDisabled}
-                            />
-                            <Form.Check
-                              type="checkbox"
-                              label="MANOMETRY"
-                              name="advice.MANOMETRY"
-                              checked={formData.advice?.manometry}
-                              onChange={handleCheckboxChange}
-                              disabled={isDisabled}
-                            />
-                            <Form.Check
-                              type="checkbox"
-                              label="DIET"
-                              name="advice.DIET"
-                              checked={formData.advice?.diet}
-                              onChange={handleCheckboxChange}
-                              disabled={isDisabled}
-                            />
-                            <Form.Check
-                              type="checkbox"
-                              label="ECHO"
-                              name="advice.ECHO"
-                              checked={formData.advice?.echo}
-                              onChange={handleCheckboxChange}
-                              disabled={isDisabled}
-                            />
-                            <Form.Check
-                              type="checkbox"
-                              label="UROFLOWMETRY"
-                              name="advice.UROFLOWMETRY"
-                              checked={formData.advice?.uroflowmetry}
-                              onChange={handleCheckboxChange}
-                              disabled={isDisabled}
-                            />
-                          </Col>
-                          <Col md={4}>
-                            <Form.Check
-                              type="checkbox"
-                              label="COLO"
-                              name="advice.COLO"
-                              checked={formData.advice?.colo}
-                              onChange={handleCheckboxChange}
-                              disabled={isDisabled}
-                            />
-                            <Form.Check
-                              type="checkbox"
-                              label="X-RAY"
-                              name="advice.xray"
-                              checked={formData.advice?.xray}
-                              onChange={handleCheckboxChange}
-                              disabled={isDisabled}
-                            />
-                            <Form.Check
-                              type="checkbox"
-                              label="MRI"
-                              name="advice.MRI"
-                              checked={formData.advice?.mri}
-                              onChange={handleCheckboxChange}
-                              disabled={isDisabled}
-                            />
-                            <Form.Check
-                              type="checkbox"
-                              label="CHT"
-                              name="advice.CHT"
-                              checked={formData.advice?.cht}
-                              onChange={handleCheckboxChange}
-                              disabled={isDisabled}
-                            />
-                            <Form.Check
-                              type="checkbox"
-                              label="GASTRO"
-                              name="advice.GASTRO"
-                              checked={formData.advice?.gastro}
-                              onChange={handleCheckboxChange}
-                              disabled={isDisabled}
-                            />
-                          </Col>
-                          <Col md={4}>
-                            <Form.Check
-                              type="checkbox"
-                              label="CT"
-                              name="advice.CT"
-                              checked={formData.advice?.ct}
-                              onChange={handleCheckboxChange}
-                              disabled={isDisabled}
-                            />
-                            <Form.Check
-                              type="checkbox"
-                              label="DOPPLER"
-                              name="advice.DOPPLER"
-                              checked={formData.advice?.doppler}
-                              onChange={handleCheckboxChange}
-                              disabled={isDisabled}
-                            />
-                            <Form.Check
-                              type="checkbox"
-                              label="BIOFEEDBACK"
-                              name="advice.BIOFEEDBACK"
-                              checked={formData.advice?.biofeedback}
-                              onChange={handleCheckboxChange}
-                              disabled={isDisabled}
-                            />
-                            <Form.Check
-                              type="checkbox"
-                              label="LAB INVESTIGATION"
-                              name="advice.labInvestigation"
-                              checked={formData.advice?.labInvestigation}
-                              onChange={handleCheckboxChange}
-                              disabled={isDisabled}
-                            />
-                            <Form.Check
-                              type="checkbox"
-                              label="ULTRASONOGRAPHY"
-                              name="advice.ULTRASONOGRAPHY"
-                              checked={formData.advice?.ultrasonography}
-                              onChange={handleCheckboxChange}
-                              disabled={isDisabled}
-                            />
-                            <Form.Check
-                              type="checkbox"
-                              label="3D ENDO ANAL IMAGING"
-                              name="advice.echoAnalImaging"
-                              checked={formData.advice?.EchoAnalImaging}
-                              onChange={handleCheckboxChange}
-                              disabled={isDisabled}
-                            />
-                          </Col>
+                          {[
+                            { label: "MCDPA", name: "mcdpa" },
+                            { label: "MANOMETRY", name: "manometry" },
+                            { label: "DIET", name: "diet" },
+                            { label: "ECHO", name: "echo" },
+                            { label: "UROFLOWMETRY", name: "uroflowmetry" },
+                            { label: "COLO", name: "colo" },
+                            { label: "X-RAY", name: "xray" },
+                            { label: "MRI", name: "mri" },
+                            { label: "CHT", name: "cht" },
+                            { label: "GASTRO", name: "gastro" },
+                            { label: "CT", name: "ct" },
+                            { label: "DOPPLER", name: "doppler" },
+                            { label: "BIOFEEDBACK", name: "biofeedback" },
+                            {
+                              label: "LAB INVESTIGATION",
+                              name: "labInvestigation",
+                            },
+                            {
+                              label: "ULTRASONOGRAPHY",
+                              name: "ultrasonography",
+                            },
+                            {
+                              label: "3D ENDO ANAL IMAGING",
+                              name: "echoAnalImaging",
+                            },
+                          ].map(({ label, name }, index) => (
+                            <Col md={4} key={index}>
+                              <label className="d-flex align-items-center">
+                                <Form.Check
+                                  type="checkbox"
+                                  name={`advice.${name}`}
+                                  checked={formData.advice?.[name] || false} // Ensure the correct property name
+                                  onChange={handleCheckboxChange}
+                                  disabled={isDisabled}
+                                  id={`advice_${name}`}
+                                  style={{ marginRight: "5px" }}
+                                />
+                                {label}
+                              </label>
+                            </Col>
+                          ))}
                         </Row>
                       </Form.Group>
                     </Col>
@@ -1317,43 +1200,62 @@ export default function Diagnosis() {
                       <Form.Group>
                         <Form.Label>Other:</Form.Label>
                         <Row>
-                          <Col>
-                            <Form.Check
-                              inline
-                              type="checkbox"
-                              label="Insurance"
-                              name="other.insurance"
-                              checked={formData.other?.insurance}
-                              onChange={handleCheckboxChange}
-                              disabled={isDisabled}
-                            />
-                            <Form.Check
-                              inline
-                              type="checkbox"
-                              label="Reimbursement"
-                              name="other.reimbursement"
-                              checked={formData.other?.reimbursement}
-                              onChange={handleCheckboxChange}
-                              disabled={isDisabled}
-                            />
-                            <Form.Check
-                              inline
-                              type="checkbox"
-                              label="Workshop"
-                              name="other.workshop"
-                              checked={formData.other?.workshop}
-                              onChange={handleCheckboxChange}
-                              disabled={isDisabled}
-                            />
-                            <Form.Check
-                              inline
-                              type="checkbox"
-                              label="PDC"
-                              name="other.pdc"
-                              checked={formData.other?.pdc}
-                              onChange={handleCheckboxChange}
-                              disabled={isDisabled}
-                            />
+                          <Col md={4} className="d-flex flex-wrap">
+                            <label className="d-flex align-items-center me-3">
+                              <Form.Check
+                                inline
+                                type="checkbox"
+                                name="other.insurance"
+                                checked={formData.other?.insurance}
+                                onChange={handleCheckboxChange}
+                                disabled={isDisabled}
+                                id="insurance"
+                                style={{ marginRight: "5px" }}
+                              />
+                              Insurance
+                            </label>
+
+                            <label className="d-flex align-items-center me-3">
+                              <Form.Check
+                                inline
+                                type="checkbox"
+                                name="other.reimbursement"
+                                checked={formData.other?.reimbursement}
+                                onChange={handleCheckboxChange}
+                                disabled={isDisabled}
+                                id="reimbursement"
+                                style={{ marginRight: "5px" }}
+                              />
+                              Reimbursement
+                            </label>
+
+                            <label className="d-flex align-items-center me-3">
+                              <Form.Check
+                                inline
+                                type="checkbox"
+                                name="other.workshop"
+                                checked={formData.other?.workshop}
+                                onChange={handleCheckboxChange}
+                                disabled={isDisabled}
+                                id="workshop"
+                                style={{ marginRight: "5px" }}
+                              />
+                              Workshop
+                            </label>
+
+                            <label className="d-flex align-items-center">
+                              <Form.Check
+                                inline
+                                type="checkbox"
+                                name="other.pdc"
+                                checked={formData.other?.pdc}
+                                onChange={handleCheckboxChange}
+                                disabled={isDisabled}
+                                id="pdc"
+                                style={{ marginRight: "5px" }}
+                              />
+                              PDC
+                            </label>
                           </Col>
                         </Row>
                       </Form.Group>
