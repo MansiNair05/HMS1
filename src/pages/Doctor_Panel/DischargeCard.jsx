@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.198:5000/api"; // Update with your backend API base URL
+const BASE_URL = "http://192.168.29.102:5000/api"; // Update with your backend API base URL
 
 export default function DischargeCard() {
   const [discharge, setDischarge] = useState([]);
@@ -54,19 +54,34 @@ export default function DischargeCard() {
     DOD: "",
     DOD_time: "",
     IPDNo: "",
-    sPO2: "",
+    spo2: "",
     BP: "",
     pulse: "",
-    rr: "",
-    temp: "",
+    RR: "",
+    temperature: "",
+    findings: "",
     surgery_type: [],
     chife_complaints: "",
     past_history: "",
     surgical_history: "",
     allergies: "",
     surgery_remarks: "",
+    surgical_procedure: "",
     surgery_note: "",
     investigation: "",
+    hb: "",
+    wbc: "",
+    plt: "",
+    bsl: "",
+    hiv: "",
+    hbsag: "",
+    vdrl: "",
+    bt: "",
+    ct: "",
+    pt: "",
+    inr: "",
+    creatinine: "",
+
     diagnosis: "",
     local_care: "",
     carenote: "",
@@ -105,6 +120,64 @@ export default function DischargeCard() {
 
   const [dropdownOptions, setDropdownOptions] = useState([]); // Store API options
   const [selectedOptions, setSelectedOptions] = useState([]); // Track selected checkboxes
+
+  const parseInvestigationData = () => {
+    const investigationString = formData.investigation; // Get the investigation string from formData
+    if (!investigationString) return; // Exit if there's no investigation data
+
+    const investigationEntries = investigationString.split(",").map((entry) => {
+      const [key, value] = entry.split(":");
+      return { key: key.trim(), value: value.trim() };
+    });
+
+    const updatedFormData = { ...formData };
+
+    investigationEntries.forEach(({ key, value }) => {
+      switch (key) {
+        case "HB":
+          updatedFormData.hb = value;
+          break;
+        case "WBC":
+          updatedFormData.wbc = value;
+          break;
+        case "PLT":
+          updatedFormData.plt = value;
+          break;
+        case "BSL":
+          updatedFormData.bsl = value;
+          break;
+        case "HIV":
+          updatedFormData.hiv = value;
+          break;
+        case "HBSAG":
+          updatedFormData.hbsag = value;
+          break;
+        case "VDRL":
+          updatedFormData.vdrl = value;
+          break;
+        case "BT":
+          updatedFormData.bt = value;
+          break;
+        case "CT":
+          updatedFormData.ct = value;
+          break;
+        case "PT":
+          updatedFormData.pt = value;
+          break;
+        case "INR":
+          updatedFormData.inr = value;
+          break;
+        case "SR.CREATININE":
+          updatedFormData.creatinine = value;
+          break;
+        default:
+          break;
+      }
+    });
+
+    // Update the state with the new form data
+    setFormData(updatedFormData);
+  };
 
   // Fetch options from API
   useEffect(() => {
@@ -217,11 +290,6 @@ export default function DischargeCard() {
   };
 
   useEffect(() => {
-    if (!patientId) {
-      console.warn("No patientId found, skipping fetch");
-      return;
-    }
-
     const fetchPatientData = async () => {
       try {
         console.log("Fetching data for patient ID:", patientId);
@@ -269,13 +337,13 @@ export default function DischargeCard() {
           surgery_type: dischargeCardDetails?.surgery_type || [],
 
           prescription_type: "", // Reset all other fields
-          consultantName: dischargeCardData?.consultant_name || "",
+          consultantName: dischargeCardData?.consultantName || "",
           DOA: dischargeCardData?.DOA || "",
           DOA_time: dischargeCardData?.DOA_time || "",
           DOD: dischargeCardData?.DOD || "",
           DOD_time: dischargeCardData?.DOD_time || "",
           IPDNo: dischargeCardData?.IPDNo || "",
-          sPO2: urologyData?.sPO2 || "",
+          spo2: urologyData?.spo2 || "",
           BP: dischargeCardData?.BP || "",
           pulse: urologyData?.pulse || "",
           RR: urologyData?.RR || "",
@@ -341,7 +409,7 @@ export default function DischargeCard() {
     setShowSaveButton(true);
 
     fetchPatientData();
-  }, [patientId]);
+  }, [patientId, formData.investigation]);
 
   // Track formData updates
   useEffect(() => {
@@ -379,7 +447,7 @@ export default function DischargeCard() {
     const { name, value } = e.target;
 
     // Fields that should only accept numbers
-    const numericFields = ["age", "sPO2", "BP", "pulse", "rr", "temp"];
+    const numericFields = ["age", "spo2", "BP", "pulse", "RR", "Temperature"];
 
     if (numericFields.includes(name)) {
       // Allow only numbers using regex
@@ -632,18 +700,19 @@ export default function DischargeCard() {
         surgery_type: dischargeCardDetails?.surgery_type || [],
 
         prescription_type: "", // Reset all other fields
-        consultantName: dischargeCardData?.consultant_name || "",
+        consultantName: dischargeCardData?.consultantName || "",
         DOA: dischargeCardData?.DOA || "",
         DOA_time: dischargeCardData?.DOA_time || "",
         DOD: dischargeCardData?.DOD || "",
         DOD_time: dischargeCardData?.DOD_time || "",
         IPDNo: dischargeCardData?.IPDNo || "",
-        sPO2: urologyData?.sPO2 || "",
+        spo2: urologyData?.spo2 || "",
         BP: dischargeCardData?.BP || "",
         pulse: urologyData?.pulse || "",
         RR: urologyData?.RR || "",
         temperature: urologyData?.temperature || "",
         surgery_type: dischargeCardDetails?.surgery_type || [],
+        surgical_procedure: dischargeCardData?.surgical_procedure || "",
         chife_complaints: dischargeCardData?.chife_complaints || "",
         past_history: dischargeCardData?.past_history || "",
         surgical_history: dischargeCardData?.surgical_history || "",
@@ -695,7 +764,7 @@ export default function DischargeCard() {
       // Update selected options and other states
       setSelectedOptions({
         prescription_type: dischargeCardData?.prescription_type || "",
-        consultantName: dischargeCardData?.consultant_name || "",
+        consultantName: dischargeCardData?.consultantName || "",
         surgery_type: dischargeCardData?.surgery_type
           ? [dischargeCardData.surgery_type]
           : [],
@@ -743,6 +812,7 @@ export default function DischargeCard() {
       setDisablePreviousButton(true);
       setIsDisabled(true);
       setAddressIsDisabled(true);
+      parseInvestigationData();
 
       console.log("Updated form data:", formData);
       console.log("Updated selected options:", selectedOptions);
@@ -832,7 +902,7 @@ export default function DischargeCard() {
       creation_timestamp: "",
       admission_reason: "",
       findings: "",
-      surgery_procedure: "",
+      surgical_procedure: "",
       assistanceDoctor: "",
       Follow_date: "",
       surgeonDoctor: "",
@@ -847,7 +917,7 @@ export default function DischargeCard() {
       dischargeTreat: [],
       investigation: "",
       IPDNo: "",
-      sPO2: "",
+      spo2: "",
       BP: "",
       pulse: "",
       RR: "",
@@ -887,6 +957,7 @@ export default function DischargeCard() {
     alert("New Record: You can now enter new data.");
     setShowPrintButton(false);
     setShowSaveButton(true);
+    parseInvestigationData(false);
   };
 
   const generateTimeSlots = () => {
@@ -1292,8 +1363,8 @@ export default function DischargeCard() {
                       <Form.Label>SPO2</Form.Label>
                       <Form.Control
                         type="text"
-                        name="sPO2"
-                        value={formData.sPO2}
+                        name="spo2"
+                        value={formData.spo2}
                         onChange={handleInputChange}
                         style={{ borderRadius: "6px" }}
                       />
@@ -1329,8 +1400,8 @@ export default function DischargeCard() {
                       <Form.Label>RR</Form.Label>
                       <Form.Control
                         type="text"
-                        name="rr"
-                        value={formData.rr}
+                        name="RR"
+                        value={formData.RR}
                         onChange={handleInputChange}
                         style={{ borderRadius: "6px" }}
                       />
@@ -1341,8 +1412,8 @@ export default function DischargeCard() {
                       <Form.Label>Temp</Form.Label>
                       <Form.Control
                         type="text"
-                        name="temp"
-                        value={formData.temp}
+                        name="temperature"
+                        value={formData.temperature}
                         onChange={handleInputChange}
                         style={{ borderRadius: "6px" }}
                       />
@@ -1383,8 +1454,8 @@ export default function DischargeCard() {
                       <Form.Label>Significant Findings</Form.Label>
                       <Form.Control
                         as="textarea"
-                        name="surgical_history"
-                        value={formData.surgical_history}
+                        name="findings"
+                        value={formData.findings}
                         onChange={handleInputChange}
                         style={{ borderRadius: "6px" }}
                       />
@@ -1410,8 +1481,8 @@ export default function DischargeCard() {
                       <Form.Label>Surgery Details</Form.Label>
                       <Form.Control
                         as="textarea"
-                        name="surgery_remarks"
-                        value={formData.surgery_remarks}
+                        name="surgical_procedure"
+                        value={formData.surgical_procedure}
                         onChange={handleInputChange}
                         style={{ borderRadius: "6px" }}
                       />
@@ -1972,7 +2043,9 @@ export default function DischargeCard() {
                         value={formData.times}
                         onChange={handleInputChange}
                       >
-                        <option value="" disabled>Times</option>
+                        <option value="" disabled>
+                          Times
+                        </option>
                         <option value="Once">Once</option>
                         <option value="Twice">Twice</option>
                         <option value="Three Times">Three Times</option>
@@ -1989,7 +2062,9 @@ export default function DischargeCard() {
                         value={formData.medicineRoute || ""}
                         onChange={handleInputChange}
                       >
-                        <option value="" disabled>Medicine Route</option>
+                        <option value="" disabled>
+                          Medicine Route
+                        </option>
                         <option value="IV">IV</option>
                         <option value="IM">IM</option>
                         <option value="ORAL">ORAL</option>

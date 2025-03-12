@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-const BASE_URL = "http://192.168.90.198:5000/api";
+const BASE_URL = "http://192.168.29.102:5000/api";
 
 export default function Personal() {
   const location = useLocation();
@@ -610,7 +610,9 @@ export default function Personal() {
                               cursor: "pointer",
                             }}
                           >
-                            <option value="PREFIX" disabled>PREFIX</option>
+                            <option value="PREFIX" disabled>
+                              PREFIX
+                            </option>
                             <option value="MR">MR</option>
                             <option value="MS">MS</option>
                             <option value="MRS">MRS</option>
@@ -715,7 +717,9 @@ export default function Personal() {
                           value={rowData.sex || rowData?.sex}
                           onChange={handleInputChange}
                         >
-                          <option value="" disabled>Select Gender</option>
+                          <option value="" disabled>
+                            Select Gender
+                          </option>
                           <option value="Male">Male</option>
                           <option value="Female">Female</option>
                         </Form.Control>
@@ -797,7 +801,9 @@ export default function Personal() {
                           value={rowData.identity}
                           onChange={handleInputChange}
                         >
-                          <option value="" disabled>Select Identity</option>
+                          <option value="" disabled>
+                            Select Identity
+                          </option>
                           <option value="Passport">Passport No</option>
                           <option value="Aadhaar">Aadhaar No</option>
                           <option value="Voter">Voter No</option>
@@ -976,7 +982,9 @@ export default function Personal() {
                           onChange={handleReferenceChange}
                           className="mb-3"
                         >
-                          <option value="" disabled>Choose Reference</option>
+                          <option value="" disabled>
+                            Choose Reference
+                          </option>
                           <option value="newspaper">Newspaper</option>
                           <option value="dr_ref">Doctor Reference</option>
                           <option value="internet">Internet</option>

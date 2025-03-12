@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.198:5000/api";
+const BASE_URL = "http://192.168.29.102:5000/api";
 
 export default function OpdPrescription() {
   const [formData, setFormData] = useState({
@@ -662,7 +662,9 @@ export default function OpdPrescription() {
                           onChange={handleInputChange}
                           disabled={isDisabled}
                         >
-                          <option value=""  disabled>Select an option</option>
+                          <option value="" disabled>
+                            Select an option
+                          </option>
                           <option value="PROCTOLOGY">PROCTOLOGY</option>
                           <option value="UROLOGY">UROLOGY</option>
                         </Form.Select>

@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.198:5000/api"; // Replace with your actual backend URL
+const BASE_URL = "http://192.168.29.102:5000/api"; // Replace with your actual backend URL
 
 const DiagnosisTabs = () => {
   const [key, setKey] = useState("piles");
@@ -67,7 +67,6 @@ const DiagnosisTabs = () => {
       id: "prolapse",
       title: "Prolapse",
       checkboxes: ["MUCOSAL", "INCOMPLETE", "PROCIDENTIA"],
-     
     },
     {
       id: "circumcision",
@@ -801,7 +800,6 @@ export default function Diagnosis() {
                           dateFormat="yyyy-MM-dd"
                           className="form-control"
                           placeholderText="Select Appointment Date"
-                     
                           showMonthDropdown
                           showYearDropdown
                           dropdownMode="select"
