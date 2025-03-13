@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-const BASE_URL = "http://192.168.29.102:5000/api";
+const BASE_URL = "http://192.168.90.170:5000/api";
 
 export default function Personal() {
   const location = useLocation();
@@ -85,40 +85,43 @@ export default function Personal() {
   // Auto-save to database when data changes
   useEffect(() => {
     console.log("Retrieved Patient ID:", patientId);
+    
 
-    const saveToDatabase = async () => {
-      // if (patientId || !rowData.patient_id) return;
+    // const saveToDatabase = async () => {
+    //   // if (patientId || !rowData.patient_id) return;
 
-      try {
-        const response = await fetch(
-          `${BASE_URL}/V1/patienttabs/editPersonal/${patientId}`,
-          {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              ...rowData,
-              selectedReference,
-              referenceDetails,
-            }),
-          }
-        );
+    //   try {
+    //     const response = await fetch(
+    //       `${BASE_URL}/V1/patienttabs/editPersonal/${patientId}`,
+    //       {
+    //         method: "PUT",
+    //         headers: { "Content-Type": "application/json" },
+    //         body: JSON.stringify({
+    //           ...rowData,
+    //           specific_work: rowData.specific_work.join(","), // Convert array to string before saving
 
-        if (!response.ok) {
-          console.error("Error saving data:", await response.text());
-        }
-      } catch (error) {
-        console.error("Error saving to database:", error);
-      }
-    };
+    //           selectedReference,
+    //           referenceDetails,
+    //         }),
+    //       }
+    //     );
 
-    // Add a debounce to prevent too many API calls
-    const timeoutId = setTimeout(() => {
-      if (Object.keys(rowData).length > 0) {
-        saveToDatabase();
-      }
-    }, 1000);
+    //     if (!response.ok) {
+    //       console.error("Error saving data:", await response.text());
+    //     }
+    //   } catch (error) {
+    //     console.error("Error saving to database:", error);
+    //   }
+    // };
 
-    return () => clearTimeout(timeoutId);
+    // // Add a debounce to prevent too many API calls
+    // const timeoutId = setTimeout(() => {
+    //   if (Object.keys(rowData).length > 0) {
+    //     saveToDatabase();
+    //   }
+    // }, 1000);
+
+    // return () => clearTimeout(timeoutId);
   }, [rowData, selectedReference, patientId]);
 
   // Add this function to calculate age from birth date
@@ -160,27 +163,43 @@ export default function Personal() {
     }
   };
 
-  const handleWorkPatternChange = (e) => {
-    const { name, checked } = e.target;
-    setWorkPatterns((prev) => ({
-      ...prev,
-      [name]: checked,
-    }));
+const handleWorkPatternChange = (e) => {
+  const { name, checked } = e.target;
+  setWorkPatterns((prev) => ({
+    ...prev,
+    [name]: checked,
+  }));
 
-    // Update rowData to include work patterns
-    setRowData((prev) => ({
-      ...prev,
-      workPatterns: {
-        ...prev.workPatterns,
-        [name]: checked,
-      },
-    }));
-  };
+  // Update rowData to include work patterns
+  setRowData((prev) => ({
+    ...prev,
+    specific_work: checked
+      ? [...(prev.specific_work || []), name] // Add to array if checked
+      : (prev.specific_work || []).filter((item) => item !== name),
+  }));
+};
 
   // Modify the handleInputChange function
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    const newValue = type === "checkbox" ? checked : value;
+const handleInputChange = (e) => {
+  const { name, value } = e.target;
+  setRowData((prev) => ({
+    ...prev,
+    [name]: value, // ✅ Ensure this updates state
+  }));
+
+  setRowData((prevState) => {
+    let identityType = prevState.identity
+      ? prevState.identity.split(",")[0]
+      : "";
+    let identityNumber = prevState.identity
+      ? prevState.identity.split(",")[1]||""
+      : "";
+
+    if (name === "identity") {
+      identityType = value; // Store the selected identity type
+    } else if (name === "identityNumber") {
+      identityNumber = value; // Store the entered identity number
+    }
 
     if (name === "birth_date") {
       const formattedDate = formatDate(value);
@@ -192,39 +211,29 @@ export default function Personal() {
       });
 
       // Update rowData to include identity and identityNumber
-      if (name === "identity") {
-        setRowData((prevState) => ({
-          ...prevState,
-          identity: `${value},${rowData.identityNumber || ""}`, // Concatenate identity and identityNumber
-        }));
-      }
+      // if (name === "identity") {
+      //   const [identityType, identityNumber] = value.split(","); // Split the value
+      //   setRowData((prevState) => ({
+      //     ...prevState,
+      //     identity: identityType, // Set identity type
+      //     identityNumber: identityNumber.trim(), // Set identity number
+      //   }));
+      // }
+      
 
       setRowData((prevState) => ({
         ...prevState,
         [name]: formattedDate,
         age: calculatedAge,
       }));
-    } else if (name === "identityNumber") {
-      setRowData((prevState) => ({
-        ...prevState,
-        identity: `${rowData.identity || ""},${
-          rowData.identityNumber || ""
-        }.trim()`, // Concatenate identity and identityNumber
-        [name]: value,
-      }));
-    } else {
-      setRowData((prevState) => ({
-        ...prevState,
-        [name]: newValue,
-      }));
     }
+    return {
+      ...prevState,
+      identity: `${identityType},${identityNumber}`, // Store them together
+    };
+  });
+};
 
-    // Log all form data after each change
-    console.log("Updated Form Data:", {
-      ...rowData,
-      [name]: newValue,
-    });
-  };
   const handleReferenceChange = (e) => {
     const selectedValue = e.target.value;
     setSelectedReference(selectedValue);
@@ -316,7 +325,13 @@ export default function Personal() {
         reference_type = null;
         ref = null;
     }
-
+    console.log("Reference Type:", reference_type);
+    console.log("Reference:", ref);
+    setRowData((prev) => ({
+      ...prev,
+      reference_type,
+      ref,
+    }));
     try {
       const response = await fetch(
         `${BASE_URL}/V1/patienttabs/editPersonal/${patientId}`,
@@ -325,13 +340,20 @@ export default function Personal() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             ...rowData,
+            specific_work: Array.isArray(rowData.specific_work)
+              ? rowData.specific_work.join(",") // Convert array to comma-separated string
+              : rowData.specific_work || "",
             reference_type, // Add the reference_type field
             selectedReference,
+            patient_type: rowData.patient_type ? 1 : 0,
             ref,
             referenceDetails,
           }),
         }
       );
+      // const responseText = await response.text(); // Read the response as text
+      //     console.log("Server Response:", responseText);
+
 
       if (response.ok) {
         alert("Patient data updated successfully");
@@ -369,14 +391,45 @@ export default function Personal() {
 
           // Check if the API response structure is correct
           if (data && data.data) {
+            const workPatternsData = data.data.specific_work
+              ? data.data.specific_work.split(",").map((item) => item.trim())
+              : [];
+
+            const updatedWorkPatterns = {
+              Sedentary: workPatternsData.includes("Sedentary"),
+              Travelling: workPatternsData.includes("Travelling"),
+              "Strenuous (Physical Activity)": workPatternsData.includes(
+                "Strenuous (Physical Activity)"
+              ),
+              "Mentally Stressful":
+                workPatternsData.includes("Mentally Stressful"),
+            };
+
+            setWorkPatterns(updatedWorkPatterns);
+
             // Ensure birth_date is properly formatted
             const formattedData = {
               ...data.data,
+                        specific_work: workPatternsData, // Store work patterns
+
               birth_date: data.data.birth_date
                 ? formatDate(data.data.birth_date)
                 : null,
             };
-            setRowData(formattedData);
+            setRowData({
+              ...formattedData,
+              specific_work: workPatternsData,
+              patient_type: data.data.patient_type || 0, // Ensures checkbox is handled
+            });
+            if (data.data.reference_type) {
+              setSelectedReference(data.data.reference_type);
+            }
+            if (data.data.ref) {
+              setReferenceDetails((prev) => ({
+                ...prev,
+                [data.data.reference_type]: data.data.ref,
+              }));
+            }
           } else {
             console.error("Unexpected data structure:", data);
           }
@@ -542,6 +595,7 @@ export default function Personal() {
                           type="text"
                           name="Uid_no"
                           value={rowData?.Uid_no}
+                          readOnly={!isEditing}
                           // readOnly
                           style={{
                             backgroundColor: "#e9ecef", // Light grey background to indicate read-only
@@ -640,7 +694,7 @@ export default function Personal() {
                             <input
                               type="text"
                               id="name"
-                              name="patientName"
+                              name="name"
                               value={rowData.name || ""}
                               placeholder="Enter Patient Name"
                               onChange={handleInputChange}
@@ -662,16 +716,21 @@ export default function Personal() {
                           }}
                         >
                           <label
-                            htmlFor="isVIP"
+                            htmlFor="patient_type"
                             className="d-flex align-items-center"
                             style={{ cursor: "pointer" }}
                           >
                             <input
                               type="checkbox"
-                              id="isVIP"
-                              name="isVIP"
-                              checked={rowData.isVIP}
-                              onChange={handleInputChange}
+                              id="patient_type"
+                              name="patient_type"
+                              checked={rowData.patient_type === 1}
+                              onChange={(e) =>
+                                setRowData((prev) => ({
+                                  ...prev,
+                                  patient_type: e.target.checked ? 1 : 0, // Updates state correctly
+                                }))
+                              }
                               style={{
                                 cursor: "pointer",
                                 marginRight: "0.5rem",
@@ -776,7 +835,10 @@ export default function Personal() {
                           name="blood_group"
                           value={rowData.blood_group || rowData?.blood_group}
                           onChange={(e) =>
-                            setRowData({ rowData, blood_group: e.target.value })
+                            setRowData((prev) => ({
+                              ...prev,
+                              blood_group: e.target.value,
+                            }))
                           }
                         >
                           <option value="">Blood Group</option>
@@ -794,20 +856,23 @@ export default function Personal() {
                     <Col md={3} className="mb-4">
                       <Form.Group className="mb-3">
                         <Form.Label>Identity</Form.Label>
-                        <Form.Control
+                        <Form.Select
                           id="identity"
-                          as="select"
                           name="identity"
-                          value={rowData.identity}
+                          value={
+                            rowData.identity
+                              ? rowData.identity.split(",")[0]
+                              : ""
+                          }
                           onChange={handleInputChange}
                         >
                           <option value="" disabled>
                             Select Identity
                           </option>
-                          <option value="Passport">Passport No</option>
-                          <option value="Aadhaar">Aadhaar No</option>
-                          <option value="Voter">Voter No</option>
-                        </Form.Control>
+                          <option value="Aadhaar No">Aadhaar No</option>
+                          <option value="Passport No">Passport No</option>
+                          <option value="Voter No">Voter No</option>
+                        </Form.Select>
                       </Form.Group>
                     </Col>
                     <Col md={3}>
@@ -816,7 +881,11 @@ export default function Personal() {
                         <Form.Control
                           type="text"
                           name="identityNumber"
-                          value={rowData.identityNumber || ""}
+                          value={
+                            rowData.identity
+                              ? rowData.identity.split(",")[1] || ""
+                              : ""
+                          }
                           onChange={handleInputChange}
                           placeholder="Enter Identity Number"
                         />
@@ -1021,6 +1090,7 @@ export default function Personal() {
                                     setRowData((prev) => ({
                                       ...prev,
                                       ref: paper, // Store the selected TV show in ref
+                                      reference_type: "newspaper", // Store "Newspaper" in reference_type
                                     }));
                                   }}
                                   checked={referenceDetails.newspaper === paper}
@@ -1055,6 +1125,7 @@ export default function Personal() {
                                     setRowData((prev) => ({
                                       ...prev,
                                       ref: source, // Store the selected TV show in ref
+                                      reference_type: "internet", // Store "Newspaper" in reference_type
                                     }));
                                   }}
                                   checked={referenceDetails.internet === source}
@@ -1201,6 +1272,7 @@ export default function Personal() {
                                     setRowData((prev) => ({
                                       ...prev,
                                       ref: media, // Store the selected TV show in ref
+                                      reference_type: "MediaRef", // Store "Newspaper" in reference_type
                                     }));
                                   }}
                                   checked={referenceDetails.MediaRef === media}
@@ -1234,6 +1306,7 @@ export default function Personal() {
                                     setRowData((prev) => ({
                                       ...prev,
                                       ref: show, // Store the selected TV show in ref
+                                      reference_type: "TVShow", // Store "Newspaper" in reference_type
                                     }));
                                   }}
                                   checked={referenceDetails.TVShow === show}
@@ -1633,7 +1706,8 @@ export default function Personal() {
                   {/* Show update button only when editing */}
                   {isEditing && (
                     <button
-                      type="submit"
+                      type="button"
+                      onClick={handleSubmit}
                       className="btn btn-primary"
                       style={{ marginTop: "30px", float: "right" }}
                     >

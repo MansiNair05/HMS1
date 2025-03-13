@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.29.102:5000/api"; // Update with your backend API base URL
+const BASE_URL = "http://192.168.90.170:5000/api"; // Update with your backend API base URL
 
 export default function DischargeCard() {
   const [discharge, setDischarge] = useState([]);

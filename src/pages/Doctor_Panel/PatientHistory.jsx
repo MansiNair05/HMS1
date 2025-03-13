@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.29.102:5000/api";
+const BASE_URL = "http://192.168.90.170:5000/api";
 
 const SurgeryTabs = ({
   selectedOptions,
@@ -216,7 +216,6 @@ export default function PatientHistory() {
   const [patientId, setPatientId] = useState(
     localStorage.getItem("selectedPatientId")
   );
-  const [showTextareas, setShowTextareas] = useState({});
   const [selectedFile, setSelectedFile] = useState(null);
   const [formData, setFormData] = useState({
     patient_date: "",
