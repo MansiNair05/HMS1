@@ -206,6 +206,30 @@ const SurgeryTabs = ({
               </Col>
             </Row>
           )}
+
+          {tab.textareas && Array.isArray(tab.textareas) && (
+            <Row style={{ marginTop: "20px" }}>
+              {tab.textareas.map((textarea, index) => (
+                <Col md={6} key={index}>
+                  <Form.Control
+                    as="textarea"
+                    name={textarea.name}
+                    placeholder={textarea.placeholder}
+                    value={formData.surgeryTabs[textarea.name] || ""}
+                    onChange={handleInputChange}
+                    disabled={isDisabled}
+                    style={{
+                      width: "100%",
+                      minHeight: "80px",
+                      padding: "10px",
+                      borderRadius: "4px",
+                      border: "1px solid #ced4da",
+                    }}
+                  />
+                </Col>
+              ))}
+            </Row>
+          )}
         </Tab>
       ))}
     </Tabs>
@@ -286,10 +310,11 @@ export default function PatientHistory() {
       other:"",
     },
     knowncaseof: "",
-    advice: {
+    medical_mx: {
       mrd: false,
       manoBf: false,
       coloGastro: false,
+      mcdpa: false,
       diet: false,
       b: false,
       d: false,
@@ -418,9 +443,15 @@ export default function PatientHistory() {
               vitB: patientData.investigation?.vitB || false,
               other: patientData.investigation?.other || "",
             },
-            advice: {
-              ...prevState.advice,
-              ...(patientData.advice || {}),
+            medical_mx: {
+              ...prevState.medical_mx,
+              mrd: patientData.medical_mx?.mrd || false,
+              manoBf: patientData.medical_mx?.manoBf || false,
+              coloGastro: patientData.medical_mx?.coloGastro || false,
+              mcdpa: patientData.medical_mx?.mcdpa || false,
+              diet: patientData.medical_mx?.diet || false,
+              b: patientData.medical_mx?.b || false,
+              d: patientData.medical_mx?.d || false,
             },
             knowncaseof: {
               ...prevState.knowncaseof,
@@ -576,6 +607,15 @@ export default function PatientHistory() {
       if (formData.investigation.other)
         investigationArray.push(formData.investigation.other);
 
+      const adviceArray =[];
+      if (formData.medical_mx.mrd) adviceArray.push("MRD");
+      if (formData.medical_mx.manoBf) adviceArray.push("Mano/BF");
+      if (formData.medical_mx.coloGastro) adviceArray.push("Colo/Gastro");
+      if (formData.medical_mx.mcdpa) adviceArray.push("MCDPA");
+      if (formData.medical_mx.diet) adviceArray.push("Diet");
+      if (formData.medical_mx.b) adviceArray.push("B12");
+      if (formData.medical_mx.d) adviceArray.push("D3");
+
       const formattedData = {
         ...formData,
         general_history: JSON.stringify(formData.general_history),
@@ -587,7 +627,7 @@ export default function PatientHistory() {
         past_history: pastHistoryArray.join(","), // Join the array into a string
 
         family_history: familyHistoryArray.join(","), // Join the array into a string
-        advice: JSON.stringify(formData.advice),
+        medical_mx: adviceArray.join(","),
         name: selectedOptions.name,
         patientId,
       };
@@ -668,6 +708,11 @@ const pastHistoryArray = pastHistoryString
     const ongoingMedicineArray = ongoingMedicineString
       .split(",")
       .map((item) => item.trim());
+
+          const AdviceString = patientHistory.medical_mx || "";
+          const AdviceArray = AdviceString
+            .split(",")
+            .map((item) => item.trim());
 
     const investigationString = patientHistory.investigation || "";
     const IknownConditions = [
@@ -754,6 +799,7 @@ const pastHistoryArray = pastHistoryString
           ...prevData.surgeryTabs,
           piles_duration: patientHistory.piles_duration || "",
           fistula_duration: patientHistory.fistula_duration || "",
+          ods_duration: patientHistory.ods_duration || "",
           hernia_duration: patientHistory.hernia_duration || "",
           varicose_duration: patientHistory.varicose_duration || "",
         },
@@ -794,14 +840,14 @@ const pastHistoryArray = pastHistoryString
             .join(", "),
         },
         knowncaseof: patientHistory.knowncaseof || "",
-        advice: {
-          ...prevData.advice,
-          mrd: patientHistory.mrd || false,
-          manoBf: patientHistory.manoBf || false,
-          coloGastro: patientHistory.coloGastro || false,
-          diet: patientHistory.diet || false,
-          b: patientHistory.b || false,
-          d: patientHistory.d || false,
+        medical_mx: {
+          mrd: AdviceArray.includes("MRD"),
+          manoBf: AdviceArray.includes("Mano/BF"),
+          coloGastro: AdviceArray.includes("Colo/Gastro"),
+          mcdpa: AdviceArray.includes("MCDPA"),
+          diet: AdviceArray.includes("Diet"),
+          b: AdviceArray.includes("B12"),
+          d: AdviceArray.includes("D3"),
         },
         medications: patientHistory.medications || [
           { id: 1, name: "", indication: "", since: "" },
@@ -884,12 +930,13 @@ const pastHistoryArray = pastHistoryString
       },
       knowncaseof: "",
       advice: {
-        mrd: false,
-        manoBf: false,
-        coloGastro: false,
-        diet: false,
-        b: false,
-        d: false,
+        mrd: "",
+        manoBf: "",
+        coloGastro: "",
+        mcdpa:"",
+        diet: "",
+        b: "",
+        d: "",
       },
       medications: [
         { id: 1, name: "", indication: "", since: "" },
@@ -2034,30 +2081,39 @@ const pastHistoryArray = pastHistoryString
                     <Col>
                       <Form.Label>Advice:</Form.Label>
                       <Row>
+                      <div className="d-flex flex-wrap">
                         {[
-                          { label: "MRD", name: "mrd" },
-                          { label: "Mano/BF", name: "manoBf" },
-                          { label: "Colo/Gastro", name: "coloGastro" },
-                          { label: "MCDPA", name: "mcdpa" },
-                          { label: "Diet", name: "diet" },
-                          { label: "B12", name: "b" },
-                          { label: "D3", name: "d" },
+                          { label: "MRD", name: "medical_mx.mrd" },
+                          { label: "Mano/BF", name: "medical_mx.manoBf" },
+                          {
+                            label: "Colo/Gastro",
+                            name: "medical_mx.coloGastro",
+                          },
+                          { label: "MCDPA", name: "medical_mx.mcdpa" },
+                          { label: "Diet", name: "medical_mx.diet" },
+                          { label: "B12", name: "medical_mx.b" },
+                          { label: "D3", name: "medical_mx.d" },
                         ].map(({ label, name }) => (
-                          <Col key={name}>
-                            <label className="d-flex align-items-center">
-                              <Form.Check
-                                inline
-                                type="checkbox"
-                                name={`advice.${name}`}
-                                checked={formData.advice?.[name] || false}
-                                onChange={handleCheckboxChange}
-                                id={`advice_${name}`}
-                                style={{ marginRight: "5px" }}
-                              />
-                              {label}
-                            </label>
+                          <Col
+                            md={1}
+                            key={name}
+                            className="d-flex align-items-center"
+                          >
+                            <Form.Check
+                              inline
+                              type="checkbox"
+                              name={name}
+                              checked={
+                                formData.medical_mx[name.split(".")[1]] || false
+                              }
+                              onChange={handleCheckboxChange}
+                              id={name}
+                              style={{ marginRight: "5px" }}
+                            />
+                            {label}
                           </Col>
                         ))}
+                      </div>
                       </Row>
                     </Col>
                   </Row>
