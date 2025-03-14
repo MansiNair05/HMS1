@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-const BASE_URL = "http://192.168.90.170:5000/api";
+const BASE_URL = "http://192.168.29.115:5000/api";
 
 export default function Personal() {
   const location = useLocation();
@@ -85,7 +85,6 @@ export default function Personal() {
   // Auto-save to database when data changes
   useEffect(() => {
     console.log("Retrieved Patient ID:", patientId);
-    
 
     // const saveToDatabase = async () => {
     //   // if (patientId || !rowData.patient_id) return;
@@ -163,76 +162,75 @@ export default function Personal() {
     }
   };
 
-const handleWorkPatternChange = (e) => {
-  const { name, checked } = e.target;
-  setWorkPatterns((prev) => ({
-    ...prev,
-    [name]: checked,
-  }));
+  const handleWorkPatternChange = (e) => {
+    const { name, checked } = e.target;
+    setWorkPatterns((prev) => ({
+      ...prev,
+      [name]: checked,
+    }));
 
-  // Update rowData to include work patterns
-  setRowData((prev) => ({
-    ...prev,
-    specific_work: checked
-      ? [...(prev.specific_work || []), name] // Add to array if checked
-      : (prev.specific_work || []).filter((item) => item !== name),
-  }));
-};
+    // Update rowData to include work patterns
+    setRowData((prev) => ({
+      ...prev,
+      specific_work: checked
+        ? [...(prev.specific_work || []), name] // Add to array if checked
+        : (prev.specific_work || []).filter((item) => item !== name),
+    }));
+  };
 
   // Modify the handleInputChange function
-const handleInputChange = (e) => {
-  const { name, value } = e.target;
-  setRowData((prev) => ({
-    ...prev,
-    [name]: value, // ✅ Ensure this updates state
-  }));
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setRowData((prev) => ({
+      ...prev,
+      [name]: value, // ✅ Ensure this updates state
+    }));
 
-  setRowData((prevState) => {
-    let identityType = prevState.identity
-      ? prevState.identity.split(",")[0]
-      : "";
-    let identityNumber = prevState.identity
-      ? prevState.identity.split(",")[1]||""
-      : "";
+    setRowData((prevState) => {
+      let identityType = prevState.identity
+        ? prevState.identity.split(",")[0]
+        : "";
+      let identityNumber = prevState.identity
+        ? prevState.identity.split(",")[1] || ""
+        : "";
 
-    if (name === "identity") {
-      identityType = value; // Store the selected identity type
-    } else if (name === "identityNumber") {
-      identityNumber = value; // Store the entered identity number
-    }
+      if (name === "identity") {
+        identityType = value; // Store the selected identity type
+      } else if (name === "identityNumber") {
+        identityNumber = value; // Store the entered identity number
+      }
 
-    if (name === "birth_date") {
-      const formattedDate = formatDate(value);
-      const calculatedAge = calculateAge(formattedDate);
-      console.log("Birth Date Changed:", {
-        originalValue: value,
-        formattedDate: formattedDate,
-        calculatedAge: calculatedAge,
-      });
+      if (name === "birth_date") {
+        const formattedDate = formatDate(value);
+        const calculatedAge = calculateAge(formattedDate);
+        console.log("Birth Date Changed:", {
+          originalValue: value,
+          formattedDate: formattedDate,
+          calculatedAge: calculatedAge,
+        });
 
-      // Update rowData to include identity and identityNumber
-      // if (name === "identity") {
-      //   const [identityType, identityNumber] = value.split(","); // Split the value
-      //   setRowData((prevState) => ({
-      //     ...prevState,
-      //     identity: identityType, // Set identity type
-      //     identityNumber: identityNumber.trim(), // Set identity number
-      //   }));
-      // }
-      
+        // Update rowData to include identity and identityNumber
+        // if (name === "identity") {
+        //   const [identityType, identityNumber] = value.split(","); // Split the value
+        //   setRowData((prevState) => ({
+        //     ...prevState,
+        //     identity: identityType, // Set identity type
+        //     identityNumber: identityNumber.trim(), // Set identity number
+        //   }));
+        // }
 
-      setRowData((prevState) => ({
+        setRowData((prevState) => ({
+          ...prevState,
+          [name]: formattedDate,
+          age: calculatedAge,
+        }));
+      }
+      return {
         ...prevState,
-        [name]: formattedDate,
-        age: calculatedAge,
-      }));
-    }
-    return {
-      ...prevState,
-      identity: `${identityType},${identityNumber}`, // Store them together
-    };
-  });
-};
+        identity: `${identityType},${identityNumber}`, // Store them together
+      };
+    });
+  };
 
   const handleReferenceChange = (e) => {
     const selectedValue = e.target.value;
@@ -354,7 +352,6 @@ const handleInputChange = (e) => {
       // const responseText = await response.text(); // Read the response as text
       //     console.log("Server Response:", responseText);
 
-
       if (response.ok) {
         alert("Patient data updated successfully");
         setIsEditing(false); // Exit edit mode after successful update
@@ -410,7 +407,7 @@ const handleInputChange = (e) => {
             // Ensure birth_date is properly formatted
             const formattedData = {
               ...data.data,
-                        specific_work: workPatternsData, // Store work patterns
+              specific_work: workPatternsData, // Store work patterns
 
               birth_date: data.data.birth_date
                 ? formatDate(data.data.birth_date)

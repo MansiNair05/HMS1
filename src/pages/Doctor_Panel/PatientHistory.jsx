@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.170:5000/api";
+const BASE_URL = "http://192.168.29.115:5000/api";
 
 const SurgeryTabs = ({
   selectedOptions,
@@ -221,7 +221,7 @@ export default function PatientHistory() {
     patient_date: "",
     height: "",
     weight: "",
-    painScale: "",
+    painscale: "",
     vitalSigns: {
       BP: "",
       Pulse: "",
@@ -250,10 +250,11 @@ export default function PatientHistory() {
       other: "",
     },
     past_history: {
-      dm: "",
-      htn: "",
-      brAsthma: "",
-      thyroid: "",
+      dm: false,
+      htn: false,
+      brAsthma: false,
+      thyroid: false,
+      otherDetails:"",
     },
     habits: {
       smoking: "",
@@ -378,7 +379,11 @@ export default function PatientHistory() {
             },
             past_history: {
               ...prevState.past_history,
-              ...(patientData.past_history || {}),
+              dm: patientData.past_history?.dm || false,
+              htn: patientData.past_history?.htn || false,
+              brAsthma: patientData.past_history?.brAsthma || false,
+              thyroid: patientData.past_history?.thyroid || false,
+              otherDetails: patientData.past_history?.otherDetails || "",
             },
             habits: {
               ...prevState.habits,
@@ -509,6 +514,14 @@ export default function PatientHistory() {
 
     try {
       console.log("Form data before saving:", formData);
+       const pastHistoryArray = [];
+       if (formData.past_history.dm) pastHistoryArray.push("DM");
+       if (formData.past_history.htn) pastHistoryArray.push("HTN");
+       if (formData.past_history.brAsthma) pastHistoryArray.push("Br.Asthma");
+       if (formData.past_history.thyroid) pastHistoryArray.push("Thyroid");
+       if (formData.past_history.otherDetails)
+         pastHistoryArray.push(formData.past_history.otherDetails);
+
       const formattedData = {
         ...formData,
         general_history: JSON.stringify(formData.general_history),
@@ -518,6 +531,8 @@ export default function PatientHistory() {
         investigation: JSON.stringify(formData.investigation),
         vitalSigns: JSON.stringify(formData.vitalSigns),
         systematicExamination: JSON.stringify(formData.systematicExamination),
+        past_history: pastHistoryArray.join(","), // Join the array into a string
+
         family_history: JSON.stringify(formData.family_history),
         advice: JSON.stringify(formData.advice),
         name: selectedOptions.name,
@@ -582,14 +597,19 @@ export default function PatientHistory() {
       setPreviousRecordDate(
         patientHistory.date_patientHistory || prevData.date_patientHistory || ""
       );
-      const symptomsArray = patientHistory.symptoms;
+      // const symptomsArray = patientHistory.symptoms;
+const pastHistoryString = patientHistory.past_history || "";
+const knownConditions = ["DM", "HTN", "Br.Asthma", "Thyroid"];
+const pastHistoryArray = pastHistoryString
+  .split(",")
+  .map((item) => item.trim());
 
       setFormData((prevData) => ({
         ...prevData,
         patient_date: patientHistory.patient_date || "",
         height: patientHistory.height || "",
         weight: patientHistory.weight || "",
-        painScale: patientHistory.painScale || "",
+        painscale: patientHistory.painscale || "",
         vitalSigns: {
           ...prevData.vitalSigns,
           BP: patientHistory.BP || "",
@@ -613,15 +633,15 @@ export default function PatientHistory() {
           gas: patientHistory.gas || false,
           bloating: patientHistory.bloating || false,
         },
-        symptoms: {
-          ...prevData.symptoms,
-          pusDischarge: symptomsArray.includes("Pus Discharge"),
-          boil: symptomsArray.includes("Boil"),
-          wateryDischarge: symptomsArray.includes("Watery Discharge"),
-          swellingAnalRegion: symptomsArray.includes(
-            "Swelling near anal region"
-          ),
-        },
+        // symptoms: {
+        //   ...prevData.symptoms,
+        //   pusDischarge: symptomsArray.includes("Pus Discharge"),
+        //   boil: symptomsArray.includes("Boil"),
+        //   wateryDischarge: symptomsArray.includes("Watery Discharge"),
+        //   swellingAnalRegion: symptomsArray.includes(
+        //     "Swelling near anal region"
+        //   ),
+        // },
         family_history: {
           ...prevData.family_history,
           piles: Boolean(patientHistory.family_history?.includes("Piles")),
@@ -636,11 +656,13 @@ export default function PatientHistory() {
           other: patientHistory.family_history || "",
         },
         past_history: {
-          ...prevData.past_history,
-          dm: patientHistory.dm || "",
-          htn: patientHistory.htn || "",
-          brAsthma: patientHistory.brAsthma || "",
-          thyroid: patientHistory.thyroid || "",
+          dm: pastHistoryArray.includes("DM"),
+          htn: pastHistoryArray.includes("HTN"),
+          brAsthma: pastHistoryArray.includes("Br.Asthma"),
+          thyroid: pastHistoryArray.includes("Thyroid"),
+          otherDetails: pastHistoryArray
+            .filter((condition) => !knownConditions.includes(condition))
+            .join(", "), // Set otherDetails
         },
         habits: {
           ...prevData.habits,
@@ -708,7 +730,8 @@ export default function PatientHistory() {
           { id: 1, name: "", indication: "", since: "" },
           { id: 2, name: "", indication: "", since: "" },
         ],
-      }));
+      })),
+        [formData.past_history];
 
       setSelectedOptions(patientHistory.selectedOptions || []);
       setShowEditButton(true);
@@ -732,7 +755,7 @@ export default function PatientHistory() {
       patient_date: new Date().toISOString().split("T")[0],
       height: "",
       weight: "",
-      painScale: "",
+      painscale: "",
       vitalSigns: { BP: "", Pulse: "", RR: "" },
       systematicExamination: { RS: "", CVS: "", CNS: "", PA: "" },
       general_history: {
@@ -983,8 +1006,8 @@ export default function PatientHistory() {
                         <Form.Label>Pain Score:</Form.Label>
                         <Form.Select
                           as="select"
-                          name="painScale"
-                          value={formData.painScale}
+                          name="painscale"
+                          value={formData.painscale}
                           onChange={handleInputChange}
                         >
                           <option value="" disabled>
@@ -1288,7 +1311,7 @@ export default function PatientHistory() {
                             inline
                             type="checkbox"
                             name="past_history.dm"
-                            checked={formData.past_history.dm}
+                            checked={formData.past_history.dm|| false}
                             onChange={handleCheckboxChange}
                             id="past_history_dm"
                             style={{ marginRight: "5px" }}
@@ -1305,7 +1328,7 @@ export default function PatientHistory() {
                             inline
                             type="checkbox"
                             name="past_history.htn"
-                            checked={formData.past_history.htn}
+                            checked={formData.past_history.htn||false}
                             onChange={handleCheckboxChange}
                             id="past_history_htn"
                             style={{ marginRight: "5px" }}
@@ -1322,7 +1345,7 @@ export default function PatientHistory() {
                             inline
                             type="checkbox"
                             name="past_history.brAsthma"
-                            checked={formData.past_history.brAsthma}
+                            checked={formData.past_history.brAsthma||false}
                             onChange={handleCheckboxChange}
                             id="past_history_brAsthma"
                             style={{ marginRight: "5px" }}
@@ -1339,7 +1362,7 @@ export default function PatientHistory() {
                             inline
                             type="checkbox"
                             name="past_history.thyroid"
-                            checked={formData.past_history.thyroid}
+                            checked={formData.past_history.thyroid|| false}
                             onChange={handleCheckboxChange}
                             id="past_history_thyroid"
                             style={{ marginRight: "5px" }}
