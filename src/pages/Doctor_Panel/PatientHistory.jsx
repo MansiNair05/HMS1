@@ -270,6 +270,7 @@ export default function PatientHistory() {
       Clopidogrel: false,
       aspirin: false,
       warfarin: false,
+      other:"",
     },
     otherongoingmedi: "",
     investigation: {
@@ -282,6 +283,7 @@ export default function PatientHistory() {
       hbsag: false,
       srCreatinine: false,
       vitB: false,
+      other:"",
     },
     knowncaseof: "",
     advice: {
@@ -375,7 +377,12 @@ export default function PatientHistory() {
             },
             family_history: {
               ...prevState.family_history,
-              ...(patientData.family_history || {}),
+              piles: patientData.family_history?.piles || false,
+              constipation: patientData.family_history?.constipation || false,
+              dm: patientData.family_history?.dm || false,
+              htn: patientData.family_history?.htn || false,
+              heartDisease: patientData.family_history?.heartDisease || false,
+              other: patientData.family_history?.other || "",
             },
             past_history: {
               ...prevState.past_history,
@@ -391,11 +398,25 @@ export default function PatientHistory() {
             },
             ongoing_medicines: {
               ...prevState.ongoing_medicines,
-              ...(patientData.ongoing_medicines || {}),
+              clopidogrel: patientData.ongoing_medicines?.clopidogrel || false,
+              aspirin: patientData.ongoing_medicines?.aspirin || false,
+              warfarin: patientData.ongoing_medicines?.warfarin || false,
+              other: patientData.ongoing_medicines?.other || "",
             },
             investigation: {
               ...prevState.investigation,
-              ...(patientData.investigation || {}),
+              hb: patientData.investigation?.hb || false,
+              bslr: patientData.investigation?.bslr || false,
+              bleedingTimeBt:
+                patientData.investigation?.bleedingTimeBt || false,
+              clottingTimeBt:
+                patientData.investigation?.clottingTimeBt || false,
+              ptInr: patientData.investigation?.ptInr || false,
+              hiv: patientData.investigation?.hiv || false,
+              hbsag: patientData.investigation?.hbsag || false,
+              srCreatinine: patientData.investigation?.srCreatinine || false,
+              vitB: patientData.investigation?.vitB || false,
+              other: patientData.investigation?.other || "",
             },
             advice: {
               ...prevState.advice,
@@ -451,20 +472,20 @@ export default function PatientHistory() {
   const handleInputChange = (e, id, field) => {
     const { name, value, type, checked } = e.target;
 
-    if (name === "family_history") {
-      setFormData((prevState) => ({
-        ...prevState,
-        family_history: {
-          ...prevState.family_history,
-          other: value,
-        },
-      }));
-    } else {
-      setFormData((prevState) => ({
-        ...prevState,
-        [name]: type === "checkbox" ? checked : value,
-      }));
-    }
+    // if (name === "family_history") {
+    //   setFormData((prevState) => ({
+    //     ...prevState,
+    //     family_history: {
+    //       ...prevState.family_history,
+    //       other: value,
+    //     },
+    //   }));
+    // } else {
+    //   setFormData((prevState) => ({
+    //     ...prevState,
+    //     [name]: type === "checkbox" ? checked : value,
+    //   }));
+    // }
     if (id && field) {
       const updatedMedications = formData.medications.map((med) =>
         med.id === id ? { ...med, [field]: value } : med
@@ -485,15 +506,16 @@ export default function PatientHistory() {
     const [category, field] = name.split(".");
     const [parent, child] = name.split(".");
 
-    if (name === "family_history") {
-      setFormData((prevState) => ({
-        ...prevState,
-        family_history: {
-          ...prevState.family_history,
-          [child]: checked,
-        },
-      }));
-    } else if (child) {
+    // if (name === "family_history") {
+    //   setFormData((prevState) => ({
+    //     ...prevState,
+    //     family_history: {
+    //       ...prevState.family_history,
+    //       [child]: checked,
+    //     },
+    //   }));
+    // } else
+     if (child) {
       setFormData({
         ...formData,
         [parent]: { ...formData[parent], [child]: checked },
@@ -522,18 +544,49 @@ export default function PatientHistory() {
        if (formData.past_history.otherDetails)
          pastHistoryArray.push(formData.past_history.otherDetails);
 
+      const familyHistoryArray = [];
+      if (formData.family_history.piles) familyHistoryArray.push("Piles");
+      if (formData.family_history.constipation)
+        familyHistoryArray.push("Constipation");
+      if (formData.family_history.dm) familyHistoryArray.push("DM");
+      if (formData.family_history.htn) familyHistoryArray.push("HTN");
+      if (formData.family_history.heartDisease)
+        familyHistoryArray.push("Heart Disease");
+      if (formData.family_history.other)
+        familyHistoryArray.push(formData.family_history.other);
+
+      const ongoingMedcineArray = [];
+      if (formData.ongoing_medicines.clopidogrel) ongoingMedcineArray.push("Clopidogrel");
+      if (formData.ongoing_medicines.aspirin) ongoingMedcineArray.push("Aspirin");
+      if (formData.ongoing_medicines.warfarin) ongoingMedcineArray.push("Warfarin");
+      if (formData.ongoing_medicines.other)
+        ongoingMedcineArray.push(formData.ongoing_medicines.other);
+
+      const investigationArray = [];
+      if (formData.investigation.hb) investigationArray.push("HB")
+      if (formData.investigation.bslr) investigationArray.push("BSL-R");
+      if (formData.investigation.bleedingTimeBt) investigationArray.push("BT");
+      if (formData.investigation.clottingTimeBt) investigationArray.push("CT");
+      if (formData.investigation.ptInr) investigationArray.push("PT INR");
+      if (formData.investigation.hiv) investigationArray.push("HIV");
+      if (formData.investigation.hbsag) investigationArray.push("Hbsag");
+      if (formData.investigation.srCreatinine)
+        investigationArray.push("SR.Creatinine");
+      if (formData.investigation.vitB) investigationArray.push("Vit B12");
+      if (formData.investigation.other)
+        investigationArray.push(formData.investigation.other);
+
       const formattedData = {
         ...formData,
         general_history: JSON.stringify(formData.general_history),
-        past_history: JSON.stringify(formData.past_history),
         habits: JSON.stringify(formData.habits),
-        ongoing_medicines: JSON.stringify(formData.ongoing_medicines),
-        investigation: JSON.stringify(formData.investigation),
+        ongoing_medicines: ongoingMedcineArray.join(","), // Join the array into a string
+        investigation: investigationArray.join(","),
         vitalSigns: JSON.stringify(formData.vitalSigns),
         systematicExamination: JSON.stringify(formData.systematicExamination),
         past_history: pastHistoryArray.join(","), // Join the array into a string
 
-        family_history: JSON.stringify(formData.family_history),
+        family_history: familyHistoryArray.join(","), // Join the array into a string
         advice: JSON.stringify(formData.advice),
         name: selectedOptions.name,
         patientId,
@@ -604,6 +657,35 @@ const pastHistoryArray = pastHistoryString
   .split(",")
   .map((item) => item.trim());
 
+  const familyHistoryString = patientHistory.family_history || "";
+  const FknownConditions = ["Piles", "Constipation", "DM", "HTN", "Heart Disease"];
+  const familyHistoryArray = familyHistoryString
+    .split(",")
+    .map((item) => item.trim());
+
+    const ongoingMedicineString = patientHistory.ongoing_medicines || "";
+    const MknownConditions= ["Clopidogrel", "Aspirin", "Warfarin"];
+    const ongoingMedicineArray = ongoingMedicineString
+      .split(",")
+      .map((item) => item.trim());
+
+    const investigationString = patientHistory.investigation || "";
+    const IknownConditions = [
+      "HB",
+      "BSL-R",
+      "BT",
+      "CT",
+      "PT INR",
+      "HIV",
+      "Hbsag",
+      "SR.Creatinine",
+      "Vit B12",
+    ];
+    const investigationArray = investigationString
+      .split(",")
+      .map((item) => item.trim());
+
+
       setFormData((prevData) => ({
         ...prevData,
         patient_date: patientHistory.patient_date || "",
@@ -643,17 +725,14 @@ const pastHistoryArray = pastHistoryString
         //   ),
         // },
         family_history: {
-          ...prevData.family_history,
-          piles: Boolean(patientHistory.family_history?.includes("Piles")),
-          constipation: Boolean(
-            patientHistory.family_history?.includes("Constipation")
-          ),
-          dm: Boolean(patientHistory.family_history?.includes("DM")),
-          htn: Boolean(patientHistory.family_history?.includes("HTN")),
-          heartDisease: Boolean(
-            patientHistory.family_history?.includes("Heart Disease")
-          ),
-          other: patientHistory.family_history || "",
+          piles: familyHistoryArray.includes("Piles"),
+          constipation: familyHistoryArray.includes("Constipation"),
+          dm: familyHistoryArray.includes("DM"),
+          htn: familyHistoryArray.includes("HTN"),
+          heartDisease: familyHistoryArray.includes("Heart Disease"),
+          other: familyHistoryArray
+            .filter((condition) => !FknownConditions.includes(condition))
+            .join(", "), // Set otherDetails
         },
         past_history: {
           dm: pastHistoryArray.includes("DM"),
@@ -693,29 +772,27 @@ const pastHistoryArray = pastHistoryString
         anyOtherComplaints: patientHistory.anyOtherComplaints || "",
         presentComplaints: patientHistory.presentComplaints || "",
         ongoing_medicines: {
-          ...prevData.ongoing_medicines,
-          Clopidogrel: Boolean(
-            patientHistory.medication_on?.includes("Clopidogrel")
-          ),
-          aspirin: Boolean(patientHistory.medication_on?.includes("Aspirin")),
-          warfarin: Boolean(patientHistory.medication_on?.includes("Warfarin")),
+          clopidogrel: ongoingMedicineArray.includes("Clopidogrel"),
+          aspirin: ongoingMedicineArray.includes("Aspirin"),
+          warfarin: ongoingMedicineArray.includes("Warfarin"),
+          other: ongoingMedicineArray
+            .filter((condition) => !MknownConditions.includes(condition))
+            .join(", "), // Set otherDetails
         },
-        otherongoingmedi: patientHistory.otherongoingmedi || "",
         investigation: {
-          ...prevData.investigation,
-          hb: Boolean(patientHistory.investigation?.includes("HB")),
-          bslr: Boolean(patientHistory.investigation?.includes("BSLR")),
-          bleedingTimeBt: Boolean(patientHistory.investigation?.includes("BT")),
-          clottingTimeBt: Boolean(patientHistory.investigation?.includes("CT")),
-          ptInr: Boolean(patientHistory.investigation?.includes("PT/INR")),
-          hiv: Boolean(patientHistory.investigation?.includes("HIV")),
-          hbsag: Boolean(patientHistory.investigation?.includes("HBsAg")),
-          srCreatinine: Boolean(
-            patientHistory.investigation?.includes("Sr. Creatinine")
-          ),
-          vitB: Boolean(patientHistory.investigation?.includes("Vit B12")),
+          hb: investigationArray?.includes("HB"),
+          bslr: investigationArray?.includes("BSL-R"),
+          bleedingTimeBt: investigationArray?.includes("BT"),
+          clottingTimeBt: investigationArray?.includes("CT"),
+          ptInr: investigationArray?.includes("PT INR"),
+          hiv: investigationArray?.includes("HIV"),
+          hbsag: investigationArray?.includes("Hbsag"),
+          srCreatinine: investigationArray?.includes("Sr.Creatinine"),
+          vitB: investigationArray?.includes("Vit B12"),
+          other: investigationArray.
+          filter((condition) => !IknownConditions.includes(condition))
+            .join(", "),
         },
-        investigationComments: patientHistory.investigationComments || {},
         knowncaseof: patientHistory.knowncaseof || "",
         advice: {
           ...prevData.advice,
@@ -730,8 +807,7 @@ const pastHistoryArray = pastHistoryString
           { id: 1, name: "", indication: "", since: "" },
           { id: 2, name: "", indication: "", since: "" },
         ],
-      })),
-        [formData.past_history];
+      }));
 
       setSelectedOptions(patientHistory.selectedOptions || []);
       setShowEditButton(true);
@@ -767,12 +843,11 @@ const pastHistoryArray = pastHistoryString
         bloating: false,
       },
       family_history: {
-        piles: false,
-        constipation: false,
-        dm: false,
-        htn: false,
-        heartDisease: false,
-        other: "",
+        piles:"",
+        constipation:"",
+        dm: "",
+        htn: "",
+        heartDisease: ""
       },
       past_history: { dm: "", htn: "", brAsthma: "", thyroid: "" },
       habits: { smoking: "", alcohol: "", tobacco: "", drugs: "" },
@@ -791,21 +866,21 @@ const pastHistoryArray = pastHistoryString
       anyOtherComplaints: "",
       presentComplaints: "",
       ongoing_medicines: {
-        Clopidogrel: false,
-        aspirin: false,
-        warfarin: false,
+        Clopidogrel: "",
+        aspirin: "",
+        warfarin: ""
       },
       otherongoingmedi: "",
       investigation: {
-        hb: false,
-        bslr: false,
-        bleedingTimeBt: false,
-        clottingTimeBt: false,
-        ptInr: false,
-        hiv: false,
-        hbsag: false,
-        srCreatinine: false,
-        vitB: false,
+        hb: "",
+        bslr: "",
+        bleedingTimeBt: "",
+        clottingTimeBt: "",
+        ptInr: "",
+        hiv: "",
+        hbsag: "",
+        srCreatinine: "",
+        vitB: ""
       },
       knowncaseof: "",
       advice: {
@@ -1198,53 +1273,115 @@ const pastHistoryArray = pastHistoryString
                   </Row>
                   {/* Row 5: Family History */}
                   <Row className="mb-3">
+                    <Form.Label>Family History:</Form.Label>
+
                     <Col>
                       <Form.Group>
-                        <Form.Label>Family History:</Form.Label>
-                        <div className="d-flex flex-wrap">
-                          {[
-                            { label: "Piles", name: "family_history.piles" },
-                            {
-                              label: "Constipation",
-                              name: "family_history.constipation",
-                            },
-                            { label: "DM", name: "family_history.dm" },
-                            { label: "HTN", name: "family_history.htn" },
-                            {
-                              label: "Heart Disease",
-                              name: "family_history.heartDisease",
-                            },
-                          ].map(({ label, name }) => (
-                            <label
-                              key={name}
-                              className="d-flex align-items-center me-3"
-                            >
-                              <Form.Check
-                                inline
-                                name={name}
-                                checked={
-                                  formData.family_history?.[
-                                    name.split(".")[1]
-                                  ] || false
-                                }
-                                onChange={handleCheckboxChange}
-                                id={name}
-                                style={{ marginRight: "5px" }}
-                              />
-                              {label}
-                            </label>
-                          ))}
-                        </div>
-                        <Col xs={7} className="mt-2">
-                          <Form.Control
-                            as="textarea"
-                            placeholder="Other"
-                            name="family_history.other"
-                            value={formData.family_history?.other || ""}
-                            onChange={handleInputChange}
+                        <label className="d-flex align-items-center">
+                          <Form.Check
+                            inline
+                            type="checkbox"
+                            name="family_history.piles"
+                            checked={formData.family_history.piles || false}
+                            onChange={handleCheckboxChange}
+                            id="family_history_piles"
+                            style={{ marginRight: "5px" }}
                           />
-                        </Col>
+                          Piles
+                        </label>
                       </Form.Group>
+                    </Col>
+
+                    <Col>
+                      <Form.Group>
+                        <label className="d-flex align-items-center">
+                          <Form.Check
+                            inline
+                            type="checkbox"
+                            name="family_history.constipation"
+                            checked={
+                              formData.family_history.constipation || false
+                            }
+                            onChange={handleCheckboxChange}
+                            id="family_history_constipation"
+                            style={{ marginRight: "5px" }}
+                          />
+                          Constipation
+                        </label>
+                      </Form.Group>
+                    </Col>
+
+                    <Col>
+                      <Form.Group>
+                        <label className="d-flex align-items-center">
+                          <Form.Check
+                            inline
+                            type="checkbox"
+                            name="family_history.dm"
+                            checked={formData.family_history.dm || false}
+                            onChange={handleCheckboxChange}
+                            id="family_history_dm"
+                            style={{ marginRight: "5px" }}
+                          />
+                          DM
+                        </label>
+                      </Form.Group>
+                    </Col>
+
+                    <Col>
+                      <Form.Group>
+                        <label className="d-flex align-items-center">
+                          <Form.Check
+                            inline
+                            type="checkbox"
+                            name="family_history.htn"
+                            checked={formData.family_history.htn || false}
+                            onChange={handleCheckboxChange}
+                            id="family_history_htn"
+                            style={{ marginRight: "5px" }}
+                          />
+                          HTN
+                        </label>
+                      </Form.Group>
+                    </Col>
+
+                    <Col>
+                      <Form.Group>
+                        <label className="d-flex align-items-center">
+                          <Form.Check
+                            inline
+                            type="checkbox"
+                            name="family_history.heartDisease"
+                            checked={
+                              formData.family_history.heartDisease || false
+                            }
+                            onChange={handleCheckboxChange}
+                            id="family_history_heartDisease"
+                            style={{ marginRight: "5px" }}
+                          />
+                          Heart Disease
+                        </label>
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col md={6}>
+                      <Form.Control
+                        as="textarea"
+                        placeholder="Any Other"
+                        name="family_history.other"
+                        value={formData.family_history.other || ""}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            family_history: {
+                              ...prev.family_history,
+                              other: e.target.value,
+                            },
+                          }))
+                        }
+                        style={{ minHeight: "80px" }}
+                      />
                     </Col>
                   </Row>
                   <br />
@@ -1311,7 +1448,7 @@ const pastHistoryArray = pastHistoryString
                             inline
                             type="checkbox"
                             name="past_history.dm"
-                            checked={formData.past_history.dm|| false}
+                            checked={formData.past_history.dm || false}
                             onChange={handleCheckboxChange}
                             id="past_history_dm"
                             style={{ marginRight: "5px" }}
@@ -1328,7 +1465,7 @@ const pastHistoryArray = pastHistoryString
                             inline
                             type="checkbox"
                             name="past_history.htn"
-                            checked={formData.past_history.htn||false}
+                            checked={formData.past_history.htn || false}
                             onChange={handleCheckboxChange}
                             id="past_history_htn"
                             style={{ marginRight: "5px" }}
@@ -1345,7 +1482,7 @@ const pastHistoryArray = pastHistoryString
                             inline
                             type="checkbox"
                             name="past_history.brAsthma"
-                            checked={formData.past_history.brAsthma||false}
+                            checked={formData.past_history.brAsthma || false}
                             onChange={handleCheckboxChange}
                             id="past_history_brAsthma"
                             style={{ marginRight: "5px" }}
@@ -1362,7 +1499,7 @@ const pastHistoryArray = pastHistoryString
                             inline
                             type="checkbox"
                             name="past_history.thyroid"
-                            checked={formData.past_history.thyroid|| false}
+                            checked={formData.past_history.thyroid || false}
                             onChange={handleCheckboxChange}
                             id="past_history_thyroid"
                             style={{ marginRight: "5px" }}
@@ -1607,10 +1744,10 @@ const pastHistoryArray = pastHistoryString
                               <Form.Check
                                 inline
                                 type="checkbox"
-                                name="ongoing_medicines.Clopidogrel"
-                                checked={formData.ongoing_medicines.Clopidogrel}
+                                name="ongoing_medicines.clopidogrel"
+                                checked={formData.ongoing_medicines.clopidogrel}
                                 onChange={handleCheckboxChange}
-                                id="ongoing_medicines_Clopidogrel"
+                                id="ongoing_medicines_clopidogrel"
                                 style={{ marginRight: "5px" }}
                               />
                               Clopidogrel
@@ -1657,9 +1794,17 @@ const pastHistoryArray = pastHistoryString
                             <Form.Control
                               as="textarea"
                               placeholder="Any Other"
-                              name="otherongoingmedi"
-                              value={formData.otherongoingmedi || ""}
-                              onChange={handleInputChange}
+                              name="ongoing_medicines.other"
+                              value={formData.ongoing_medicines.other || ""}
+                              onChange={(e) =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  ongoing_medicines: {
+                                    ...prev.ongoing_medicines,
+                                    other: e.target.value,
+                                  },
+                                }))
+                              }
                             />
                           </Form.Group>
                         </Col>
@@ -1668,48 +1813,158 @@ const pastHistoryArray = pastHistoryString
                   </Row>
                   <br />
                   <Row>
-                    <Col md={15}>
+                    <Col md={10}>
                       <Form.Label>Previous Investigation:</Form.Label>
                       <Row>
                         <Col>
-                          <div className="d-flex flex-wrap">
-                            {[
-                              { label: "HB", name: "hb" },
-                              { label: "BSL-R", name: "bslr" },
-                              {
-                                label: "Bleeding Time-BT",
-                                name: "bleedingTimeBt",
-                              },
-                              {
-                                label: "Clotting Time-BT",
-                                name: "clottingTimeBt",
-                              },
-                              { label: "PT INR", name: "ptInr" },
-                              { label: "HIV", name: "hiv" },
-                              { label: "Hbsag", name: "hbsag" },
-                              { label: "SR.Creatinine", name: "srCreatinine" },
-                              { label: "VIT B12", name: "vitB" },
-                            ].map(({ label, name }) => (
-                              <label
-                                key={name}
-                                className="d-flex align-items-center me-3"
-                              >
-                                <Form.Check
-                                  inline
-                                  type="checkbox"
-                                  name={`investigation.${name}`}
-                                  checked={
-                                    formData.investigation?.[name] || false
-                                  }
-                                  onChange={handleCheckboxChange}
-                                  disabled={isDisabled}
-                                  id={`investigation_${name}`}
-                                  style={{ marginRight: "5px" }}
-                                />
-                                {label}
-                              </label>
-                            ))}
-                          </div>
+                          <Form.Group>
+                            <label className="d-flex align-items-center">
+                              <Form.Check
+                                inline
+                                type="checkbox"
+                                name="investigation.hb"
+                                checked={formData.investigation.hb || false}
+                                onChange={handleCheckboxChange}
+                                id="investigation_hb"
+                                style={{ marginRight: "5px" }}
+                              />
+                              HB
+                            </label>
+                          </Form.Group>
+                        </Col>
+                        <Col>
+                          <Form.Group>
+                            <label className="d-flex align-items-center">
+                              <Form.Check
+                                inline
+                                type="checkbox"
+                                name="investigation.bslr"
+                                checked={formData.investigation.bslr || false}
+                                onChange={handleCheckboxChange}
+                                id="investigation_bslr"
+                                style={{ marginRight: "5px" }}
+                              />
+                              BSL-R
+                            </label>
+                          </Form.Group>
+                        </Col>
+                        <Col>
+                          <Form.Group>
+                            <label className="d-flex align-items-center">
+                              <Form.Check
+                                inline
+                                type="checkbox"
+                                name="investigation.bleedingTimeBt"
+                                checked={
+                                  formData.investigation.bleedingTimeBt || false
+                                }
+                                onChange={handleCheckboxChange}
+                                id="investigation_bleedingTimeBt"
+                                style={{ marginRight: "5px" }}
+                              />
+                              Bleeding Time-BT
+                            </label>
+                          </Form.Group>
+                        </Col>
+                        <Col>
+                          <Form.Group>
+                            <label className="d-flex align-items-center">
+                              <Form.Check
+                                inline
+                                type="checkbox"
+                                name="investigation.clottingTimeBt"
+                                checked={
+                                  formData.investigation.clottingTimeBt || false
+                                }
+                                onChange={handleCheckboxChange}
+                                id="investigation_clottingTimeBt"
+                                style={{ marginRight: "5px" }}
+                              />
+                              Clotting time- CT
+                            </label>
+                          </Form.Group>
+                        </Col>
+                        <Col>
+                          <Form.Group>
+                            <label className="d-flex align-items-center">
+                              <Form.Check
+                                inline
+                                type="checkbox"
+                                name="investigation.ptInr"
+                                checked={formData.investigation.ptInr || false}
+                                onChange={handleCheckboxChange}
+                                id="investigation_ptInr"
+                                style={{ marginRight: "5px" }}
+                              />
+                              PT INR
+                            </label>
+                          </Form.Group>
+                        </Col>
+                        <Col>
+                          <Form.Group>
+                            <label className="d-flex align-items-center">
+                              <Form.Check
+                                inline
+                                type="checkbox"
+                                name="investigation.hiv"
+                                checked={formData.investigation.hiv || false}
+                                onChange={handleCheckboxChange}
+                                id="investigation_hiv"
+                                style={{ marginRight: "5px" }}
+                              />
+                              HIV
+                            </label>
+                          </Form.Group>
+                        </Col>
+                        <Col>
+                          <Form.Group>
+                            <label className="d-flex align-items-center">
+                              <Form.Check
+                                inline
+                                type="checkbox"
+                                name="investigation.hbsag"
+                                checked={formData.investigation.hbsag || false}
+                                onChange={handleCheckboxChange}
+                                id="investigation_hbsag"
+                                style={{ marginRight: "5px" }}
+                              />
+                              Hbsag
+                            </label>
+                          </Form.Group>
+                        </Col>
+                        <Col>
+                          <Form.Group>
+                            <label className="d-flex align-items-center">
+                              <Form.Check
+                                inline
+                                type="checkbox"
+                                name="investigation.srCreatinine"
+                                checked={
+                                  formData.investigation.srCreatinine || false
+                                }
+                                onChange={handleCheckboxChange}
+                                id="investigation_srCreatinine"
+                                style={{ marginRight: "5px" }}
+                              />
+                              SR.Creatinine
+                            </label>
+                          </Form.Group>
+                        </Col>
+                        <Col>
+                          <Form.Group>
+                            <label className="d-flex align-items-center">
+                              <Form.Check
+                                inline
+                                type="checkbox"
+                                name="investigation.vitB"
+                                checked={formData.investigation.vitB || false}
+                                onChange={handleCheckboxChange}
+                                id="investigation_vitB"
+                                style={{ marginRight: "5px" }}
+                              />
+                              Vit B12
+                            </label>
+                          </Form.Group>
                         </Col>
 
                         {/* Upload File Section */}
@@ -1744,8 +1999,16 @@ const pastHistoryArray = pastHistoryString
                           as="textarea"
                           name="investigationDetails"
                           placeholder="Investigation Details"
-                          value={formData.investigationDetails}
-                          onChange={handleInputChange}
+                          value={formData.investigation.other || ""}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              investigation: {
+                                ...prev.investigation,
+                                other: e.target.value,
+                              },
+                            }))
+                          }
                         />
                       </Form.Group>
                     </Col>
