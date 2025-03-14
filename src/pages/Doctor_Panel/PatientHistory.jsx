@@ -264,6 +264,7 @@ export default function PatientHistory() {
       acidity: false,
       gas: false,
       bloating: false,
+      other: "",
     },
     family_history: {
       piles: false,
@@ -278,23 +279,23 @@ export default function PatientHistory() {
       htn: false,
       brAsthma: false,
       thyroid: false,
-      otherDetails:"",
+      otherDetails: "",
     },
     habits: {
-      smoking: "",
-      alcohol: "",
-      tobacco: "",
-      drugs: "",
+      smoking: false,
+      alcohol: false,
+      tobacco: false,
+      drugs: false,
     },
-    drugs_allergy: "",
-    pastSurgicalHistory: "",
-    anyOtherComplaints: "",
-    presentComplaints: "",
+    drugs_allery: "",
+    comment: "",
+    presentcomplaints: "",
+    complaints: "",
     ongoing_medicines: {
       Clopidogrel: false,
       aspirin: false,
       warfarin: false,
-      other:"",
+      other: "",
     },
     otherongoingmedi: "",
     investigation: {
@@ -307,7 +308,7 @@ export default function PatientHistory() {
       hbsag: false,
       srCreatinine: false,
       vitB: false,
-      other:"",
+      other: "",
     },
     knowncaseof: "",
     medical_mx: {
@@ -320,8 +321,8 @@ export default function PatientHistory() {
       d: false,
     },
     medications: [
-      { id: 1, name: "", indication: "", since: "" },
-      { id: 2, name: "", indication: "", since: "" },
+      { id: 1, medicine: "", indication: "", since: "" },
+      { id: 2, medicine: "", indication: "", since: "" },
     ],
     surgeryTabs: {
       piles_duration: "",
@@ -340,6 +341,7 @@ export default function PatientHistory() {
 
   const [errors, setErrors] = useState({});
   const [patientHistory, setPatientHistory] = useState([]);
+  const [medicationHistory, setMedicationHistory] = useState([]);
   const [assistantsDoctor, setAssistantsDoctor] = useState([]);
   const [showEditButton, setShowEditButton] = useState(false);
   const [isDisabled, setIsDisabled] = useState(false);
@@ -352,122 +354,142 @@ export default function PatientHistory() {
     if (storedPatientId) setPatientId(storedPatientId);
   }, []);
 
-  useEffect(() => {
-    if (!patientId) {
-      console.warn("No patientId found, skipping fetch");
-      return;
-    }
-    const fetchPatientData = async () => {
-      console.log(`Fetching data for patient ID: ${patientId}`);
-      try {
-        const response = await fetch(
-          `${BASE_URL}/V1/patientHistory/listPatientHistory/${patientId}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
+useEffect(() => {
+  if (!patientId) {
+    console.warn("No patientId found, skipping fetch");
+    return;
+  }
+
+  const fetchPatientData = async () => {
+    console.log(`Fetching data for patient ID: ${patientId}`);
+    try {
+      const response = await fetch(
+        `${BASE_URL}/V1/patientHistory/listPatientHistory/${patientId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.error(
+          "API Response Error:",
+          response.status,
+          await response.text()
         );
-
-        if (!response.ok) {
-          console.error(
-            "API Response Error:",
-            response.status,
-            await response.text()
-          );
-          return;
-        }
-
-        const data = await response.json();
-        console.log("Fetched Data:", data);
-
-        if (data?.data?.patientHistory?.length > 0) {
-          const patientData = data.data.patientHistory[0];
-
-          setFormData((prevState) => ({
-            ...prevState,
-            ...patientData,
-            vitalSigns: {
-              ...prevState.vitalSigns,
-              ...(patientData.vitalSigns || {}),
-            },
-            systematicExamination: {
-              ...prevState.systematicExamination,
-              ...(patientData.systematicExamination || {}),
-            },
-            general_history: {
-              ...prevState.general_history,
-              ...(patientData.general_history || {}),
-            },
-            family_history: {
-              ...prevState.family_history,
-              piles: patientData.family_history?.piles || false,
-              constipation: patientData.family_history?.constipation || false,
-              dm: patientData.family_history?.dm || false,
-              htn: patientData.family_history?.htn || false,
-              heartDisease: patientData.family_history?.heartDisease || false,
-              other: patientData.family_history?.other || "",
-            },
-            past_history: {
-              ...prevState.past_history,
-              dm: patientData.past_history?.dm || false,
-              htn: patientData.past_history?.htn || false,
-              brAsthma: patientData.past_history?.brAsthma || false,
-              thyroid: patientData.past_history?.thyroid || false,
-              otherDetails: patientData.past_history?.otherDetails || "",
-            },
-            habits: {
-              ...prevState.habits,
-              ...(patientData.habits || {}),
-            },
-            ongoing_medicines: {
-              ...prevState.ongoing_medicines,
-              clopidogrel: patientData.ongoing_medicines?.clopidogrel || false,
-              aspirin: patientData.ongoing_medicines?.aspirin || false,
-              warfarin: patientData.ongoing_medicines?.warfarin || false,
-              other: patientData.ongoing_medicines?.other || "",
-            },
-            investigation: {
-              ...prevState.investigation,
-              hb: patientData.investigation?.hb || false,
-              bslr: patientData.investigation?.bslr || false,
-              bleedingTimeBt:
-                patientData.investigation?.bleedingTimeBt || false,
-              clottingTimeBt:
-                patientData.investigation?.clottingTimeBt || false,
-              ptInr: patientData.investigation?.ptInr || false,
-              hiv: patientData.investigation?.hiv || false,
-              hbsag: patientData.investigation?.hbsag || false,
-              srCreatinine: patientData.investigation?.srCreatinine || false,
-              vitB: patientData.investigation?.vitB || false,
-              other: patientData.investigation?.other || "",
-            },
-            medical_mx: {
-              ...prevState.medical_mx,
-              mrd: patientData.medical_mx?.mrd || false,
-              manoBf: patientData.medical_mx?.manoBf || false,
-              coloGastro: patientData.medical_mx?.coloGastro || false,
-              mcdpa: patientData.medical_mx?.mcdpa || false,
-              diet: patientData.medical_mx?.diet || false,
-              b: patientData.medical_mx?.b || false,
-              d: patientData.medical_mx?.d || false,
-            },
-            knowncaseof: {
-              ...prevState.knowncaseof,
-              ...(patientData.knowncaseof || {}),
-            },
-            medications: patientData.medications || prevState.medications,
-          }));
-        } else {
-          console.warn("No patient data found in API response");
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
+        return;
       }
-    };
-    fetchPatientData();
-  }, [patientId]);
+
+      const data = await response.json();
+      console.log("Fetched Data:", data);
+
+      if (data?.data?.patientHistory?.length > 0) {
+        const patientData = data.data.patientHistory[0];
+
+        // Initialize medicationData to avoid undefined reference
+        const medicationData =
+          data?.data?.medicationHistory?.length > 0
+            ? data.data.medicationHistory[0]
+            : {};
+
+        setFormData((prevState) => ({
+          ...prevState,
+          ...patientData,
+          vitalSigns: {
+            ...prevState.vitalSigns,
+            ...(patientData.vitalSigns || {}),
+          },
+          systematicExamination: {
+            ...prevState.systematicExamination,
+            ...(patientData.systematicExamination || {}),
+          },
+          general_history: {
+            ...prevState.general_history,
+            hoWtLoss: patientData.general_history?.hoWtLoss || false,
+            decAppetite: patientData.general_history?.decAppetite || false,
+            hoStrainingForurination:
+              patientData.general_history?.hoStrainingForurination || false,
+            acidity: patientData.general_history?.acidity || false,
+            gas: patientData.general_history?.gas || false,
+            bloating: patientData.general_history?.bloating || false,
+            other: patientData.general_history?.other || "",
+          },
+          family_history: {
+            ...prevState.family_history,
+            piles: patientData.family_history?.piles || false,
+            constipation: patientData.family_history?.constipation || false,
+            dm: patientData.family_history?.dm || false,
+            htn: patientData.family_history?.htn || false,
+            heartDisease: patientData.family_history?.heartDisease || false,
+            other: patientData.family_history?.other || "",
+          },
+          past_history: {
+            ...prevState.past_history,
+            dm: patientData.past_history?.dm || false,
+            htn: patientData.past_history?.htn || false,
+            brAsthma: patientData.past_history?.brAsthma || false,
+            thyroid: patientData.past_history?.thyroid || false,
+            otherDetails: patientData.past_history?.otherDetails || "",
+          },
+          habits: {
+            ...prevState.habits,
+            smoking: patientData.habits?.smoking || false,
+            alcohol: patientData.habits?.alcohol || false,
+            tobacco: patientData.habits?.tobacco || false,
+            drugs: patientData.habits?.drugs || false,
+          },
+          ongoing_medicines: {
+            ...prevState.ongoing_medicines,
+            clopidogrel: patientData.ongoing_medicines?.clopidogrel || false,
+            aspirin: patientData.ongoing_medicines?.aspirin || false,
+            warfarin: patientData.ongoing_medicines?.warfarin || false,
+            other: patientData.ongoing_medicines?.other || "",
+          },
+          investigation: {
+            ...prevState.investigation,
+            hb: patientData.investigation?.hb || false,
+            bslr: patientData.investigation?.bslr || false,
+            bleedingTimeBt: patientData.investigation?.bleedingTimeBt || false,
+            clottingTimeBt: patientData.investigation?.clottingTimeBt || false,
+            ptInr: patientData.investigation?.ptInr || false,
+            hiv: patientData.investigation?.hiv || false,
+            hbsag: patientData.investigation?.hbsag || false,
+            srCreatinine: patientData.investigation?.srCreatinine || false,
+            vitB: patientData.investigation?.vitB || false,
+            other: patientData.investigation?.other || "",
+          },
+          medical_mx: {
+            ...prevState.medical_mx,
+            mrd: patientData.medical_mx?.mrd || false,
+            manoBf: patientData.medical_mx?.manoBf || false,
+            coloGastro: patientData.medical_mx?.coloGastro || false,
+            mcdpa: patientData.medical_mx?.mcdpa || false,
+            diet: patientData.medical_mx?.diet || false,
+            b: patientData.medical_mx?.b || false,
+            d: patientData.medical_mx?.d || false,
+          },
+          knowncaseof: {
+            ...prevState.knowncaseof,
+            ...(patientData.knowncaseof || {}),
+          },
+          medications: {
+            ...prevState.medications,
+            ...(medicationData.medications || {}), // ✅ Ensures no undefined reference
+          },
+        }));
+      } else {
+        console.warn("No patient data found in API response");
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  fetchPatientData();
+}, [patientId]);
+
 
   useEffect(() => {
     const fetchDropdownOptions = async () => {
@@ -616,10 +638,29 @@ export default function PatientHistory() {
       if (formData.medical_mx.b) adviceArray.push("B12");
       if (formData.medical_mx.d) adviceArray.push("D3");
 
+     const habitsArray = [];
+     if (formData.habits.smoking) habitsArray.push("Smoking");
+     if (formData.habits.alcohol) habitsArray.push("Alcohol");
+     if (formData.habits.tobacco) habitsArray.push("Tobacco");
+     if (formData.habits.drugs) habitsArray.push("Drugs");
+
+     const generalArray = [];
+     if (formData.general_history.hoWtLoss) generalArray.push("H/O Wt Loss");
+     if (formData.general_history.decAppetite) generalArray.push("Dec Appetite");
+     if (formData.general_history.hoStrainingForurination)
+       generalArray.push("H/O Straining for urination");
+     if (formData.general_history.acidity) generalArray.push("Acidity");
+     if (formData.general_history.gas) generalArray.push("Gas");
+     if (formData.general_history.bloating) generalArray.push("Bloating");
+     if (formData.general_history.other)
+       generalArray.push(formData.general_history.other);
+
+
+
       const formattedData = {
         ...formData,
-        general_history: JSON.stringify(formData.general_history),
-        habits: JSON.stringify(formData.habits),
+        general_history: generalArray.join(","),
+        habits: habitsArray.join(","),
         ongoing_medicines: ongoingMedcineArray.join(","), // Join the array into a string
         investigation: investigationArray.join(","),
         vitalSigns: JSON.stringify(formData.vitalSigns),
@@ -680,12 +721,14 @@ export default function PatientHistory() {
 
       const result = await response.json();
       console.log("on click Fetched Data:", result.data.patientHistory);
+      console.log("on click fetched medication Data:",result.data.medicationHistory);
 
       if (!response.ok) {
         throw new Error("Failed to fetch previous records");
       }
 
       const patientHistory = result.data.patientHistory;
+      const medicationHistory= result.data.medicationHistory;
 
       setPreviousRecordDate(
         patientHistory.date_patientHistory || prevData.date_patientHistory || ""
@@ -696,6 +739,23 @@ const knownConditions = ["DM", "HTN", "Br.Asthma", "Thyroid"];
 const pastHistoryArray = pastHistoryString
   .split(",")
   .map((item) => item.trim());
+
+  const generalString = patientHistory.general_history || "";
+  // const GknownConditions = [
+  //   "H/O Wt Loss",
+  //   "Dec Appetite",
+  //   "H/O Straining for urination",
+  //   "Acidity",
+  //   "Gas",
+  //   "Bloating",
+  // ];
+  const generalArray = generalString
+    .split(",")
+    .map((item) => item.trim());
+
+  const AdviceString = patientHistory.medical_mx || "";
+  const AdviceArray = AdviceString.split(",").map((item) => item.trim());
+
 
   const familyHistoryString = patientHistory.family_history || "";
   const FknownConditions = ["Piles", "Constipation", "DM", "HTN", "Heart Disease"];
@@ -709,10 +769,7 @@ const pastHistoryArray = pastHistoryString
       .split(",")
       .map((item) => item.trim());
 
-          const AdviceString = patientHistory.medical_mx || "";
-          const AdviceArray = AdviceString
-            .split(",")
-            .map((item) => item.trim());
+       
 
     const investigationString = patientHistory.investigation || "";
     const IknownConditions = [
@@ -729,6 +786,9 @@ const pastHistoryArray = pastHistoryString
     const investigationArray = investigationString
       .split(",")
       .map((item) => item.trim());
+
+      const habitsString = patientHistory.habits || "";
+      const habitsArray = habitsString.split(",").map((item) => item.trim());
 
 
       setFormData((prevData) => ({
@@ -751,14 +811,14 @@ const pastHistoryArray = pastHistoryString
           PA: patientHistory.PA || "",
         },
         general_history: {
-          ...prevData.general_history,
-          hoWtLoss: patientHistory.hoWtLoss || false,
-          decAppetite: patientHistory.decAppetite || false,
-          hoStrainingForurination:
-            patientHistory.hoStrainingForurination || false,
-          acidity: patientHistory.acidity || false,
-          gas: patientHistory.gas || false,
-          bloating: patientHistory.bloating || false,
+          hoWtLoss: generalArray.includes("H/O Wt Loss"),
+          decAppetite: generalArray.includes("Dec Appetite"),
+          hoStrainingForurination: generalArray.includes(
+            "H/O Straining for urination"
+          ),
+          acidity: generalArray.includes("Acidity"),
+          gas: generalArray.includes("Gas"),
+          bloating: generalArray.includes("Bloating"),
         },
         // symptoms: {
         //   ...prevData.symptoms,
@@ -789,11 +849,10 @@ const pastHistoryArray = pastHistoryString
             .join(", "), // Set otherDetails
         },
         habits: {
-          ...prevData.habits,
-          smoking: Boolean(patientHistory.habits?.includes("Smoking")),
-          alcohol: Boolean(patientHistory.habits?.includes("Alcohol")),
-          tobacco: Boolean(patientHistory.habits?.includes("Tobacco")),
-          drugs: Boolean(patientHistory.habits?.includes("Drugs")),
+          smoking: habitsArray.includes("Smoking"),
+          alcohol: habitsArray.includes("Alcohol"),
+          tobacco: habitsArray.includes("Tobacco"),
+          drugs: habitsArray.includes("Drugs"),
         },
         surgeryTabs: {
           ...prevData.surgeryTabs,
@@ -813,10 +872,10 @@ const pastHistoryArray = pastHistoryString
         ods: patientHistory.ods || [],
         pilonidal: patientHistory.pilonidal || "",
         circumcision: patientHistory.circumcision || "",
-        drugs_allergy: patientHistory.drugs_allergy || "",
-        pastSurgicalHistory: patientHistory.pastSurgicalHistory || "",
-        anyOtherComplaints: patientHistory.anyOtherComplaints || "",
-        presentComplaints: patientHistory.presentComplaints || "",
+        drugs_allery: patientHistory.drugs_allery || "",
+        comment: patientHistory.comment || "",
+        presentcomplaints: patientHistory.presentcomplaints || "",
+        complaints: patientHistory.complaints || "",
         ongoing_medicines: {
           clopidogrel: ongoingMedicineArray.includes("Clopidogrel"),
           aspirin: ongoingMedicineArray.includes("Aspirin"),
@@ -835,8 +894,8 @@ const pastHistoryArray = pastHistoryString
           hbsag: investigationArray?.includes("Hbsag"),
           srCreatinine: investigationArray?.includes("Sr.Creatinine"),
           vitB: investigationArray?.includes("Vit B12"),
-          other: investigationArray.
-          filter((condition) => !IknownConditions.includes(condition))
+          other: investigationArray
+            .filter((condition) => !IknownConditions.includes(condition))
             .join(", "),
         },
         knowncaseof: patientHistory.knowncaseof || "",
@@ -849,9 +908,9 @@ const pastHistoryArray = pastHistoryString
           b: AdviceArray.includes("B12"),
           d: AdviceArray.includes("D3"),
         },
-        medications: patientHistory.medications || [
-          { id: 1, name: "", indication: "", since: "" },
-          { id: 2, name: "", indication: "", since: "" },
+        medications: medicationHistory.medications || [
+          { id: 1, medicine: "", indication: "", since: "" },
+          { id: 2, medicine: "", indication: "", since: "" },
         ],
       }));
 
@@ -881,19 +940,19 @@ const pastHistoryArray = pastHistoryString
       vitalSigns: { BP: "", Pulse: "", RR: "" },
       systematicExamination: { RS: "", CVS: "", CNS: "", PA: "" },
       general_history: {
-        hoWtLoss: false,
-        decAppetite: false,
-        hoStrainingForurination: false,
-        acidity: false,
-        gas: false,
-        bloating: false,
+        hoWtLoss: "",
+        decAppetite: "",
+        hoStrainingForurination: "",
+        acidity: "",
+        gas: "",
+        bloating: "",
       },
       family_history: {
-        piles:"",
-        constipation:"",
+        piles: "",
+        constipation: "",
         dm: "",
         htn: "",
-        heartDisease: ""
+        heartDisease: "",
       },
       past_history: { dm: "", htn: "", brAsthma: "", thyroid: "" },
       habits: { smoking: "", alcohol: "", tobacco: "", drugs: "" },
@@ -907,14 +966,14 @@ const pastHistoryArray = pastHistoryString
       ods: [],
       pilonidal: "",
       circumcision: "",
-      drugs_allergy: "",
-      pastSurgicalHistory: "",
-      anyOtherComplaints: "",
-      presentComplaints: "",
+      drugs_allery: "",
+      comment: "",
+      presentcomplaints: "",
+      complaints: "",
       ongoing_medicines: {
         Clopidogrel: "",
         aspirin: "",
-        warfarin: ""
+        warfarin: "",
       },
       otherongoingmedi: "",
       investigation: {
@@ -926,21 +985,21 @@ const pastHistoryArray = pastHistoryString
         hiv: "",
         hbsag: "",
         srCreatinine: "",
-        vitB: ""
+        vitB: "",
       },
       knowncaseof: "",
       advice: {
         mrd: "",
         manoBf: "",
         coloGastro: "",
-        mcdpa:"",
+        mcdpa: "",
         diet: "",
         b: "",
         d: "",
       },
       medications: [
-        { id: 1, name: "", indication: "", since: "" },
-        { id: 2, name: "", indication: "", since: "" },
+        { id: 1, medicine: "", indication: "", since: "" },
+        { id: 2, medicine: "", indication: "", since: "" },
       ],
       surgeryTabs: {
         piles_duration: "",
@@ -1654,8 +1713,8 @@ const pastHistoryArray = pastHistoryString
                         <Form.Label>Allergy to Any Drug:</Form.Label>
                         <Form.Control
                           as="textarea"
-                          name="allergyToDrugs"
-                          value={formData.allergyToDrugs}
+                          name="drugs_allery"
+                          value={formData.drugs_allery}
                           onChange={handleInputChange}
                         />
                       </Form.Group>
@@ -1680,7 +1739,7 @@ const pastHistoryArray = pastHistoryString
                           <td>
                             <input
                               type="text"
-                              value={med.name}
+                              value={medicationHistory.medicine}
                               onChange={(e) =>
                                 handleInputChange(e, med.id, "name")
                               }
@@ -1690,7 +1749,7 @@ const pastHistoryArray = pastHistoryString
                           <td>
                             <input
                               type="text"
-                              value={med.indication}
+                              value={medicationHistory.indication}
                               onChange={(e) =>
                                 handleInputChange(e, med.id, "indication")
                               }
@@ -1700,7 +1759,7 @@ const pastHistoryArray = pastHistoryString
                           <td>
                             <input
                               type="text"
-                              value={med.since}
+                              value={medicationHistory.since}
                               onChange={(e) =>
                                 handleInputChange(e, med.id, "since")
                               }
@@ -1721,7 +1780,7 @@ const pastHistoryArray = pastHistoryString
                           const newId = formData.medications.length + 1;
                           const newMedication = {
                             id: newId,
-                            name: "",
+                            medicine: "",
                             indication: "",
                             since: "",
                           };
@@ -1745,22 +1804,8 @@ const pastHistoryArray = pastHistoryString
                         <Form.Label>Past Surgical History:</Form.Label>
                         <Form.Control
                           as="textarea"
-                          name="pastSurgicalHistory"
-                          value={formData.pastSurgicalHistory}
-                          onChange={handleInputChange}
-                        />
-                      </Form.Group>
-                    </Col>
-                  </Row>
-                  <br />
-                  <Row>
-                    <Col>
-                      <Form.Group>
-                        <Form.Label>Any Other Complaints:</Form.Label>
-                        <Form.Control
-                          as="textarea"
-                          name="anyOtherComplaints"
-                          value={formData.anyOtherComplaints}
+                          name="comment"
+                          value={formData.comment}
                           onChange={handleInputChange}
                         />
                       </Form.Group>
@@ -1773,8 +1818,22 @@ const pastHistoryArray = pastHistoryString
                         <Form.Label>Present Complaints:</Form.Label>
                         <Form.Control
                           as="textarea"
-                          name="presentComplaints"
-                          value={formData.presentComplaints}
+                          name="presentcomplaints"
+                          value={formData.presentcomplaints}
+                          onChange={handleInputChange}
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  <br />
+                  <Row>
+                    <Col>
+                      <Form.Group>
+                        <Form.Label>Any Other Complaints:</Form.Label>
+                        <Form.Control
+                          as="textarea"
+                          name="complaints"
+                          value={formData.complaints}
                           onChange={handleInputChange}
                         />
                       </Form.Group>
@@ -2081,39 +2140,40 @@ const pastHistoryArray = pastHistoryString
                     <Col>
                       <Form.Label>Advice:</Form.Label>
                       <Row>
-                      <div className="d-flex flex-wrap">
-                        {[
-                          { label: "MRD", name: "medical_mx.mrd" },
-                          { label: "Mano/BF", name: "medical_mx.manoBf" },
-                          {
-                            label: "Colo/Gastro",
-                            name: "medical_mx.coloGastro",
-                          },
-                          { label: "MCDPA", name: "medical_mx.mcdpa" },
-                          { label: "Diet", name: "medical_mx.diet" },
-                          { label: "B12", name: "medical_mx.b" },
-                          { label: "D3", name: "medical_mx.d" },
-                        ].map(({ label, name }) => (
-                          <Col
-                            md={1}
-                            key={name}
-                            className="d-flex align-items-center"
-                          >
-                            <Form.Check
-                              inline
-                              type="checkbox"
-                              name={name}
-                              checked={
-                                formData.medical_mx[name.split(".")[1]] || false
-                              }
-                              onChange={handleCheckboxChange}
-                              id={name}
-                              style={{ marginRight: "5px" }}
-                            />
-                            {label}
-                          </Col>
-                        ))}
-                      </div>
+                        <div className="d-flex flex-wrap">
+                          {[
+                            { label: "MRD", name: "medical_mx.mrd" },
+                            { label: "Mano/BF", name: "medical_mx.manoBf" },
+                            {
+                              label: "Colo/Gastro",
+                              name: "medical_mx.coloGastro",
+                            },
+                            { label: "MCDPA", name: "medical_mx.mcdpa" },
+                            { label: "Diet", name: "medical_mx.diet" },
+                            { label: "B12", name: "medical_mx.b" },
+                            { label: "D3", name: "medical_mx.d" },
+                          ].map(({ label, name }) => (
+                            <Col
+                              md={1}
+                              key={name}
+                              className="d-flex align-items-center"
+                            >
+                              <Form.Check
+                                inline
+                                type="checkbox"
+                                name={name}
+                                checked={
+                                  formData.medical_mx[name.split(".")[1]] ||
+                                  false
+                                }
+                                onChange={handleCheckboxChange}
+                                id={name}
+                                style={{ marginRight: "5px" }}
+                              />
+                              {label}
+                            </Col>
+                          ))}
+                        </div>
                       </Row>
                     </Col>
                   </Row>
