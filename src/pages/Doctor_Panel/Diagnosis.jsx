@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.29.115:5000/api"; // Replace with your actual backend URL
+const BASE_URL = "http://192.168.29.118:5000/api"; // Replace with your actual backend URL
 
 const DiagnosisTabs = () => {
   const [key, setKey] = useState("piles");
@@ -191,6 +191,8 @@ export default function Diagnosis() {
   const [patientId, setPatientId] = useState(
     localStorage.getItem("selectedPatientId")
   );
+    const [selectedOption, setSelectedOption] = useState({ RF: [] ,Laser:[], MW:[]}); // Track selected checkboxes
+  
   const [formData, setFormData] = useState({
     diagnosis: "",
     date_diagnosis: "",
@@ -202,12 +204,12 @@ export default function Diagnosis() {
       test: false,
     },
     // medicinesPrescribed: false,
-    medicinesPrescribed: {
-      AAC: false,
-      ANTACID: false,
-      PROBIOTICS: false,
-      NSAIDS: false,
-      ANTIBIOTICS: false,
+    medicines: {
+      aac: false,
+      antacid: false,
+      probiotics: false,
+      nsaids: false,
+      antibiotics: false,
       other: "", // Add an "other" field for the textarea
     },
     medicineDetails: "",
@@ -215,11 +217,11 @@ export default function Diagnosis() {
     comment: "",
     adviceComment: "",
     SurgicalDate: "",
-    RF: [],
-    Laser: [],
-    MW: [],
+    RF: "",
+    Laser: "",
+    MW: "",
     categoryComment: "",
-    advice: {
+    medical_mx: {
       mcdpa: false,
       manometry: false,
       diet: false,
@@ -244,7 +246,7 @@ export default function Diagnosis() {
       pdc: false,
     },
     consultantDoctor: "",
-    assistantDoctor: "",
+    assistanceDoctor: "",
   });
 
   const surgicalAdviceOptions = [
@@ -310,8 +312,63 @@ export default function Diagnosis() {
         const data = await response.json();
         console.log("Fetched Data:", data.data.diagnosisData);
 
-        if (data?.data?.diagnosisData) {
-          setFormData(data.data.diagnosisData);
+        if (data?.data?.diagnosisData?.length > 0) {
+          const diagnosisData = data.data.diagnosisData[0];
+
+          setFormData((prevState) => ({
+            ...prevState,
+            ...diagnosisData,
+            diagnosis: diagnosisData.diagnosis,
+            provisionaldiagnosis: diagnosisData.provisionaldiagnosis,
+            investigationorders: diagnosisData.investigationorders,
+            comment: diagnosisData.comment,
+            categoryComment: diagnosisData.categoryComment,
+            adviceComment: diagnosisData.adviceComment,
+            diagnosisAdvice: {
+              ...prevState.diagnosisAdvice,
+              medication: diagnosisData.diagnosisAdvice?.medication || false,
+              surgery: diagnosisData.diagnosisAdvice?.surgery || false,
+              test: diagnosisData.diagnosisAdvice?.test || false,
+            },
+            medicines: {
+              ...prevState.medicines,
+              aac: diagnosisData.medicines?.aac || false,
+              probiotics: diagnosisData.medicines?.probiotics || false,
+              nsaids: diagnosisData.medicines?.nsaids || false,
+              antibiotics: diagnosisData.medicines?.antibiotics || false,
+              antacid: diagnosisData.medicines?.antacid || false,
+              other: diagnosisData.medicines?.other || "",
+            },
+            other: {
+              ...prevState.other,
+              insurance: diagnosisData.other?.insurance || false,
+              reimbursement: diagnosisData.other?.reimbursement || false,
+              workshop: diagnosisData.other?.workshop || false,
+              pdc: diagnosisData.other?.pdc || false,
+            },
+            medical_mx: {
+              ...prevState.medical_mx,
+              mcdpa: diagnosisData.medical_mx?.mcdpa || false,
+              manometry: diagnosisData.medical_mx?.manometry || false,
+              diet: diagnosisData.medical_mx?.diet || false,
+              echo: diagnosisData.medical_mx?.echo || false,
+              uroflowmetry: diagnosisData.medical_mx?.uroflowmetry || false,
+              colo: diagnosisData.medical_mx?.colo || false,
+              xray: diagnosisData.medical_mx?.xray || false,
+              mri: diagnosisData.medical_mx?.mri || false,
+              cht: diagnosisData.medical_mx?.cht || false,
+              gastro: diagnosisData.medical_mx?.gastro || false,
+              ct: diagnosisData.medical_mx?.ct || false,
+              doppler: diagnosisData.medical_mx?.doppler || false,
+              biofeedback: diagnosisData.medical_mx?.biofeedback || false,
+              labInvestigation:
+                diagnosisData.medical_mx?.labInvestigation || false,
+              ultrasonography:
+                diagnosisData.medical_mx?.ultrasonography || false,
+              EchoAnalImaging:
+                diagnosisData.medical_mx?.EchoAnalImaging || false,
+            },
+          }));
         } else {
           console.warn("No patient data found in API response");
           setFormData({});
@@ -408,16 +465,17 @@ export default function Diagnosis() {
     }
     const [parent, child] = name.split(".");
 
-    if (parent === "medicinesPrescribed") {
-      // Handle medicinesPrescribed checkboxes
-      setFormData((prevData) => ({
-        ...prevData,
-        medicinesPrescribed: {
-          ...prevData.medicinesPrescribed,
-          [child]: checked, // Update the specific medicine checkbox
-        },
-      }));
-    } else if (child) {
+    // if (parent === "medicinesPrescribed") {
+    //   // Handle medicinesPrescribed checkboxes
+    //   setFormData((prevData) => ({
+    //     ...prevData,
+    //     medicinesPrescribed: {
+    //       ...prevData.medicinesPrescribed,
+    //       [child]: checked, // Update the specific medicine checkbox
+    //     },
+    //   }));
+    // } else
+    if (child) {
       setFormData({
         ...formData,
         [parent]: { ...formData[parent], [child]: checked },
@@ -497,62 +555,83 @@ export default function Diagnosis() {
 
     try {
       // Basic validation
-      if (!formData.diagnosis || formData.diagnosis.trim() === "") {
-        alert("Please enter a diagnosis");
-        return;
-      }
+      // if (!formData.diagnosis || formData.diagnosis.trim() === "") {
+      //   alert("Please enter a diagnosis");
+      //   return;
+      // }
 
       if (!patientId) {
         alert("Patient ID is required");
         return;
       }
+      const adviceArray = [];
+if (formData.diagnosisAdvice && formData.diagnosisAdvice.medication) {
+  adviceArray.push("Medication");
+}
+if (formData.diagnosisAdvice && formData.diagnosisAdvice.surgery) {
+  adviceArray.push("Surgery");
+}
+if (formData.diagnosisAdvice && formData.diagnosisAdvice.test) {
+  adviceArray.push("Test");
+}
+
+      const medicineArray = [];
+      if (formData.medicines.aac) medicineArray.push("AAC");
+      if (formData.medicines.probiotics) medicineArray.push("PROBIOTICS");
+      if (formData.medicines.nsaids) medicineArray.push("NSAIDS");
+      if (formData.medicines.antibiotics) medicineArray.push("ANTIBIOTICS");
+      if (formData.medicines.antacid) medicineArray.push("ANTACID");
+      if (formData.medicines.other)
+        medicineArray.push(formData.medicines.other);
+
+      const otherArray = [];
+      if (formData.other.insurance) otherArray.push("Insurance");
+      if (formData.other.reimbursement) otherArray.push("Reimbursement");
+      if (formData.other.workshop) otherArray.push("Workshop");
+      if (formData.other.pdc) otherArray.push("PDC");
+
+      const medical_mxArray =[];
+      if (formData.medical_mx.mcdpa) medical_mxArray.push("MCDPA");
+      if (formData.medical_mx.manometry) medical_mxArray.push("Manometry");
+      if (formData.medical_mx.diet) medical_mxArray.push("Diet");
+      if (formData.medical_mx.echo) medical_mxArray.push("ECHO");
+      if (formData.medical_mx.uroflowmetry) medical_mxArray.push("Uroflowmetry");
+      if (formData.medical_mx.colo) medical_mxArray.push("Colo");
+      if (formData.medical_mx.xray) medical_mxArray.push("X-ray");
+      if (formData.medical_mx.mri) medical_mxArray.push("MRI");
+      if (formData.medical_mx.cht) medical_mxArray.push("CHT");
+      if (formData.medical_mx.gastro) medical_mxArray.push("Gastro");
+      if (formData.medical_mx.ct) medical_mxArray.push("CT");
+      if (formData.medical_mx.doppler) medical_mxArray.push("Doppler");
+      if (formData.medical_mx.biofeedback) medical_mxArray.push("Biofeedback");
+      if (formData.medical_mx.labInvestigation)
+        medical_mxArray.push("Lab  Investigation");
+      if (formData.medical_mx.ultrasonography)
+        medical_mxArray.push("Ultrasonography");
+      if (formData.medical_mx.EchoAnalImaging)
+        medical_mxArray.push("3D Endo Anal Imaging");
+
       const requestBody = {
         patientId: patientId.toString(),
-        diagnosis: formData.diagnosis.trim(),
+        diagnosis: formData.diagnosis,
         date_diagnosis: formData.date_diagnosis || null,
         provisionaldiagnosis: formData.provisionaldiagnosis || "",
-        investigationorders: formData.investigationorders || "",
-        diagnosisAdvice: JSON.stringify({
-          medication: Boolean(formData.diagnosisAdvice?.medication),
-          surgery: Boolean(formData.diagnosisAdvice?.surgery),
-          test: Boolean(formData.diagnosisAdvice?.test),
-        }),
-        medicinesPrescribed: Boolean(formData.medicinesPrescribed),
+        investigationorders: formData.investigationorders,
+        diagnosisAdvice: adviceArray.join(","),
+        medicines: medicineArray.join(","),
         medicineDetails: formData.medicineDetails || "",
-        surgicalAdvice: formData.surgicalAdvice.join(", "), // Convert array to string
+        surgicalAdvice: formData.surgicalAdvice.join(","), // Convert array to string
         comment: formData.comment || "",
         adviceComment: formData.adviceComment || "",
         SurgicalDate: formData.SurgicalDate || null,
-        RF: formData.RF.join(", "), // Convert array to string
-        Laser: formData.Laser.join(", "), // Convert array to string
-        MW: formData.MW.join(", "), // Convert array to string
+        RF: selectedOption.RF.join(","), // Convert array to string
+        Laser: selectedOption.Laser.join(","), // Convert array to string
+        MW: selectedOption.MW.join(","), // Convert array to string
         categoryComment: formData.categoryComment || "",
-        advice: JSON.stringify({
-          mcdpa: Boolean(formData.advice?.mcdpa),
-          manometry: Boolean(formData.advice?.manometry),
-          diet: Boolean(formData.advice?.diet),
-          echo: Boolean(formData.advice?.echo),
-          uroflowmetry: Boolean(formData.advice?.uroflowmetry),
-          colo: Boolean(formData.advice?.colo),
-          xray: Boolean(formData.advice?.xray),
-          mri: Boolean(formData.advice?.mri),
-          cht: Boolean(formData.advice?.cht),
-          gastro: Boolean(formData.advice?.gastro),
-          ct: Boolean(formData.advice?.ct),
-          doppler: Boolean(formData.advice?.doppler),
-          biofeedback: Boolean(formData.advice?.biofeedback),
-          labInvestigation: Boolean(formData.advice?.labInvestigation),
-          ultrasonography: Boolean(formData.advice?.ultrasonography),
-          EchoAnalImaging: Boolean(formData.advice?.EchoAnalImaging),
-        }),
-        other: JSON.stringify({
-          insurance: Boolean(formData.other?.insurance),
-          reimbursement: Boolean(formData.other?.reimbursement),
-          workshop: Boolean(formData.other?.workshop),
-          pdc: Boolean(formData.other?.pdc),
-        }),
+        other: otherArray.join(","),
         consultantDoctor: formData.consultantDoctor || "",
-        assistantDoctor: formData.assistantDoctor || "",
+        assistanceDoctor: formData.assistanceDoctor || "",
+        medical_mx: medical_mxArray.join(","),
       };
       // Determine URL and method based on the button clicked
       const url = isEdit
@@ -592,6 +671,9 @@ export default function Diagnosis() {
       if (isEdit) {
         setIsDisabled(true);
       }
+      setSelectedOption({
+        RF:[], Laser:[],MW:[]
+      });
     } catch (error) {
       console.error("Submission Error:", error);
       alert(
@@ -629,13 +711,88 @@ export default function Diagnosis() {
       }
 
       const enrichedDiagnosisData = result.data.enrichedDiagnosisData;
+      const diagnosisData = result.data.diagnosisData;
+
+      const AdviceString = diagnosisData.diagnosisAdvice || "";
+      const AdviceArray = AdviceString.split(",").map((item) => item.trim());
+
+      const otherString = diagnosisData.other || "";
+      const otherArray = otherString.split(",").map((item) => item.trim());
+
+      
+      const medical_mxString = diagnosisData.medical_mx || "";
+      const medical_mxArray = medical_mxString
+        .split(",")
+        .map((item) => item.trim());
+
+      const medicineString = diagnosisData.medicines || "";
+      const MknownConditions = [
+        "AAC",
+        "PROBIOTICS",
+        "NSAIDS",
+        "ANTIBIOTICS",
+        "ANTACID",
+      ];
+      const medicineArray = medicineString
+        .split(",")
+        .map((item) => item.trim());
 
       // Update formData with all the fields from the API
       setFormData((prevData) => ({
         ...prevData,
         ...enrichedDiagnosisData,
+        date_diagnosis: diagnosisData.date_diagnosis || "",
+        diagnosis: diagnosisData.diagnosis || "",
+        provisionaldiagnosis: diagnosisData.provisionaldiagnosis || "",
+        investigationorders: diagnosisData.investigationorders || "",
+        comment: diagnosisData.comment || "",
+        categoryComment: diagnosisData.categoryComment || "",
+        adviceComment: diagnosisData.adviceComment || "",
+        diagnosisAdvice: {
+          medication: AdviceArray.includes("Medication"),
+          surgery: AdviceArray.includes("Surgery"),
+          test: AdviceArray.includes("Test"),
+        },
+        medicines: {
+          aac: medicineArray.includes("AAC"),
+          probiotics: medicineArray.includes("PROBIOTICS"),
+          nsaids: medicineArray.includes("NSAIDS"),
+          antibiotics: medicineArray.includes("ANTIBIOTICS"),
+          antacid: medicineArray.includes("ANTACID"),
+          other: medicineArray
+            .filter((condition) => !MknownConditions.includes(condition))
+            .join(", "),
+        },
+        other: {
+          insurance: otherArray.includes("Insurance"),
+          reimbursement: otherArray.includes("Reimbursement"),
+          workshop: otherArray.includes("Workshop"),
+          pdc: otherArray.includes("PDC"),
+        },
+        medical_mx:{
+          mcdpa: medical_mxArray.includes("MCDPA"),
+          manometry: medical_mxArray.includes("Manometry"),
+          diet: medical_mxArray.includes("Diet"),
+          echo: medical_mxArray.includes("ECHO"),
+          uroflowmetry: medical_mxArray.includes("Uroflowmetry"),
+          colo: medical_mxArray.includes("Colo"),
+          xray: medical_mxArray.includes("X-ray"),
+          mri: medical_mxArray.includes("MRI"),
+          cht: medical_mxArray.includes("CHT"),
+          gastro: medical_mxArray.includes("Gastro"),
+          ct: medical_mxArray.includes("CT"),
+          doppler: medical_mxArray.includes("Doppler"),
+          biofeedback: medical_mxArray.includes("Biofeedback"),
+          labInvestigation:medical_mxArray.includes("Lab  Investigation"),
+          ultrasonography: medical_mxArray.includes("Ultrasonography"),
+          EchoAnalImaging: medical_mxArray.includes("3D Endo Anal Imaging"),
+        }
       }));
-
+setSelectedOption({
+  RF: diagnosisData.RF ? diagnosisData.RF.split(",") : [],
+  Laser: diagnosisData.Laser ? diagnosisData.Laser.split(",") : [],
+  MW: diagnosisData.MW ? diagnosisData.MW.split(",") : [],
+});
       // Show the "Edit Diagnosis" button
       setShowEditButton(true);
       // Disable "Previous Records" button after clicking it
@@ -667,21 +824,72 @@ export default function Diagnosis() {
     // This will enable "Save Edit Diagnosis" and disable "Save New Record"
   };
 
+    const handleStateChange = (e, value, category) => {
+      if (isDisabled) return; // Don't update if form is disabled
+
+      const { checked } = e.target;
+      setSelectedOption((prevState) => ({
+        ...prevState,
+        [category]: checked
+          ? [...prevState[category], value]
+          : prevState[category].filter((item) => item !== value),
+      }));
+    };
+
   const handleNewRecord = () => {
     setFormData({
-      date_diagnosis: "",
+      date_diagnosis: new Date().toISOString().split("T")[0],
       provisionaldiagnosis: "",
       investigationorders: "",
       diagnosis: "",
       comment: "",
+      diagnosisAdvice: {
+        medication: "",
+        surgery: "",
+        test: "",
+      },
       adviceComment: "",
       SurgicalDate: "",
-      RF: [],
-      Laser: [],
-      MW: [],
+      RF: "",
+      Laser: "",
+      MW: "",
       categoryComment: "",
       consultantDoctor: "",
-      assistantDoctor: "",
+      assistanceDoctor: "",
+      medicines: {
+        aac: "",
+        probiotics: "",
+        nsaids: "",
+        antibiotics: "",
+        antacid: "",
+      },
+      other: {
+        insurance: "",
+        reimbursement: "",
+        workshop: "",
+        pdc: "",
+      },
+      medical_mx: {
+        mcdpa: "",
+        manometry: "",
+        diet: "",
+        echo: "",
+        uroflowmetry: "",
+        colo: "",
+        xray: "",
+        mri: "",
+        cht: "",
+        gastro: "",
+        ct: "",
+        doppler: "",
+        biofeedback: "",
+        labInvestigation: "",
+        ultrasonography: "",
+        EchoAnalImaging: "",
+      },
+    });
+    setSelectedOption({
+      RF: [], Laser:[], MW:[]
     });
 
     // Hide "Edit Diagnosis" button when creating a new record
@@ -757,7 +965,7 @@ export default function Diagnosis() {
                       >
                         Previous Records
                       </button>
-
+                     
                       {/* Show Edit Diagnosis Button only after clicking "Previous Records" */}
                       {showEditButton && (
                         <button
@@ -785,14 +993,14 @@ export default function Diagnosis() {
                         <Form.Label>Diagnosis Date:</Form.Label>
                         <DatePicker
                           selected={
-                            formData?.appointmentDate
-                              ? new Date(formData.appointmentDate)
+                            formData?.date_diagnosis
+                              ? new Date(formData.date_diagnosis)
                               : null
                           }
                           onChange={(date) => {
                             setFormData((prev) => ({
                               ...prev,
-                              appointmentDate: date
+                              date_diagnosis: date
                                 ? date.toISOString().split("T")[0]
                                 : "",
                             }));
@@ -817,7 +1025,12 @@ export default function Diagnosis() {
                           as="textarea"
                           name="provisionaldiagnosis"
                           value={formData.provisionaldiagnosis}
-                          onChange={handleInputChange}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              provisionaldiagnosis: e.target.value,
+                            })
+                          }
                           disabled={isDisabled} // Disable until Edit is clicked
                         />
                       </Form.Group>
@@ -832,7 +1045,12 @@ export default function Diagnosis() {
                           as="textarea" // Fixed the name
                           name="investigationorders"
                           value={formData.investigationorders}
-                          onChange={handleInputChange}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              investigationorders: e.target.value,
+                            })
+                          }
                           disabled={isDisabled} // Disable until Edit is clicked
                         />
                       </Form.Group>
@@ -846,7 +1064,12 @@ export default function Diagnosis() {
                           as="textarea"
                           name="diagnosis"
                           value={formData.diagnosis || ""}
-                          onChange={handleInputChange}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              diagnosis: e.target.value,
+                            })
+                          }
                           disabled={isDisabled}
                         />
                       </Form.Group>
@@ -919,11 +1142,14 @@ export default function Diagnosis() {
                       <Form.Label>Medicines Prescribed:</Form.Label>
                       <div className="d-flex flex-wrap">
                         {[
-                          { label: "AAC", name: "AAC" },
-                          { label: "ANTACID", name: "ANTACID" },
-                          { label: "PROBIOTICS", name: "PROBIOTICS" },
-                          { label: "NSAIDS", name: "NSAIDS" },
-                          { label: "ANTIBIOTICS", name: "ANTIBIOTICS" },
+                          { label: "AAC", name: "medicines?.aac" },
+                          { label: "ANTACID", name: "medicines.antacid" },
+                          { label: "PROBIOTICS", name: "medicines.probiotics" },
+                          { label: "NSAIDS", name: "medicines.nsaids" },
+                          {
+                            label: "ANTIBIOTICS",
+                            name: "medicines.antibiotics",
+                          },
                         ].map(({ label, name }) => (
                           <label
                             key={name}
@@ -932,13 +1158,13 @@ export default function Diagnosis() {
                             <Form.Check
                               inline
                               type="checkbox"
-                              name={`medicinesPrescribed.${name}`}
+                              name={name}
                               checked={
-                                formData.medicinesPrescribed?.[name] || false
+                                formData.medicines?.[name.split(".")[1]] ||
+                                false
                               }
                               onChange={handleCheckboxChange}
-                              disabled={isDisabled}
-                              id={`medicinesPrescribed_${name}`}
+                              id={name}
                               style={{ marginRight: "5px" }}
                             />
                             {label}
@@ -950,10 +1176,18 @@ export default function Diagnosis() {
                       <Form.Control
                         as="textarea"
                         placeholder="Other"
-                        name="medicinesPrescribed.other"
-                        value={formData.medicinesPrescribed?.other || ""}
-                        onChange={handleInputChange}
-                        disabled={isDisabled}
+                        name="medicines.other"
+                        value={formData.medicines?.other || ""}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            medicines: {
+                              ...prev.medicines,
+                              other: e.target.value,
+                            },
+                          }))
+                        }
+                        // disabled={isDisabled}
                         className="mt-2"
                       />
                     </Col>
@@ -1010,7 +1244,12 @@ export default function Diagnosis() {
                           as="textarea"
                           name="comment"
                           value={formData.comment}
-                          onChange={handleInputChange}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              comment: e.target.value,
+                            })
+                          }
                           disabled={isDisabled}
                         />
                       </Form.Group>
@@ -1023,7 +1262,12 @@ export default function Diagnosis() {
                           as="textarea"
                           name="adviceComment"
                           value={formData.adviceComment || ""}
-                          onChange={handleInputChange}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              adviceComment: e.target.value,
+                            })
+                          }
                           disabled={isDisabled}
                         />
                       </Form.Group>
@@ -1082,48 +1326,86 @@ export default function Diagnosis() {
                       <Form.Group>
                         <Form.Label>Category:</Form.Label>
                         <Row className="mt-2">
-                          {Object.keys(categoryOptions).map((category) => (
-                            <Col md={4} key={category}>
                               <Form.Group>
-                                <Form.Label>{category}:</Form.Label>
                                 <Dropdown>
                                   <Dropdown.Toggle
                                     variant="primary"
                                     as={Button}
                                   >
-                                    {Array.isArray(formData[category]) &&
-                                    formData[category].length > 0
-                                      ? formData[category].join(", ")
-                                      : `Select ${category}`}
+                                    {selectedOption.RF.length > 0
+                                      ? selectedOption.RF.join(", ")
+                                      : "Select RF"}
                                   </Dropdown.Toggle>
-
-                                  <Dropdown.Menu
-                                    style={{
-                                      maxHeight: "200px",
-                                      overflowY: "auto",
-                                    }}
-                                  >
-                                    {categoryOptions[category].map((option) => (
+                                  <Dropdown.Menu>
+                                    {categoryOptions.RF.map((option) => (
                                       <Dropdown.Item key={option} as="div">
                                         <Form.Check
                                           type="checkbox"
                                           label={option}
                                           value={option}
-                                          checked={
-                                            Array.isArray(formData[category]) &&
-                                            formData[category].includes(option)
-                                          }
+                                          checked={selectedOption.RF.includes(
+                                            option
+                                          )}
                                           onChange={(e) =>
-                                            handleCategoryChange(category, e)
+                                            handleStateChange(e, option, "RF")
                                           }
                                         />
                                       </Dropdown.Item>
                                     ))}
                                   </Dropdown.Menu>
                                 </Dropdown>
+
+                                <Dropdown>
+                                  <Dropdown.Toggle
+                                    variant="primary"
+                                    as={Button}
+                                  >
+                                    {selectedOption.Laser.length > 0
+                                      ? selectedOption.Laser.join(", ")
+                                      : "Select Laser"}
+                                  </Dropdown.Toggle>
+                                  <Dropdown.Menu>
+                                    {categoryOptions.Laser.map((option) => (
+                                      <Dropdown.Item key={option} as="div">
+                                        <Form.Check
+                                          type="checkbox"
+                                          label={option}
+                                          value={option}
+                                          checked={selectedOption.Laser.includes(
+                                            option
+                                          )}
+                                          onChange={(e) =>
+                                            handleStateChange(
+                                              e,
+                                              option,
+                                              "Laser"
+                                            )
+                                          }
+                                        />
+                                      </Dropdown.Item>
+                                    ))}
+                                  </Dropdown.Menu>
+                                </Dropdown>
+                                <Dropdown>
+  <Dropdown.Toggle variant="primary" as={Button}>
+    {selectedOption.MW.length > 0 ? selectedOption.MW.join(", ") : "Select MW"}
+  </Dropdown.Toggle>
+  <Dropdown.Menu>
+    {categoryOptions.MW.map((option) => (
+      <Dropdown.Item key={option} as="div">
+        <Form.Check
+          type="checkbox"
+          label={option}
+          value={option}
+          checked={selectedOption.MW.includes(option)}
+          onChange={(e) => handleStateChange(e, option, "MW")}
+        />
+      </Dropdown.Item>
+    ))}
+  </Dropdown.Menu></Dropdown>
                               </Form.Group>
-                            </Col>
-                          ))}
+                            
+                          
                         </Row>
                       </Form.Group>
                     </Col>
@@ -1134,7 +1416,12 @@ export default function Diagnosis() {
                           as="textarea"
                           name="categoryComment"
                           value={formData.categoryComment}
-                          onChange={handleInputChange}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              categoryComment: e.target.value,
+                            })
+                          }
                           disabled={isDisabled}
                         />
                       </Form.Group>
@@ -1147,41 +1434,53 @@ export default function Diagnosis() {
                         <Form.Label>Advice:</Form.Label>
                         <Row>
                           {[
-                            { label: "MCDPA", name: "mcdpa" },
-                            { label: "MANOMETRY", name: "manometry" },
-                            { label: "DIET", name: "diet" },
-                            { label: "ECHO", name: "echo" },
-                            { label: "UROFLOWMETRY", name: "uroflowmetry" },
-                            { label: "COLO", name: "colo" },
-                            { label: "X-RAY", name: "xray" },
-                            { label: "MRI", name: "mri" },
-                            { label: "CHT", name: "cht" },
-                            { label: "GASTRO", name: "gastro" },
-                            { label: "CT", name: "ct" },
-                            { label: "DOPPLER", name: "doppler" },
-                            { label: "BIOFEEDBACK", name: "biofeedback" },
+                            { label: "MCDPA", name: "medical_mx?.mcdpa" },
+                            {
+                              label: "MANOMETRY",
+                              name: "medical_mx?.manometry",
+                            },
+                            { label: "DIET", name: "medical_mx?.diet" },
+                            { label: "ECHO", name: "medical_mx?.echo" },
+                            {
+                              label: "UROFLOWMETRY",
+                              name: "medical_mx?.uroflowmetry",
+                            },
+                            { label: "COLO", name: "medical_mx?.colo" },
+                            { label: "X-RAY", name: "medical_mx?.xray" },
+                            { label: "MRI", name: "medical_mx?.mri" },
+                            { label: "CHT", name: "medical_mx?.cht" },
+                            { label: "GASTRO", name: "medical_mx?.gastro" },
+                            { label: "CT", name: "medical_mx?.ct" },
+                            { label: "DOPPLER", name: "medical_mx?.doppler" },
+                            {
+                              label: "BIOFEEDBACK",
+                              name: "medical_mx?.biofeedback",
+                            },
                             {
                               label: "LAB INVESTIGATION",
-                              name: "labInvestigation",
+                              name: "medical_mx?.labInvestigation",
                             },
                             {
                               label: "ULTRASONOGRAPHY",
-                              name: "ultrasonography",
+                              name: "medical_mx?.ultrasonography",
                             },
                             {
                               label: "3D ENDO ANAL IMAGING",
-                              name: "echoAnalImaging",
+                              name: "medical_mx?.EchoAnalImaging",
                             },
                           ].map(({ label, name }, index) => (
                             <Col md={4} key={index}>
                               <label className="d-flex align-items-center">
                                 <Form.Check
                                   type="checkbox"
-                                  name={`advice.${name}`}
-                                  checked={formData.advice?.[name] || false} // Ensure the correct property name
+                                  name={name}
+                                  checked={
+                                    formData.medical_mx?.[name.split(".")[1]] ||
+                                    false
+                                  } // Ensure the correct property name
                                   onChange={handleCheckboxChange}
                                   disabled={isDisabled}
-                                  id={`advice_${name}`}
+                                  id={name}
                                   style={{ marginRight: "5px" }}
                                 />
                                 {label}

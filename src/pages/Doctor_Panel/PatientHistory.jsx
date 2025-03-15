@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.29.115:5000/api";
+const BASE_URL = "http://192.168.29.118:5000/api";
 
 const SurgeryTabs = ({
   selectedOptions,
@@ -320,10 +320,8 @@ export default function PatientHistory() {
       b: false,
       d: false,
     },
-    medications: [
-      { id: 1, medicine: "", indication: "", since: "" },
-      { id: 2, medicine: "", indication: "", since: "" },
-    ],
+    medications: [],
+
     surgeryTabs: {
       piles_duration: "",
       fistula_duration: "",
@@ -354,142 +352,145 @@ export default function PatientHistory() {
     if (storedPatientId) setPatientId(storedPatientId);
   }, []);
 
-useEffect(() => {
-  if (!patientId) {
-    console.warn("No patientId found, skipping fetch");
-    return;
-  }
-
-  const fetchPatientData = async () => {
-    console.log(`Fetching data for patient ID: ${patientId}`);
-    try {
-      const response = await fetch(
-        `${BASE_URL}/V1/patientHistory/listPatientHistory/${patientId}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        console.error(
-          "API Response Error:",
-          response.status,
-          await response.text()
-        );
-        return;
-      }
-
-      const data = await response.json();
-      console.log("Fetched Data:", data);
-
-      if (data?.data?.patientHistory?.length > 0) {
-        const patientData = data.data.patientHistory[0];
-
-        // Initialize medicationData to avoid undefined reference
-        const medicationData =
-          data?.data?.medicationHistory?.length > 0
-            ? data.data.medicationHistory[0]
-            : {};
-
-        setFormData((prevState) => ({
-          ...prevState,
-          ...patientData,
-          vitalSigns: {
-            ...prevState.vitalSigns,
-            ...(patientData.vitalSigns || {}),
-          },
-          systematicExamination: {
-            ...prevState.systematicExamination,
-            ...(patientData.systematicExamination || {}),
-          },
-          general_history: {
-            ...prevState.general_history,
-            hoWtLoss: patientData.general_history?.hoWtLoss || false,
-            decAppetite: patientData.general_history?.decAppetite || false,
-            hoStrainingForurination:
-              patientData.general_history?.hoStrainingForurination || false,
-            acidity: patientData.general_history?.acidity || false,
-            gas: patientData.general_history?.gas || false,
-            bloating: patientData.general_history?.bloating || false,
-            other: patientData.general_history?.other || "",
-          },
-          family_history: {
-            ...prevState.family_history,
-            piles: patientData.family_history?.piles || false,
-            constipation: patientData.family_history?.constipation || false,
-            dm: patientData.family_history?.dm || false,
-            htn: patientData.family_history?.htn || false,
-            heartDisease: patientData.family_history?.heartDisease || false,
-            other: patientData.family_history?.other || "",
-          },
-          past_history: {
-            ...prevState.past_history,
-            dm: patientData.past_history?.dm || false,
-            htn: patientData.past_history?.htn || false,
-            brAsthma: patientData.past_history?.brAsthma || false,
-            thyroid: patientData.past_history?.thyroid || false,
-            otherDetails: patientData.past_history?.otherDetails || "",
-          },
-          habits: {
-            ...prevState.habits,
-            smoking: patientData.habits?.smoking || false,
-            alcohol: patientData.habits?.alcohol || false,
-            tobacco: patientData.habits?.tobacco || false,
-            drugs: patientData.habits?.drugs || false,
-          },
-          ongoing_medicines: {
-            ...prevState.ongoing_medicines,
-            clopidogrel: patientData.ongoing_medicines?.clopidogrel || false,
-            aspirin: patientData.ongoing_medicines?.aspirin || false,
-            warfarin: patientData.ongoing_medicines?.warfarin || false,
-            other: patientData.ongoing_medicines?.other || "",
-          },
-          investigation: {
-            ...prevState.investigation,
-            hb: patientData.investigation?.hb || false,
-            bslr: patientData.investigation?.bslr || false,
-            bleedingTimeBt: patientData.investigation?.bleedingTimeBt || false,
-            clottingTimeBt: patientData.investigation?.clottingTimeBt || false,
-            ptInr: patientData.investigation?.ptInr || false,
-            hiv: patientData.investigation?.hiv || false,
-            hbsag: patientData.investigation?.hbsag || false,
-            srCreatinine: patientData.investigation?.srCreatinine || false,
-            vitB: patientData.investigation?.vitB || false,
-            other: patientData.investigation?.other || "",
-          },
-          medical_mx: {
-            ...prevState.medical_mx,
-            mrd: patientData.medical_mx?.mrd || false,
-            manoBf: patientData.medical_mx?.manoBf || false,
-            coloGastro: patientData.medical_mx?.coloGastro || false,
-            mcdpa: patientData.medical_mx?.mcdpa || false,
-            diet: patientData.medical_mx?.diet || false,
-            b: patientData.medical_mx?.b || false,
-            d: patientData.medical_mx?.d || false,
-          },
-          knowncaseof: {
-            ...prevState.knowncaseof,
-            ...(patientData.knowncaseof || {}),
-          },
-          medications: {
-            ...prevState.medications,
-            ...(medicationData.medications || {}), // ✅ Ensures no undefined reference
-          },
-        }));
-      } else {
-        console.warn("No patient data found in API response");
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
+  useEffect(() => {
+    if (!patientId) {
+      console.warn("No patientId found, skipping fetch");
+      return;
     }
-  };
 
-  fetchPatientData();
-}, [patientId]);
+    const fetchPatientData = async () => {
+      console.log(`Fetching data for patient ID: ${patientId}`);
+      try {
+        const response = await fetch(
+          `${BASE_URL}/V1/patientHistory/listPatientHistory/${patientId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
+        if (!response.ok) {
+          console.error(
+            "API Response Error:",
+            response.status,
+            await response.text()
+          );
+          return;
+        }
+
+        const data = await response.json();
+        console.log("Fetched Data:", data);
+
+        if (data?.data?.patientHistory?.length > 0) {
+          const patientData = data.data.patientHistory[0];
+
+          // Initialize medicationData to avoid undefined reference
+          let medicationData = [];
+          if (data?.data?.medicationHistory?.length > 0) {
+            medicationData = data.data.medicationHistory;
+          }
+
+          setMedicationHistory(medicationData);
+
+          setFormData((prevState) => ({
+            ...prevState,
+            ...patientData,
+            vitalSigns: {
+              ...prevState.vitalSigns,
+              ...(patientData.vitalSigns || {}),
+            },
+            systematicExamination: {
+              ...prevState.systematicExamination,
+              ...(patientData.systematicExamination || {}),
+            },
+            general_history: {
+              ...prevState.general_history,
+              hoWtLoss: patientData.general_history?.hoWtLoss || false,
+              decAppetite: patientData.general_history?.decAppetite || false,
+              hoStrainingForurination:
+                patientData.general_history?.hoStrainingForurination || false,
+              acidity: patientData.general_history?.acidity || false,
+              gas: patientData.general_history?.gas || false,
+              bloating: patientData.general_history?.bloating || false,
+              other: patientData.general_history?.other || "",
+            },
+            family_history: {
+              ...prevState.family_history,
+              piles: patientData.family_history?.piles || false,
+              constipation: patientData.family_history?.constipation || false,
+              dm: patientData.family_history?.dm || false,
+              htn: patientData.family_history?.htn || false,
+              heartDisease: patientData.family_history?.heartDisease || false,
+              other: patientData.family_history?.other || "",
+            },
+            past_history: {
+              ...prevState.past_history,
+              dm: patientData.past_history?.dm || false,
+              htn: patientData.past_history?.htn || false,
+              brAsthma: patientData.past_history?.brAsthma || false,
+              thyroid: patientData.past_history?.thyroid || false,
+              otherDetails: patientData.past_history?.otherDetails || "",
+            },
+            habits: {
+              ...prevState.habits,
+              smoking: patientData.habits?.smoking || false,
+              alcohol: patientData.habits?.alcohol || false,
+              tobacco: patientData.habits?.tobacco || false,
+              drugs: patientData.habits?.drugs || false,
+            },
+            ongoing_medicines: {
+              ...prevState.ongoing_medicines,
+              clopidogrel: patientData.ongoing_medicines?.clopidogrel || false,
+              aspirin: patientData.ongoing_medicines?.aspirin || false,
+              warfarin: patientData.ongoing_medicines?.warfarin || false,
+              other: patientData.ongoing_medicines?.other || "",
+            },
+            investigation: {
+              ...prevState.investigation,
+              hb: patientData.investigation?.hb || false,
+              bslr: patientData.investigation?.bslr || false,
+              bleedingTimeBt:
+                patientData.investigation?.bleedingTimeBt || false,
+              clottingTimeBt:
+                patientData.investigation?.clottingTimeBt || false,
+              ptInr: patientData.investigation?.ptInr || false,
+              hiv: patientData.investigation?.hiv || false,
+              hbsag: patientData.investigation?.hbsag || false,
+              srCreatinine: patientData.investigation?.srCreatinine || false,
+              vitB: patientData.investigation?.vitB || false,
+              other: patientData.investigation?.other || "",
+            },
+            medical_mx: {
+              ...prevState.medical_mx,
+              mrd: patientData.medical_mx?.mrd || false,
+              manoBf: patientData.medical_mx?.manoBf || false,
+              coloGastro: patientData.medical_mx?.coloGastro || false,
+              mcdpa: patientData.medical_mx?.mcdpa || false,
+              diet: patientData.medical_mx?.diet || false,
+              b: patientData.medical_mx?.b || false,
+              d: patientData.medical_mx?.d || false,
+            },
+            knowncaseof: {
+              ...prevState.knowncaseof,
+              ...(patientData.knowncaseof || {}),
+            },
+            medications:
+              medicationData.length > 0
+                ? medicationData
+                : prevState.medications,
+          }));
+        } else {
+          console.warn("No patient data found in API response");
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchPatientData();
+  }, [patientId]);
 
   useEffect(() => {
     const fetchDropdownOptions = async () => {
@@ -568,7 +569,7 @@ useEffect(() => {
     //     },
     //   }));
     // } else
-     if (child) {
+    if (child) {
       setFormData({
         ...formData,
         [parent]: { ...formData[parent], [child]: checked },
@@ -589,13 +590,13 @@ useEffect(() => {
 
     try {
       console.log("Form data before saving:", formData);
-       const pastHistoryArray = [];
-       if (formData.past_history.dm) pastHistoryArray.push("DM");
-       if (formData.past_history.htn) pastHistoryArray.push("HTN");
-       if (formData.past_history.brAsthma) pastHistoryArray.push("Br.Asthma");
-       if (formData.past_history.thyroid) pastHistoryArray.push("Thyroid");
-       if (formData.past_history.otherDetails)
-         pastHistoryArray.push(formData.past_history.otherDetails);
+      const pastHistoryArray = [];
+      if (formData.past_history.dm) pastHistoryArray.push("DM");
+      if (formData.past_history.htn) pastHistoryArray.push("HTN");
+      if (formData.past_history.brAsthma) pastHistoryArray.push("Br.Asthma");
+      if (formData.past_history.thyroid) pastHistoryArray.push("Thyroid");
+      if (formData.past_history.otherDetails)
+        pastHistoryArray.push(formData.past_history.otherDetails);
 
       const familyHistoryArray = [];
       if (formData.family_history.piles) familyHistoryArray.push("Piles");
@@ -609,14 +610,17 @@ useEffect(() => {
         familyHistoryArray.push(formData.family_history.other);
 
       const ongoingMedcineArray = [];
-      if (formData.ongoing_medicines.clopidogrel) ongoingMedcineArray.push("Clopidogrel");
-      if (formData.ongoing_medicines.aspirin) ongoingMedcineArray.push("Aspirin");
-      if (formData.ongoing_medicines.warfarin) ongoingMedcineArray.push("Warfarin");
+      if (formData.ongoing_medicines.clopidogrel)
+        ongoingMedcineArray.push("Clopidogrel");
+      if (formData.ongoing_medicines.aspirin)
+        ongoingMedcineArray.push("Aspirin");
+      if (formData.ongoing_medicines.warfarin)
+        ongoingMedcineArray.push("Warfarin");
       if (formData.ongoing_medicines.other)
         ongoingMedcineArray.push(formData.ongoing_medicines.other);
 
       const investigationArray = [];
-      if (formData.investigation.hb) investigationArray.push("HB")
+      if (formData.investigation.hb) investigationArray.push("HB");
       if (formData.investigation.bslr) investigationArray.push("BSL-R");
       if (formData.investigation.bleedingTimeBt) investigationArray.push("BT");
       if (formData.investigation.clottingTimeBt) investigationArray.push("CT");
@@ -629,7 +633,7 @@ useEffect(() => {
       if (formData.investigation.other)
         investigationArray.push(formData.investigation.other);
 
-      const adviceArray =[];
+      const adviceArray = [];
       if (formData.medical_mx.mrd) adviceArray.push("MRD");
       if (formData.medical_mx.manoBf) adviceArray.push("Mano/BF");
       if (formData.medical_mx.coloGastro) adviceArray.push("Colo/Gastro");
@@ -638,24 +642,23 @@ useEffect(() => {
       if (formData.medical_mx.b) adviceArray.push("B12");
       if (formData.medical_mx.d) adviceArray.push("D3");
 
-     const habitsArray = [];
-     if (formData.habits.smoking) habitsArray.push("Smoking");
-     if (formData.habits.alcohol) habitsArray.push("Alcohol");
-     if (formData.habits.tobacco) habitsArray.push("Tobacco");
-     if (formData.habits.drugs) habitsArray.push("Drugs");
+      const habitsArray = [];
+      if (formData.habits.smoking) habitsArray.push("Smoking");
+      if (formData.habits.alcohol) habitsArray.push("Alcohol");
+      if (formData.habits.tobacco) habitsArray.push("Tobacco");
+      if (formData.habits.drugs) habitsArray.push("Drugs");
 
-     const generalArray = [];
-     if (formData.general_history.hoWtLoss) generalArray.push("H/O Wt Loss");
-     if (formData.general_history.decAppetite) generalArray.push("Dec Appetite");
-     if (formData.general_history.hoStrainingForurination)
-       generalArray.push("H/O Straining for urination");
-     if (formData.general_history.acidity) generalArray.push("Acidity");
-     if (formData.general_history.gas) generalArray.push("Gas");
-     if (formData.general_history.bloating) generalArray.push("Bloating");
-     if (formData.general_history.other)
-       generalArray.push(formData.general_history.other);
-
-
+      const generalArray = [];
+      if (formData.general_history.hoWtLoss) generalArray.push("H/O Wt Loss");
+      if (formData.general_history.decAppetite)
+        generalArray.push("Dec Appetite");
+      if (formData.general_history.hoStrainingForurination)
+        generalArray.push("H/O Straining for urination");
+      if (formData.general_history.acidity) generalArray.push("Acidity");
+      if (formData.general_history.gas) generalArray.push("Gas");
+      if (formData.general_history.bloating) generalArray.push("Bloating");
+      if (formData.general_history.other)
+        generalArray.push(formData.general_history.other);
 
       const formattedData = {
         ...formData,
@@ -721,75 +724,91 @@ useEffect(() => {
 
       const result = await response.json();
       console.log("on click Fetched Data:", result.data.patientHistory);
-      console.log("on click fetched medication Data:",result.data.medicationHistory);
+      console.log(
+        "on click fetched medication Data:",
+        result.data.medicationHistory
+      );
 
       if (!response.ok) {
         throw new Error("Failed to fetch previous records");
       }
 
       const patientHistory = result.data.patientHistory;
-      const medicationHistory= result.data.medicationHistory;
+      const medicationHistory = result.data.medicationHistory;
 
       setPreviousRecordDate(
         patientHistory.date_patientHistory || prevData.date_patientHistory || ""
       );
       // const symptomsArray = patientHistory.symptoms;
-const pastHistoryString = patientHistory.past_history || "";
-const knownConditions = ["DM", "HTN", "Br.Asthma", "Thyroid"];
-const pastHistoryArray = pastHistoryString
-  .split(",")
-  .map((item) => item.trim());
+      const pastHistoryString = patientHistory.past_history || "";
+      const knownConditions = ["DM", "HTN", "Br.Asthma", "Thyroid"];
+      const pastHistoryArray = pastHistoryString
+        .split(",")
+        .map((item) => item.trim());
 
-  const generalString = patientHistory.general_history || "";
-  // const GknownConditions = [
-  //   "H/O Wt Loss",
-  //   "Dec Appetite",
-  //   "H/O Straining for urination",
-  //   "Acidity",
-  //   "Gas",
-  //   "Bloating",
-  // ];
-  const generalArray = generalString
-    .split(",")
-    .map((item) => item.trim());
+      const generalString = patientHistory.general_history || "";
+      // const GknownConditions = [
+      //   "H/O Wt Loss",
+      //   "Dec Appetite",
+      //   "H/O Straining for urination",
+      //   "Acidity",
+      //   "Gas",
+      //   "Bloating",
+      // ];
+      const generalArray = generalString.split(",").map((item) => item.trim());
 
-  const AdviceString = patientHistory.medical_mx || "";
-  const AdviceArray = AdviceString.split(",").map((item) => item.trim());
+      const AdviceString = patientHistory.medical_mx || "";
+      const AdviceArray = AdviceString.split(",").map((item) => item.trim());
 
+      const familyHistoryString = patientHistory.family_history || "";
+      const FknownConditions = [
+        "Piles",
+        "Constipation",
+        "DM",
+        "HTN",
+        "Heart Disease",
+      ];
+      const familyHistoryArray = familyHistoryString
+        .split(",")
+        .map((item) => item.trim());
 
-  const familyHistoryString = patientHistory.family_history || "";
-  const FknownConditions = ["Piles", "Constipation", "DM", "HTN", "Heart Disease"];
-  const familyHistoryArray = familyHistoryString
-    .split(",")
-    .map((item) => item.trim());
+      const ongoingMedicineString = patientHistory.ongoing_medicines || "";
+      const MknownConditions = ["Clopidogrel", "Aspirin", "Warfarin"];
+      const ongoingMedicineArray = ongoingMedicineString
+        .split(",")
+        .map((item) => item.trim());
 
-    const ongoingMedicineString = patientHistory.ongoing_medicines || "";
-    const MknownConditions= ["Clopidogrel", "Aspirin", "Warfarin"];
-    const ongoingMedicineArray = ongoingMedicineString
-      .split(",")
-      .map((item) => item.trim());
-
-       
-
-    const investigationString = patientHistory.investigation || "";
-    const IknownConditions = [
-      "HB",
-      "BSL-R",
-      "BT",
-      "CT",
-      "PT INR",
-      "HIV",
-      "Hbsag",
-      "SR.Creatinine",
-      "Vit B12",
-    ];
-    const investigationArray = investigationString
-      .split(",")
-      .map((item) => item.trim());
+      const investigationString = patientHistory.investigation || "";
+      const IknownConditions = [
+        "HB",
+        "BSL-R",
+        "BT",
+        "CT",
+        "PT INR",
+        "HIV",
+        "Hbsag",
+        "SR.Creatinine",
+        "Vit B12",
+      ];
+      const investigationArray = investigationString
+        .split(",")
+        .map((item) => item.trim());
 
       const habitsString = patientHistory.habits || "";
       const habitsArray = habitsString.split(",").map((item) => item.trim());
 
+      const formattedMedications =
+        medicationHistory.length > 0
+          ? medicationHistory.map((med, index) => ({
+              id: index + 1,
+              medicine: med.medicine || "",
+              indication: med.indication || "",
+              since: med.since || "",
+            }))
+          : [
+              { id: 1, medicine: "", indication: "", since: "" },
+              { id: 2, medicine: "", indication: "", since: "" },
+            ];
 
       setFormData((prevData) => ({
         ...prevData,
@@ -908,10 +927,7 @@ const pastHistoryArray = pastHistoryString
           b: AdviceArray.includes("B12"),
           d: AdviceArray.includes("D3"),
         },
-        medications: medicationHistory.medications || [
-          { id: 1, medicine: "", indication: "", since: "" },
-          { id: 2, medicine: "", indication: "", since: "" },
-        ],
+        medications: formattedMedications, // ✅ Set medications properly
       }));
 
       setSelectedOptions(patientHistory.selectedOptions || []);
@@ -997,10 +1013,7 @@ const pastHistoryArray = pastHistoryString
         b: "",
         d: "",
       },
-      medications: [
-        { id: 1, medicine: "", indication: "", since: "" },
-        { id: 2, medicine: "", indication: "", since: "" },
-      ],
+      medications: [],
       surgeryTabs: {
         piles_duration: "",
         fistula_duration: "",
@@ -1733,15 +1746,15 @@ const pastHistoryArray = pastHistoryString
                       </tr>
                     </thead>
                     <tbody>
-                      {formData.medications.map((med) => (
+                      {formData.medications.map((med, index) => (
                         <tr key={med.id}>
-                          <td>{med.id}</td>
+                          <td>{index + 1}</td>
                           <td>
                             <input
                               type="text"
-                              value={medicationHistory.medicine}
+                              value={med.medicine}
                               onChange={(e) =>
-                                handleInputChange(e, med.id, "name")
+                                handleInputChange(e, med.id, "medicine")
                               }
                               placeholder="Enter medication name"
                             />
@@ -1749,7 +1762,7 @@ const pastHistoryArray = pastHistoryString
                           <td>
                             <input
                               type="text"
-                              value={medicationHistory.indication}
+                              value={med.indication}
                               onChange={(e) =>
                                 handleInputChange(e, med.id, "indication")
                               }
@@ -1759,7 +1772,7 @@ const pastHistoryArray = pastHistoryString
                           <td>
                             <input
                               type="text"
-                              value={medicationHistory.since}
+                              value={med.since}
                               onChange={(e) =>
                                 handleInputChange(e, med.id, "since")
                               }
