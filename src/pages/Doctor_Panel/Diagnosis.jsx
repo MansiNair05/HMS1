@@ -192,8 +192,10 @@ export default function Diagnosis() {
     localStorage.getItem("selectedPatientId")
   );
     const [selectedOption, setSelectedOption] = useState({ RF: [] ,Laser:[], MW:[]}); // Track selected checkboxes
-  
+     const [selectedAdviceOptions, setSelectedAdviceOptions] = useState({ advice: [] }); // Track selected checkboxes
+
   const [formData, setFormData] = useState({
+    advice:"",
     diagnosis: "",
     date_diagnosis: "",
     provisionaldiagnosis: "",
@@ -431,13 +433,13 @@ export default function Diagnosis() {
     });
   };
 
-  const handleSurgicalAdviceChange = (selectedOption) => {
-    setFormData((prevState) => {
-      const updatedAdvice = prevState.surgicalAdvice.includes(selectedOption)
-        ? prevState.surgicalAdvice.filter((item) => item !== selectedOption)
-        : [...prevState.surgicalAdvice, selectedOption];
+  const handleAdviceChange = (selectedAdvice) => {
+    setSelectedAdviceOptions((prevState) => {
+      const updatedAdvice = prevState.advice.includes(selectedAdvice)
+        ? prevState.advice.filter((item) => item !== selectedAdvice)
+        : [...prevState.advice, selectedAdvice];
 
-      return { ...prevState, surgicalAdvice: updatedAdvice };
+      return { ...prevState, advice: updatedAdvice };
     });
   };
 
@@ -614,13 +616,14 @@ if (formData.diagnosisAdvice && formData.diagnosisAdvice.test) {
       const requestBody = {
         patientId: patientId.toString(),
         diagnosis: formData.diagnosis,
+        advice: selectedAdviceOptions.advice.join(","),
         date_diagnosis: formData.date_diagnosis || null,
         provisionaldiagnosis: formData.provisionaldiagnosis || "",
         investigationorders: formData.investigationorders,
         diagnosisAdvice: adviceArray.join(","),
         medicines: medicineArray.join(","),
         medicineDetails: formData.medicineDetails || "",
-        surgicalAdvice: formData.surgicalAdvice.join(","), // Convert array to string
+        surgicalAdvice: formData.surgicalAdvice || "", // Convert array to string
         comment: formData.comment || "",
         adviceComment: formData.adviceComment || "",
         SurgicalDate: formData.SurgicalDate || null,
@@ -673,6 +676,9 @@ if (formData.diagnosisAdvice && formData.diagnosisAdvice.test) {
       }
       setSelectedOption({
         RF:[], Laser:[],MW:[]
+      });
+      setSelectedAdviceOptions({
+        advice:[]
       });
     } catch (error) {
       console.error("Submission Error:", error);
@@ -793,6 +799,9 @@ setSelectedOption({
   Laser: diagnosisData.Laser ? diagnosisData.Laser.split(",") : [],
   MW: diagnosisData.MW ? diagnosisData.MW.split(",") : [],
 });
+setSelectedAdviceOptions({
+  advice: diagnosisData.advice ? diagnosisData.advice.split(",") :[],
+});
       // Show the "Edit Diagnosis" button
       setShowEditButton(true);
       // Disable "Previous Records" button after clicking it
@@ -839,6 +848,7 @@ setSelectedOption({
   const handleNewRecord = () => {
     setFormData({
       date_diagnosis: new Date().toISOString().split("T")[0],
+      advice:"",
       provisionaldiagnosis: "",
       investigationorders: "",
       diagnosis: "",
@@ -890,6 +900,9 @@ setSelectedOption({
     });
     setSelectedOption({
       RF: [], Laser:[], MW:[]
+    });
+    setSelectedAdviceOptions({
+      advice:[]
     });
 
     // Hide "Edit Diagnosis" button when creating a new record
@@ -965,7 +978,7 @@ setSelectedOption({
                       >
                         Previous Records
                       </button>
-                     
+
                       {/* Show Edit Diagnosis Button only after clicking "Previous Records" */}
                       {showEditButton && (
                         <button
@@ -1200,35 +1213,22 @@ setSelectedOption({
                         <Form.Label>Surgical Advice:</Form.Label>
                         <Dropdown>
                           <Dropdown.Toggle variant="primary" as={Button}>
-                            {formData.surgicalAdvice?.length > 0
-                              ? formData.surgicalAdvice.join(", ")
+                            {selectedAdviceOptions.advice.length > 0
+                              ? selectedAdviceOptions.advice.join(", ")
                               : "Select Surgical Advice"}
                           </Dropdown.Toggle>
 
-                          <Dropdown.Menu
-                            style={{
-                              maxHeight: "200px",
-                              overflowY: "auto",
-                              width: "100%",
-                            }}
-                          >
-                            {surgicalAdviceOptions.map((option) => (
-                              <Dropdown.Item
-                                key={option}
-                                as="div"
-                                onClick={() =>
-                                  handleSurgicalAdviceChange(option)
-                                } // ✅ Click anywhere selects checkbox
-                                style={{ cursor: "pointer" }}
-                              >
+                          <Dropdown.Menu>
+                            {surgicalAdviceOptions.map((advice, index) => (
+                              <Dropdown.Item key={index} as="div">
                                 <Form.Check
                                   type="checkbox"
-                                  label={option}
-                                  value={option}
-                                  checked={formData.surgicalAdvice?.includes(
-                                    option
+                                  label={advice}
+                                  value={advice}
+                                  checked={selectedAdviceOptions.advice.includes(
+                                    advice
                                   )}
-                                  onChange={() => {}} // ✅ Empty to prevent double triggering
+                                  onChange={() => handleAdviceChange(advice)}
                                 />
                               </Dropdown.Item>
                             ))}
@@ -1325,87 +1325,96 @@ setSelectedOption({
                     <Col md={6}>
                       <Form.Group>
                         <Form.Label>Category:</Form.Label>
-                        <Row className="mt-2">
-                              <Form.Group>
-                                <Dropdown>
-                                  <Dropdown.Toggle
-                                    variant="primary"
-                                    as={Button}
-                                  >
-                                    {selectedOption.RF.length > 0
-                                      ? selectedOption.RF.join(", ")
-                                      : "Select RF"}
-                                  </Dropdown.Toggle>
-                                  <Dropdown.Menu>
-                                    {categoryOptions.RF.map((option) => (
-                                      <Dropdown.Item key={option} as="div">
-                                        <Form.Check
-                                          type="checkbox"
-                                          label={option}
-                                          value={option}
-                                          checked={selectedOption.RF.includes(
-                                            option
-                                          )}
-                                          onChange={(e) =>
-                                            handleStateChange(e, option, "RF")
-                                          }
-                                        />
-                                      </Dropdown.Item>
-                                    ))}
-                                  </Dropdown.Menu>
-                                </Dropdown>
+                        <Row className="mb-3">
+                          <Col md={4}>
+                            <Form.Group>
+                              <Form.Label>RF:</Form.Label>
+                              <Dropdown>
+                                <Dropdown.Toggle variant="primary" as={Button}>
+                                  {selectedOption.RF.length > 0
+                                    ? selectedOption.RF.join(", ")
+                                    : "Select RF"}
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu>
+                                  {categoryOptions.RF.map((option) => (
+                                    <Dropdown.Item key={option} as="div">
+                                      <Form.Check
+                                        type="checkbox"
+                                        label={option}
+                                        value={option}
+                                        checked={selectedOption.RF.includes(
+                                          option
+                                        )}
+                                        onChange={(e) =>
+                                          handleStateChange(e, option, "RF")
+                                        }
+                                      />
+                                    </Dropdown.Item>
+                                  ))}
+                                </Dropdown.Menu>
+                              </Dropdown>
+                            </Form.Group>
+                          </Col>
 
-                                <Dropdown>
-                                  <Dropdown.Toggle
-                                    variant="primary"
-                                    as={Button}
-                                  >
-                                    {selectedOption.Laser.length > 0
-                                      ? selectedOption.Laser.join(", ")
-                                      : "Select Laser"}
-                                  </Dropdown.Toggle>
-                                  <Dropdown.Menu>
-                                    {categoryOptions.Laser.map((option) => (
-                                      <Dropdown.Item key={option} as="div">
-                                        <Form.Check
-                                          type="checkbox"
-                                          label={option}
-                                          value={option}
-                                          checked={selectedOption.Laser.includes(
-                                            option
-                                          )}
-                                          onChange={(e) =>
-                                            handleStateChange(
-                                              e,
-                                              option,
-                                              "Laser"
-                                            )
-                                          }
-                                        />
-                                      </Dropdown.Item>
-                                    ))}
-                                  </Dropdown.Menu>
-                                </Dropdown>
-                                <Dropdown>
-  <Dropdown.Toggle variant="primary" as={Button}>
-    {selectedOption.MW.length > 0 ? selectedOption.MW.join(", ") : "Select MW"}
-  </Dropdown.Toggle>
-  <Dropdown.Menu>
-    {categoryOptions.MW.map((option) => (
-      <Dropdown.Item key={option} as="div">
-        <Form.Check
-          type="checkbox"
-          label={option}
-          value={option}
-          checked={selectedOption.MW.includes(option)}
-          onChange={(e) => handleStateChange(e, option, "MW")}
-        />
-      </Dropdown.Item>
-    ))}
-  </Dropdown.Menu></Dropdown>
-                              </Form.Group>
-                            
-                          
+                          <Col md={4}>
+                            <Form.Group>
+                              <Form.Label>Laser:</Form.Label>
+                              <Dropdown>
+                                <Dropdown.Toggle variant="primary" as={Button}>
+                                  {selectedOption.Laser.length > 0
+                                    ? selectedOption.Laser.join(", ")
+                                    : "Select Laser"}
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu>
+                                  {categoryOptions.Laser.map((option) => (
+                                    <Dropdown.Item key={option} as="div">
+                                      <Form.Check
+                                        type="checkbox"
+                                        label={option}
+                                        value={option}
+                                        checked={selectedOption.Laser.includes(
+                                          option
+                                        )}
+                                        onChange={(e) =>
+                                          handleStateChange(e, option, "Laser")
+                                        }
+                                      />
+                                    </Dropdown.Item>
+                                  ))}
+                                </Dropdown.Menu>
+                              </Dropdown>
+                            </Form.Group>
+                          </Col>
+
+                          <Col md={4}>
+                            <Form.Group>
+                              <Form.Label>MW:</Form.Label>
+                              <Dropdown>
+                                <Dropdown.Toggle variant="primary" as={Button}>
+                                  {selectedOption.MW.length > 0
+                                    ? selectedOption.MW.join(", ")
+                                    : "Select MW"}
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu>
+                                  {categoryOptions.MW.map((option) => (
+                                    <Dropdown.Item key={option} as="div">
+                                      <Form.Check
+                                        type="checkbox"
+                                        label={option}
+                                        value={option}
+                                        checked={selectedOption.MW.includes(
+                                          option
+                                        )}
+                                        onChange={(e) =>
+                                          handleStateChange(e, option, "MW")
+                                        }
+                                      />
+                                    </Dropdown.Item>
+                                  ))}
+                                </Dropdown.Menu>
+                              </Dropdown>
+                            </Form.Group>
+                          </Col>
                         </Row>
                       </Form.Group>
                     </Col>
