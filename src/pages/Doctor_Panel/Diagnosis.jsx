@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.29.118:5000/api"; // Replace with your actual backend URL
+const BASE_URL = "http://192.168.29.115:5000/api"; // Replace with your actual backend URL
 
 const DiagnosisTabs = () => {
   const [key, setKey] = useState("piles");
@@ -191,11 +191,17 @@ export default function Diagnosis() {
   const [patientId, setPatientId] = useState(
     localStorage.getItem("selectedPatientId")
   );
-    const [selectedOption, setSelectedOption] = useState({ RF: [] ,Laser:[], MW:[]}); // Track selected checkboxes
-     const [selectedAdviceOptions, setSelectedAdviceOptions] = useState({ advice: [] }); // Track selected checkboxes
+  const [selectedOption, setSelectedOption] = useState({
+    RF: [],
+    Laser: [],
+    MW: [],
+  }); // Track selected checkboxes
+  const [selectedAdviceOptions, setSelectedAdviceOptions] = useState({
+    advice: [],
+  }); // Track selected checkboxes
 
   const [formData, setFormData] = useState({
-    advice:"",
+    advice: "",
     diagnosis: "",
     date_diagnosis: "",
     provisionaldiagnosis: "",
@@ -284,103 +290,47 @@ export default function Diagnosis() {
     if (storedPatientId) setPatientId(storedPatientId);
   }, []);
 
-  useEffect(() => {
-    if (!patientId) {
-      console.warn("No patientId found, skipping fetch");
-      return;
-    }
-    const fetchPatientData = async () => {
-      console.log(`Fetching data for patient ID: ${patientId}`);
-      try {
-        const response = await fetch(
-          `${BASE_URL}/V1/diagnosis/listDiagnosis/${patientId}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
+useEffect(() => {
+  if (!patientId) {
+    console.warn("No patientId found, skipping fetch");
+    return;
+  }
+  const fetchPatientData = async () => {
+    console.log(`Fetching data for patient ID: ${patientId}`);
+    try {
+      const response = await fetch(
+        `${BASE_URL}/V1/diagnosis/listDiagnosis/${patientId}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (!response.ok) {
+        console.error(
+          "API Response Error:",
+          response.status,
+          await response.text()
         );
-
-        if (!response.ok) {
-          console.error(
-            "API Response Error:",
-            response.status,
-            await response.text()
-          );
-          return;
-        }
-
-        const data = await response.json();
-        console.log("Fetched Data:", data.data.diagnosisData);
-
-        if (data?.data?.diagnosisData?.length > 0) {
-          const diagnosisData = data.data.diagnosisData[0];
-
-          setFormData((prevState) => ({
-            ...prevState,
-            ...diagnosisData,
-            diagnosis: diagnosisData.diagnosis,
-            provisionaldiagnosis: diagnosisData.provisionaldiagnosis,
-            investigationorders: diagnosisData.investigationorders,
-            comment: diagnosisData.comment,
-            categoryComment: diagnosisData.categoryComment,
-            adviceComment: diagnosisData.adviceComment,
-            diagnosisAdvice: {
-              ...prevState.diagnosisAdvice,
-              medication: diagnosisData.diagnosisAdvice?.medication || false,
-              surgery: diagnosisData.diagnosisAdvice?.surgery || false,
-              test: diagnosisData.diagnosisAdvice?.test || false,
-            },
-            medicines: {
-              ...prevState.medicines,
-              aac: diagnosisData.medicines?.aac || false,
-              probiotics: diagnosisData.medicines?.probiotics || false,
-              nsaids: diagnosisData.medicines?.nsaids || false,
-              antibiotics: diagnosisData.medicines?.antibiotics || false,
-              antacid: diagnosisData.medicines?.antacid || false,
-              other: diagnosisData.medicines?.other || "",
-            },
-            other: {
-              ...prevState.other,
-              insurance: diagnosisData.other?.insurance || false,
-              reimbursement: diagnosisData.other?.reimbursement || false,
-              workshop: diagnosisData.other?.workshop || false,
-              pdc: diagnosisData.other?.pdc || false,
-            },
-            medical_mx: {
-              ...prevState.medical_mx,
-              mcdpa: diagnosisData.medical_mx?.mcdpa || false,
-              manometry: diagnosisData.medical_mx?.manometry || false,
-              diet: diagnosisData.medical_mx?.diet || false,
-              echo: diagnosisData.medical_mx?.echo || false,
-              uroflowmetry: diagnosisData.medical_mx?.uroflowmetry || false,
-              colo: diagnosisData.medical_mx?.colo || false,
-              xray: diagnosisData.medical_mx?.xray || false,
-              mri: diagnosisData.medical_mx?.mri || false,
-              cht: diagnosisData.medical_mx?.cht || false,
-              gastro: diagnosisData.medical_mx?.gastro || false,
-              ct: diagnosisData.medical_mx?.ct || false,
-              doppler: diagnosisData.medical_mx?.doppler || false,
-              biofeedback: diagnosisData.medical_mx?.biofeedback || false,
-              labInvestigation:
-                diagnosisData.medical_mx?.labInvestigation || false,
-              ultrasonography:
-                diagnosisData.medical_mx?.ultrasonography || false,
-              EchoAnalImaging:
-                diagnosisData.medical_mx?.EchoAnalImaging || false,
-            },
-          }));
-        } else {
-          console.warn("No patient data found in API response");
-          setFormData({});
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
+        return;
       }
-    };
-    fetchPatientData();
-  }, [patientId]);
+
+      const data = await response.json();
+      console.log("Fetched Data:", data.data.diagnosisData);
+
+      // ❌ Don't update the form data automatically
+      if (!data?.data?.diagnosisData?.length) {
+        console.warn("No previous data found. Keeping the form empty.");
+        setFormData({}); // Keep form empty
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  fetchPatientData();
+}, [patientId]);
+
 
   // Fetch options from API
   useEffect(() => {
@@ -567,15 +517,15 @@ export default function Diagnosis() {
         return;
       }
       const adviceArray = [];
-if (formData.diagnosisAdvice && formData.diagnosisAdvice.medication) {
-  adviceArray.push("Medication");
-}
-if (formData.diagnosisAdvice && formData.diagnosisAdvice.surgery) {
-  adviceArray.push("Surgery");
-}
-if (formData.diagnosisAdvice && formData.diagnosisAdvice.test) {
-  adviceArray.push("Test");
-}
+      if (formData.diagnosisAdvice && formData.diagnosisAdvice.medication) {
+        adviceArray.push("Medication");
+      }
+      if (formData.diagnosisAdvice && formData.diagnosisAdvice.surgery) {
+        adviceArray.push("Surgery");
+      }
+      if (formData.diagnosisAdvice && formData.diagnosisAdvice.test) {
+        adviceArray.push("Test");
+      }
 
       const medicineArray = [];
       if (formData.medicines.aac) medicineArray.push("AAC");
@@ -592,12 +542,13 @@ if (formData.diagnosisAdvice && formData.diagnosisAdvice.test) {
       if (formData.other.workshop) otherArray.push("Workshop");
       if (formData.other.pdc) otherArray.push("PDC");
 
-      const medical_mxArray =[];
+      const medical_mxArray = [];
       if (formData.medical_mx.mcdpa) medical_mxArray.push("MCDPA");
       if (formData.medical_mx.manometry) medical_mxArray.push("Manometry");
       if (formData.medical_mx.diet) medical_mxArray.push("Diet");
       if (formData.medical_mx.echo) medical_mxArray.push("ECHO");
-      if (formData.medical_mx.uroflowmetry) medical_mxArray.push("Uroflowmetry");
+      if (formData.medical_mx.uroflowmetry)
+        medical_mxArray.push("Uroflowmetry");
       if (formData.medical_mx.colo) medical_mxArray.push("Colo");
       if (formData.medical_mx.xray) medical_mxArray.push("X-ray");
       if (formData.medical_mx.mri) medical_mxArray.push("MRI");
@@ -675,10 +626,12 @@ if (formData.diagnosisAdvice && formData.diagnosisAdvice.test) {
         setIsDisabled(true);
       }
       setSelectedOption({
-        RF:[], Laser:[],MW:[]
+        RF: [],
+        Laser: [],
+        MW: [],
       });
       setSelectedAdviceOptions({
-        advice:[]
+        advice: [],
       });
     } catch (error) {
       console.error("Submission Error:", error);
@@ -717,7 +670,7 @@ if (formData.diagnosisAdvice && formData.diagnosisAdvice.test) {
       }
 
       const enrichedDiagnosisData = result.data.enrichedDiagnosisData;
-      const diagnosisData = result.data.diagnosisData;
+      const diagnosisData = result.data.diagnosisData[0];
 
       const AdviceString = diagnosisData.diagnosisAdvice || "";
       const AdviceArray = AdviceString.split(",").map((item) => item.trim());
@@ -725,7 +678,6 @@ if (formData.diagnosisAdvice && formData.diagnosisAdvice.test) {
       const otherString = diagnosisData.other || "";
       const otherArray = otherString.split(",").map((item) => item.trim());
 
-      
       const medical_mxString = diagnosisData.medical_mx || "";
       const medical_mxArray = medical_mxString
         .split(",")
@@ -746,6 +698,7 @@ if (formData.diagnosisAdvice && formData.diagnosisAdvice.test) {
       // Update formData with all the fields from the API
       setFormData((prevData) => ({
         ...prevData,
+        ...diagnosisData,
         ...enrichedDiagnosisData,
         date_diagnosis: diagnosisData.date_diagnosis || "",
         diagnosis: diagnosisData.diagnosis || "",
@@ -775,7 +728,7 @@ if (formData.diagnosisAdvice && formData.diagnosisAdvice.test) {
           workshop: otherArray.includes("Workshop"),
           pdc: otherArray.includes("PDC"),
         },
-        medical_mx:{
+        medical_mx: {
           mcdpa: medical_mxArray.includes("MCDPA"),
           manometry: medical_mxArray.includes("Manometry"),
           diet: medical_mxArray.includes("Diet"),
@@ -789,19 +742,19 @@ if (formData.diagnosisAdvice && formData.diagnosisAdvice.test) {
           ct: medical_mxArray.includes("CT"),
           doppler: medical_mxArray.includes("Doppler"),
           biofeedback: medical_mxArray.includes("Biofeedback"),
-          labInvestigation:medical_mxArray.includes("Lab  Investigation"),
+          labInvestigation: medical_mxArray.includes("Lab  Investigation"),
           ultrasonography: medical_mxArray.includes("Ultrasonography"),
           EchoAnalImaging: medical_mxArray.includes("3D Endo Anal Imaging"),
-        }
+        },
       }));
-setSelectedOption({
-  RF: diagnosisData.RF ? diagnosisData.RF.split(",") : [],
-  Laser: diagnosisData.Laser ? diagnosisData.Laser.split(",") : [],
-  MW: diagnosisData.MW ? diagnosisData.MW.split(",") : [],
-});
-setSelectedAdviceOptions({
-  advice: diagnosisData.advice ? diagnosisData.advice.split(",") :[],
-});
+      setSelectedOption({
+        RF: diagnosisData.RF ? diagnosisData.RF.split(",") : [],
+        Laser: diagnosisData.Laser ? diagnosisData.Laser.split(",") : [],
+        MW: diagnosisData.MW ? diagnosisData.MW.split(",") : [],
+      });
+      setSelectedAdviceOptions({
+        advice: diagnosisData.advice ? diagnosisData.advice.split(",") : [],
+      });
       // Show the "Edit Diagnosis" button
       setShowEditButton(true);
       // Disable "Previous Records" button after clicking it
@@ -833,22 +786,22 @@ setSelectedAdviceOptions({
     // This will enable "Save Edit Diagnosis" and disable "Save New Record"
   };
 
-    const handleStateChange = (e, value, category) => {
-      if (isDisabled) return; // Don't update if form is disabled
+  const handleStateChange = (e, value, category) => {
+    if (isDisabled) return; // Don't update if form is disabled
 
-      const { checked } = e.target;
-      setSelectedOption((prevState) => ({
-        ...prevState,
-        [category]: checked
-          ? [...prevState[category], value]
-          : prevState[category].filter((item) => item !== value),
-      }));
-    };
+    const { checked } = e.target;
+    setSelectedOption((prevState) => ({
+      ...prevState,
+      [category]: checked
+        ? [...prevState[category], value]
+        : prevState[category].filter((item) => item !== value),
+    }));
+  };
 
   const handleNewRecord = () => {
     setFormData({
       date_diagnosis: new Date().toISOString().split("T")[0],
-      advice:"",
+      advice: "",
       provisionaldiagnosis: "",
       investigationorders: "",
       diagnosis: "",
@@ -899,10 +852,12 @@ setSelectedAdviceOptions({
       },
     });
     setSelectedOption({
-      RF: [], Laser:[], MW:[]
+      RF: [],
+      Laser: [],
+      MW: [],
     });
     setSelectedAdviceOptions({
-      advice:[]
+      advice: [],
     });
 
     // Hide "Edit Diagnosis" button when creating a new record
@@ -918,9 +873,7 @@ setSelectedAdviceOptions({
   };
 
   // Add a useEffect to log form data changes
-  useEffect(() => {
-    console.log("Current Form Data:", formData);
-  }, [formData]);
+
 
   return (
     <div

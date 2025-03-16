@@ -12,11 +12,11 @@ const Surgery = () => {
     assistanceDoctor: "",
     anaesthetist: "",
     anesthesia: {
-      LA: false,
-      SA: false,
-      GA: false,
+      la: false,
+      sa: false,
+      ga: false,
+      other:"",
     },
-    anesthesiaDetails: "", // Add this line
 
     plan: "",
     surgery_remarks: "",
@@ -37,7 +37,7 @@ const Surgery = () => {
   const [previousRecordDate, setPreviousRecordDate] = useState("");
   const [isOtherSpecifyDisabled, setIsOtherSpecifyDisabled] = useState(false);
 
-  const BASE_URL = "http://192.168.29.118:5000/api";
+  const BASE_URL = "http://192.168.29.115:5000/api";
 
   // Update the API endpoints constants
   const API_ENDPOINTS = {
@@ -107,17 +107,11 @@ const Surgery = () => {
       const surgeryData = result.data.surgeryDetails;
 
       // Ensure surgeryData and its properties are defined
-      const anesthesiaTypes = surgeryData.anesthesia
-        ? surgeryData.anesthesia.split(", ")
-        : [];
-      const anesthesiaObject = {
-        LA: anesthesiaTypes.includes("LA"),
-        SA: anesthesiaTypes.includes("SA"),
-        GA: anesthesiaTypes.includes("GA"),
-      };
-      const otherAnesthesiaValues = anesthesiaTypes
-        .filter((type) => !["LA", "SA", "GA"].includes(type))
-        .join(", ");
+     const AnesthesiaString = surgeryData.anesthesia || "";
+     const AknownConditions = ["LA", "SA", "GA"];
+     const anesthesiaArray = AnesthesiaString.split(",").map((item) =>
+       item.trim()
+     );
 
       // Update states
       setDisablePreviousButton(true);
@@ -132,12 +126,18 @@ const Surgery = () => {
         risk_consent: surgeryData.risk_consent || "",
         assistanceDoctor: surgeryData.assistanceDoctor || "",
         anaesthetist: surgeryData.anaesthetist || "",
-        anesthesia: anesthesiaObject, // Set the parsed object
+        anesthesia: {
+          la: anesthesiaArray.includes("LA"),
+          sa: anesthesiaArray.includes("SA"),
+          ga: anesthesiaArray.includes("GA"),
+          other: anesthesiaArray
+            .filter((condition) => !AknownConditions.includes(condition))
+            .join(", "), // Set otherDetails
+        }, // Set the parsed object
         surgery_remarks: surgeryData.surgery_remarks || "",
         plan: surgeryData.plan || "",
         surgery_note: surgeryData.surgery_note || "",
         additional_comment: surgeryData.additional_comment || "",
-        anesthesiaDetails: otherAnesthesiaValues, // Store other values separately
       });
     } catch (error) {
       console.error("Error fetching previous records:", error);
@@ -154,11 +154,10 @@ const Surgery = () => {
       assistanceDoctor: "",
       anaesthetist: "",
       anesthesia: {
-        LA: false,
-        SA: false,
-        GA: false,
+        LA: "",
+        SA: "",
+        GA: "",
       },
-      anesthesiaDetails: "", // Add this line
 
       surgery_remarks: "",
       plan: "",
@@ -178,6 +177,10 @@ const Surgery = () => {
   // Function to handle edit
   const handleEditSurgery = () => {
     setIsDisabled(false);
+    setSelectedOptions((prev) => ({
+      ...prev,
+      assistanceDoctor: formData.assistanceDoctor || "", // Ensure old value is loaded
+    }));
     setIsOtherSpecifyDisabled(true);
     alert("You can now edit the surgery details.");
   };
@@ -188,16 +191,13 @@ const Surgery = () => {
       console.log("Submitting surgery details for patientId:", patientId);
 
       // Convert anesthesia object to string
-      const selectedAnesthesia = Object.entries(formData.anesthesia)
-        .filter(([_, value]) => value)
-        .map(([key]) => key)
-        .join(", ");
-
-      // Include only new values in anesthesiaDetails
-      const otherAnesthesia = formData.anesthesiaDetails
-        .split(", ")
-        .filter((type) => !selectedAnesthesia.includes(type))
-        .join(", ");
+      const anesthesiaArray = [];
+      if (formData.anesthesia.la)
+        anesthesiaArray.push("LA");
+      if (formData.anesthesia.sa) anesthesiaArray.push("SA");
+      if (formData.anesthesia.ga) anesthesiaArray.push("GA");
+      if (formData.anesthesia.other)
+        anesthesiaArray.push(formData.anesthesia.other);
 
       // Construct the request body
       const requestBody = {
@@ -208,8 +208,7 @@ const Surgery = () => {
         assistanceDoctor:
           selectedOptions.assistanceDoctor || formData.assistanceDoctor || "",
         anaesthetist: selectedOptions.anaesthetist || "",
-        anesthesia: selectedAnesthesia, // Only LA, SA, GA
-        anesthesiaDetails: otherAnesthesia, // Store remaining values separately
+        anesthesia: anesthesiaArray.join(","), // Only LA, SA, GA
 
         surgery_remarks: formData.surgery_remarks,
         plan: formData.plan,
@@ -279,10 +278,7 @@ const Surgery = () => {
         .join(", ");
 
       // Include only new values in anesthesiaDetails
-      const otherAnesthesia = formData.anesthesiaDetails
-        .split(", ")
-        .filter((type) => !selectedAnesthesia.includes(type))
-        .join(", ");
+    
 
       const requestBody = {
         patientId: patientId,
@@ -292,7 +288,6 @@ const Surgery = () => {
         assistanceDoctor: selectedOptions.assistanceDoctor || "",
         anaesthetist: selectedOptions.anaesthetist || "",
         anesthesia: selectedAnesthesia, // Only LA, SA, GA
-        anesthesiaDetails: otherAnesthesia,
         surgery_remarks: formData.surgery_remarks,
         plan: formData.plan,
         surgery_note: formData.surgery_note,
@@ -343,6 +338,28 @@ const Surgery = () => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
+  const handleDateChange = (date, name) => {
+    if (!date) {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: "", // Reset if date is cleared
+      }));
+      return;
+    }
+
+    // Convert to local date string (YYYY-MM-DD) before storing
+    const localDate = new Date(
+      date.getTime() - date.getTimezoneOffset() * 60000
+    )
+      .toISOString()
+      .split("T")[0];
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: localDate,
+    }));
+  };
+
 
   const handleCheckboxChange = (e) => {
     const { name, checked } = e.target;
@@ -435,16 +452,9 @@ const Surgery = () => {
                               ? new Date(formData.admission_date)
                               : null
                           }
-                          onChange={(date) => {
-                            handleInputChange({
-                              target: {
-                                name: "admission_date",
-                                value: date
-                                  ? date.toISOString().split("T")[0]
-                                  : "",
-                              },
-                            });
-                          }}
+                          onChange={(date) =>
+                            handleDateChange(date, "admission_date")
+                          }
                           disabled={isDisabled}
                           dateFormat="yyyy-MM-dd"
                           className="form-control"
@@ -470,16 +480,9 @@ const Surgery = () => {
                               ? new Date(formData.surgery_date)
                               : null
                           }
-                          onChange={(date) => {
-                            handleInputChange({
-                              target: {
-                                name: "surgery_date",
-                                value: date
-                                  ? date.toISOString().split("T")[0]
-                                  : "",
-                              },
-                            });
-                          }}
+                          onChange={(date) =>
+                            handleDateChange(date, "surgery_date")
+                          }
                           dateFormat="yyyy-MM-dd"
                           className="form-control"
                           placeholderText="Select Surgery Date"
@@ -534,17 +537,21 @@ const Surgery = () => {
                         <Form.Label>Assistant Doctor:</Form.Label>
                         <Form.Select
                           value={
-                            formData?.assistanceDoctor ||
-                            selectedOptions?.assistanceDoctor ||
-                            handleInputChange ||
+                            selectedOptions.assistanceDoctor ||
+                            formData.assistanceDoctor ||
                             ""
                           }
-                          onChange={(e) =>
-                            setSelectedOptions({
-                              ...selectedOptions,
-                              assistanceDoctor: e.target.value,
-                            })
-                          }
+                          onChange={(e) => {
+                            const selectedValue = e.target.value;
+                            setSelectedOptions((prev) => ({
+                              ...prev,
+                              assistanceDoctor: selectedValue,
+                            }));
+                            setFormData((prev) => ({
+                              ...prev,
+                              assistanceDoctor: selectedValue, // Update form data so it reflects immediately
+                            }));
+                          }}
                           disabled={isDisabled}
                         >
                           <option value="">Select Assistant</option>
@@ -604,8 +611,9 @@ const Surgery = () => {
                                 <Form.Check
                                   inline
                                   type="checkbox"
-                                  name="LA"
-                                  checked={formData.anesthesia.LA}
+                                  name="la"
+                                  value={formData.anesthesia.la}
+                                  checked={formData.anesthesia.la}
                                   onChange={handleCheckboxChange}
                                   disabled={isDisabled}
                                   id="LA"
@@ -618,8 +626,9 @@ const Surgery = () => {
                                 <Form.Check
                                   inline
                                   type="checkbox"
-                                  name="SA"
-                                  checked={formData.anesthesia.SA}
+                                  name="sa"
+                                  value={formData.anesthesia.sa}
+                                  checked={formData.anesthesia.sa}
                                   onChange={handleCheckboxChange}
                                   disabled={isDisabled}
                                   id="SA"
@@ -632,8 +641,9 @@ const Surgery = () => {
                                 <Form.Check
                                   inline
                                   type="checkbox"
-                                  name="GA"
-                                  checked={formData.anesthesia.GA}
+                                  name="ga"
+                                  value={formData.anesthesia.ga || ""}
+                                  checked={formData.anesthesia.ga}
                                   onChange={handleCheckboxChange}
                                   disabled={isDisabled}
                                   id="GA"
@@ -647,9 +657,17 @@ const Surgery = () => {
                             <Form.Control
                               as="textarea"
                               placeholder="Other (Specify)"
-                              name="anesthesiaDetails"
-                              value={formData.anesthesiaDetails || ""}
-                              onChange={handleInputChange}
+                              name="anesthesia.other"
+                              value={formData.anesthesia.other || ""}
+                              onChange={(e) =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  anesthesia: {
+                                    ...prev.anesthesia,
+                                    other: e.target.value,
+                                  },
+                                }))
+                              }
                               disabled={isDisabled || isOtherSpecifyDisabled}
                             />
                           </Col>

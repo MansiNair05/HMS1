@@ -292,7 +292,7 @@ export default function PatientHistory() {
     presentcomplaints: "",
     complaints: "",
     ongoing_medicines: {
-      Clopidogrel: false,
+      clopidogrel: false,
       aspirin: false,
       warfarin: false,
       other: "",

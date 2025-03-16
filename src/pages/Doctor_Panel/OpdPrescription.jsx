@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.29.118:5000/api";
+const BASE_URL = "http://192.168.29.115:5000/api";
 
 export default function OpdPrescription() {
   const [formData, setFormData] = useState({
@@ -22,12 +22,12 @@ export default function OpdPrescription() {
     medical_history: "",
     investigation: "",
     creation_timestamp: "",
-    allergy: false,
+    allergy: "",
     doctor_id: "",
     testAdvice: [],
     diagnosis: "",
     advicesx: "",
-    admissionnote: "",
+    admmisionnote: "",
     nextAppointment: "",
     // appointmentDate: "",
 
@@ -328,6 +328,7 @@ export default function OpdPrescription() {
       // Convert medicine_time object to a string
       const formDataToSubmit = {
         ...formData,
+        creation_timestamp: formData.creation_timestamp || null,
         medicine_time: JSON.stringify(formData.medicine_time),
       };
 
@@ -391,6 +392,7 @@ export default function OpdPrescription() {
       }
 
       const prescription = result.data.prescription;
+      const urology =result.data.urology;
 
       // Ensure prescription is valid
       if (!prescription || typeof prescription !== "object") {
@@ -404,13 +406,15 @@ export default function OpdPrescription() {
       // Prevent page from disappearing by ensuring no invalid state updates
       setFormData((prev) => ({
         ...prev,
+        prescription_type:prescription.prescription_type|| "",
+investigation: urology?.[0]?.investigation || prev.investigation,
         creation_timestamp:
-          prescription.creation_timestamp || prev.creation_timestamp || "",
-        allergy: prescription.allergy === "1" || prescription.allergy === true,
+          prescription.creation_timestamp,
+        allergy: prescription.allergy || prev.allergy || "",
         doctor_id: prescription.doctor_id || prev.doctor_id || "",
         diagnosis: prescription.diagnosis || prev.diagnosis || "",
         advicesx: prescription.advicesx || prev.advicesx || "",
-        admissionnote: prescription.admissionnote || prev.admissionnote || "",
+        admmisionnote: prescription.admmisionnote || prev.admmisionnote || "",
         testAdvice: Array.isArray(prescription.testAdvice)
           ? prescription.testAdvice
           : [],
@@ -419,9 +423,10 @@ export default function OpdPrescription() {
       // Update table data safely
       if (Array.isArray(prescription.medicines)) {
         setTableData(
-          prescription.medicines.map((med) => ({
+          prescription.medicines.map((med, prev) => ({
+            ...prev,
             medicine: med.medicine_name || "N/A",
-            qty: med.medicine_quantity || "0",
+            qty: med.medicine_quantity || prev.medicine_quantity || "0",
             mealTimings: med.medicine_time || "N/A",
             days: med.medicine_days || "0",
           }))
@@ -464,13 +469,13 @@ export default function OpdPrescription() {
       prepo_investigation: [],
       medical_history: "",
       investigation: "",
-      creation_timestamp: "",
-      allergy: false,
+      creation_timestamp: new Date().toISOString().split("T")[0],
+      allergy: "",
       doctor_id: "",
       testAdvice: [],
       diagnosis: "",
       advicesx: "",
-      admissionnote: "",
+      admmisionnote: "",
       nextAppointment: "",
       appointmentDate: "",
       adviceMedicine: "",
@@ -678,22 +683,17 @@ export default function OpdPrescription() {
                         </Form.Label>
                         <DatePicker
                           selected={
-                            formData?.creation_timestamp &&
-                            !isNaN(
-                              new Date(formData.creation_timestamp).getTime()
-                            )
+                            formData?.creation_timestamp
                               ? new Date(formData.creation_timestamp)
                               : null
                           }
                           onChange={(date) => {
-                            handleInputChange({
-                              target: {
-                                name: "creation_timestamp",
-                                value: date
-                                  ? date.toISOString().split("T")[0]
-                                  : "",
-                              },
-                            });
+                            setFormData((prev) => ({
+                              ...prev,
+                              creation_timestamp: date
+                                ? date.toISOString().split("T")[0]
+                                : "",
+                            }));
                           }}
                           dateFormat="yyyy-MM-dd"
                           className="form-control"
@@ -712,67 +712,68 @@ export default function OpdPrescription() {
                     <Col>
                       <Form.Group>
                         <Form.Label>Allergy:</Form.Label>
-                        <Form.Check
-                          type="checkbox"
+                        <Form.Control
+                          type="textarea"
                           name="allergy"
-                          checked={formData.allergy || false}
+                          placeholder="allergy"
+                          value={formData.allergy}
                           onChange={handleInputChange}
                           disabled={isDisabled}
                         />
                       </Form.Group>
                     </Col>
                   </Row>
-                  {formData.prescription_type === "PROCTOLOGY" && (
-                    <>
-                      <br />
-                      <Row className="mb-3">
-                        <Col md={4}>
-                          <Form.Group>
-                            <Form.Label>Assistant Doctor:</Form.Label>
-                            {renderAssistantDoctorSelect()}
-                          </Form.Group>
-                        </Col>
+                  <>
+                    <br />
+                    <Row className="mb-3">
+                      <Col md={4}>
+                        <Form.Group>
+                          <Form.Label>Assistant Doctor:</Form.Label>
+                          {renderAssistantDoctorSelect()}
+                        </Form.Group>
+                      </Col>
 
-                        <Col md={4}>
-                          <Form.Group controlId="testAdvice">
-                            <Form.Label>Test Advice:</Form.Label>
-                            <Dropdown>
-                              <Dropdown.Toggle
-                                variant="primary"
-                                as={Button}
-                                disabled={isDisabled}
-                              >
-                                {Array.isArray(formData.testAdvice) &&
-                                formData.testAdvice.length > 0
-                                  ? formData.testAdvice.join(", ")
-                                  : "Select Test Advice"}
-                              </Dropdown.Toggle>
+                      <Col md={4}>
+                        <Form.Group controlId="testAdvice">
+                          <Form.Label>Test Advice:</Form.Label>
+                          <Dropdown>
+                            <Dropdown.Toggle
+                              variant="primary"
+                              as={Button}
+                              disabled={isDisabled}
+                            >
+                              {Array.isArray(formData.testAdvice) &&
+                              formData.testAdvice.length > 0
+                                ? formData.testAdvice.join(", ")
+                                : "Select Test Advice"}
+                            </Dropdown.Toggle>
 
-                              <Dropdown.Menu
-                                style={{
-                                  maxHeight: "200px",
-                                  width: "100%",
-                                  overflowY: "auto",
-                                }}
-                              >
-                                {combinedTestAdvice.map((option) => (
-                                  <Dropdown.Item key={option}>
-                                    <Form.Check
-                                      type="checkbox"
-                                      label={option}
-                                      value={option}
-                                      checked={formData.testAdvice.includes(
-                                        option
-                                      )}
-                                      onChange={handleTestAdviceChange}
-                                      disabled={isDisabled}
-                                    />
-                                  </Dropdown.Item>
-                                ))}
-                              </Dropdown.Menu>
-                            </Dropdown>
-                          </Form.Group>
-                        </Col>
+                            <Dropdown.Menu
+                              style={{
+                                maxHeight: "200px",
+                                width: "100%",
+                                overflowY: "auto",
+                              }}
+                            >
+                              {combinedTestAdvice.map((option) => (
+                                <Dropdown.Item key={option}>
+                                  <Form.Check
+                                    type="checkbox"
+                                    label={option}
+                                    value={option}
+                                    checked={formData.testAdvice.includes(
+                                      option
+                                    )}
+                                    onChange={handleTestAdviceChange}
+                                    disabled={isDisabled}
+                                  />
+                                </Dropdown.Item>
+                              ))}
+                            </Dropdown.Menu>
+                          </Dropdown>
+                        </Form.Group>
+                      </Col>
+                      {formData.prescription_type !== "UROLOGY" && (
                         <Col md={4}>
                           <Form.Group>
                             <Form.Label>Advice Sx:</Form.Label>
@@ -785,54 +786,8 @@ export default function OpdPrescription() {
                             />
                           </Form.Group>
                         </Col>
-                      </Row>
-                    </>
-                  )}
-                  {formData.prescription_type === "UROLOGY" && (
-                    <>
-                      <br />
-                      <Row className="mb-3">
-                        <Col md={4}>
-                          <Form.Group>
-                            <Form.Label>Assistant Doctor:</Form.Label>
-                            {renderAssistantDoctorSelect()}
-                          </Form.Group>
-                        </Col>
-                        <Col md={4}>
-                          <Form.Group controlId="testAdvice">
-                            <Form.Label>Test Advice:</Form.Label>
-                            <Dropdown>
-                              <Dropdown.Toggle variant="primary" as={Button}>
-                                {Array.isArray(formData.testAdvice) &&
-                                formData.testAdvice.length > 0
-                                  ? formData.testAdvice.join(", ")
-                                  : "Select Test Advice"}
-                              </Dropdown.Toggle>
-
-                              <Dropdown.Menu
-                                style={{
-                                  maxHeight: "200px",
-                                  width: "100%",
-                                  overflowY: "auto",
-                                }}
-                              >
-                                {combinedTestAdvice.map((option) => (
-                                  <Dropdown.Item key={option}>
-                                    <Form.Check
-                                      type="checkbox"
-                                      label={option}
-                                      value={option}
-                                      checked={formData.testAdvice.includes(
-                                        option
-                                      )}
-                                      onChange={handleTestAdviceChange}
-                                    />
-                                  </Dropdown.Item>
-                                ))}
-                              </Dropdown.Menu>
-                            </Dropdown>
-                          </Form.Group>
-                        </Col>
+                      )}
+                      {formData.prescription_type == "UROLOGY" && (
                         <Col md={4}>
                           <Form.Group>
                             <Form.Label>PREPO Investigation:</Form.Label>
@@ -861,12 +816,51 @@ export default function OpdPrescription() {
                             </Dropdown>
                           </Form.Group>
                         </Col>
+                      )}
+                    </Row>
+                  </>
+                  {formData.prescription_type == "UROLOGY" && (
+                    <>
+                      <br />
+                      <Row>
+                        <Col>
+                          <Form.Group>
+                            <Form.Label>Cheif Complaints(c/O):</Form.Label>
+                            <Form.Control
+                              as="textarea"
+                              name="medical_history"
+                              value={formData.medical_history}
+                              onChange={handleInputChange}
+                              disabled={isDisabled}
+                            />
+                          </Form.Group>
+                        </Col>
                       </Row>
                       <br />
                       <Row>
                         <Col>
                           <Form.Group>
-                            <Form.Label>Medical History:</Form.Label>
+                            <Form.Label>Known Case of:</Form.Label>
+                            <Form.Control
+                              as="textarea"
+                              name="medicalhistory"
+                              value={formData.medicalhistory}
+                              onChange={handleInputChange}
+                              disabled={isDisabled}
+                            />
+                          </Form.Group>
+                        </Col>
+                      </Row>
+                    </>
+                  )}
+
+                  {formData.prescription_type === "UROLOGY" && (
+                    <>
+                      <br />
+                      <Row>
+                        <Col>
+                          <Form.Group>
+                            <Form.Label>Past Surgical History:</Form.Label>
                             <Form.Control
                               as="textarea"
                               name="medical_history"
@@ -918,9 +912,9 @@ export default function OpdPrescription() {
                       <Form.Label>Admission Note:</Form.Label>
                       <Form.Control
                         as="textarea"
-                        name="admissionnote"
+                        name="admmisionnote"
                         placeholder="Enter Admission Note"
-                        value={formData.admissionnote || ""}
+                        value={formData.admmisionnote || ""}
                         onChange={handleInputChange}
                         disabled={isDisabled}
                       />
@@ -1034,7 +1028,7 @@ export default function OpdPrescription() {
                       <Form.Label>Quantity:</Form.Label>
                       <Form.Select
                         name="medicine_quantity"
-                        value={formData.medicine_quantity}
+                        value={formData.medicine_quantity || setTableData.qty}
                         onChange={handleInputChange}
                         disabled={isDisabled}
                       >
