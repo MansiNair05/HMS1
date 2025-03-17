@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.29.118:5000/api";
+const BASE_URL = "http://192.168.90.185:5000/api";
 
 const SurgeryTabs = ({
   selectedOptions,
@@ -391,8 +391,7 @@ export default function PatientHistory() {
           if (data?.data?.medicationHistory?.length > 0) {
             medicationData = data.data.medicationHistory;
           }
-
-          setMedicationHistory(medicationData);
+         setMedicationHistory(medicationData);
 
           setFormData((prevState) => ({
             ...prevState,
@@ -481,6 +480,7 @@ export default function PatientHistory() {
                 ? medicationData
                 : prevState.medications,
           }));
+          
         } else {
           console.warn("No patient data found in API response");
         }
@@ -585,7 +585,7 @@ export default function PatientHistory() {
     }
   };
 
-  const handleHistoryClick = async () => {
+  const handleSubmit = async () => {
     const patientId = localStorage.getItem("selectedPatientId");
 
     try {
@@ -666,8 +666,13 @@ export default function PatientHistory() {
         habits: habitsArray.join(","),
         ongoing_medicines: ongoingMedcineArray.join(","), // Join the array into a string
         investigation: investigationArray.join(","),
-        vitalSigns: JSON.stringify(formData.vitalSigns),
-        systematicExamination: JSON.stringify(formData.systematicExamination),
+        BP: formData.vitalSigns.BP,
+        Pulse: formData.vitalSigns.Pulse,
+        RR: formData.vitalSigns.RR,
+        RS: formData.systematicExamination.RS,
+        CVS: formData.systematicExamination.CVS,
+        CNS: formData.systematicExamination.CNS,
+        PA: formData.systematicExamination.PA,
         past_history: pastHistoryArray.join(","), // Join the array into a string
 
         family_history: familyHistoryArray.join(","), // Join the array into a string
@@ -712,7 +717,65 @@ export default function PatientHistory() {
     }
   };
 
+  const handleUpdate = async () => {
+    if (!patientId) {
+      alert("No patient selected!");
+      return;
+    }
+
+    try {
+
+      const updatedData = {
+        ...formData,
+        BP: formData.vitalSigns.BP,
+        Pulse: formData.vitalSigns.Pulse,
+        RR: formData.vitalSigns.RR,
+        RS: formData.systematicExamination.RS,
+        CVS: formData.systematicExamination.CVS,
+        CNS: formData.systematicExamination.CNS,
+        PA: formData.systematicExamination.PA,
+        patientId,
+      };
+      console.log("Updating patient history with:", updatedData);
+
+      const response = await fetch(
+        `${BASE_URL}/V1/patientHistory/updatePatientHistory/${patientId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updatedData),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || "Failed to update patient history"
+        );
+      }
+      const data = await response.json();
+      console.log("Response data:", data);
+      if (data.statusCode === 200) {
+        alert("patient history updated successfully!");
+        setIsDisabled(true);
+        setShowEditButton(true);
+        setPreviousRecordDate(formData.date_diagnosis);
+        setDisablePreviousButton(true);
+      } else {
+        throw new Error(data.message || "Failed to update surgery details");
+      }
+
+      alert("Patient history updated successfully!");
+    } catch (error) {
+      console.error("Error updating patient history:", error);
+      alert("Failed to update patient history. Please try again.");
+    }
+  };
+
   const [previousRecordDate, setPreviousRecordDate] = useState("");
+  const [assistantDoctorName, setAssistantDoctorName] = useState("");
 
   const fetchPreviousRecords = async (prevData) => {
     try {
@@ -734,6 +797,8 @@ export default function PatientHistory() {
       }
 
       const patientHistory = result.data.patientHistory;
+      setAssistantDoctorName(result.data.doctor.name);
+
       const medicationHistory = result.data.medicationHistory;
 
       setPreviousRecordDate(
@@ -944,8 +1009,11 @@ export default function PatientHistory() {
 
   const handleEditPatientHistory = () => {
     setIsDisabled(false);
+
     alert("Editing mode enabled. You can now modify the diagnosis details.");
   };
+
+
 
   const handleNewRecord = () => {
     const newData = {
@@ -1032,6 +1100,7 @@ export default function PatientHistory() {
     setFormData(newData);
     setSelectedOptions([]);
     setShowEditButton(false);
+
     setDisablePreviousButton(false);
     setIsDisabled(false);
 
@@ -2176,7 +2245,7 @@ export default function PatientHistory() {
                                 type="checkbox"
                                 name={name}
                                 checked={
-                                  formData.medical_mx[name.split(".")[1]] ||
+                                  formData.medical_mx?.[name.split(".")[1]] ||
                                   false
                                 }
                                 onChange={handleCheckboxChange}
@@ -2192,25 +2261,32 @@ export default function PatientHistory() {
                   </Row>
                   <Row>
                     <Col md={3}>
-                      <Form.Group controlId="name">
+                      <Form.Group controlId="assistantDoctor">
                         <Form.Label>Assistant Doctor:</Form.Label>
                         <Form.Select
-                          value={selectedOptions?.name || ""}
-                          onChange={(e) =>
+                          name="assistantDoctorName"
+                          value={
+                            selectedOptions?.name || assistantDoctorName || ""
+                          }
+                          onChange={(e) => {
+                            const selectedDoctorName = e.target.value; // Get the selected value
                             setSelectedOptions({
                               ...selectedOptions,
-                              name: e.target.value,
-                            })
-                          }
+                              name: selectedDoctorName, // Update selected options with the selected doctor's name
+                            });
+                            setFormData((prev) => ({
+                              ...prev,
+                              assistanceDoctor: selectedDoctorName, // Update form data with the selected doctor's name
+                            }));
+                          }}
                         >
                           <option value="">Select Assistant</option>
                           {[
                             ...new Set([
+                              // Include the fetched doctor's name
+                              assistantDoctorName,
                               ...patientHistory
-                                .map(
-                                  (option) =>
-                                    option.assistantsDoctorconsultantName
-                                )
+                                .map((option) => option.assistantDoctorName)
                                 .filter(Boolean),
                               ...assistantsDoctor
                                 .map((doctor) => doctor.name)
@@ -2228,9 +2304,12 @@ export default function PatientHistory() {
                   <br />
                   <Button
                     className="mt-4"
-                    onClick={() => handleHistoryClick("save")}
+                    onClick={
+                      showEditButton ? handleUpdate : handleSubmit
+                    }
+                    disabled={isDisabled}
                   >
-                    Save Patient History
+                    {showEditButton ? "Update" : "Save"}
                   </Button>
                 </Form>
               </Card.Body>

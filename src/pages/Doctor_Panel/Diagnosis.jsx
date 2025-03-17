@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.29.115:5000/api"; // Replace with your actual backend URL
+const BASE_URL = "http://192.168.90.185:5000/api"; // Replace with your actual backend URL
 
 const DiagnosisTabs = () => {
   const [key, setKey] = useState("piles");
@@ -273,14 +273,19 @@ export default function Diagnosis() {
 
   const [errors, setErrors] = useState({});
   const [diagnosis, setDiagnosis] = useState([]);
-  const [consultants, setConsultants] = useState([]);
+  const [consultantsDoctor, setConsultantsDoctor] = useState([]);
   const [assistantsDoctor, setAssistantsDoctor] = useState([]);
-  const [selectedOptions, setSelectedOptions] = useState([]);
-  const [showEditButton, setShowEditButton] = useState(false); // Controls visibility of "Edit Diagnosis"
+const [selectedOptions, setSelectedOptions] = useState({
+  consultantsDoctorName: "",
+  assistantsDoctorName: "",
+});  const [showEditButton, setShowEditButton] = useState(false); // Controls visibility of "Edit Diagnosis"
   const [isDisabled, setIsDisabled] = useState(false); // Controls edit mode
   const [disablePreviousButton, setDisablePreviousButton] = useState(false); // Disables "Previous Records" after clicking
   const [showSurgicalDate, setShowSurgicalDate] = useState(false);
-
+const [previousRecord, setPreviousRecord] = useState({
+  consultantDoctor: "",
+  assistanceDoctor: "",
+});
   // Add state for previous records
   const [selectedRecord, setSelectedRecord] = useState(null);
 
@@ -290,47 +295,102 @@ export default function Diagnosis() {
     if (storedPatientId) setPatientId(storedPatientId);
   }, []);
 
-useEffect(() => {
-  if (!patientId) {
-    console.warn("No patientId found, skipping fetch");
-    return;
-  }
-  const fetchPatientData = async () => {
-    console.log(`Fetching data for patient ID: ${patientId}`);
-    try {
-      const response = await fetch(
-        `${BASE_URL}/V1/diagnosis/listDiagnosis/${patientId}`,
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-
-      if (!response.ok) {
-        console.error(
-          "API Response Error:",
-          response.status,
-          await response.text()
-        );
-        return;
-      }
-
-      const data = await response.json();
-      console.log("Fetched Data:", data.data.diagnosisData);
-
-      // ❌ Don't update the form data automatically
-      if (!data?.data?.diagnosisData?.length) {
-        console.warn("No previous data found. Keeping the form empty.");
-        setFormData({}); // Keep form empty
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
+  useEffect(() => {
+    if (!patientId) {
+      console.warn("No patientId found, skipping fetch");
+      return;
     }
-  };
+    const fetchPatientData = async () => {
+      console.log(`Fetching data for patient ID: ${patientId}`);
+      try {
+        const response = await fetch(
+          `${BASE_URL}/V1/diagnosis/listDiagnosis/${patientId}`,
+          {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          }
+        );
 
-  fetchPatientData();
-}, [patientId]);
+        if (!response.ok) {
+          console.error(
+            "API Response Error:",
+            response.status,
+            await response.text()
+          );
+          return;
+        }
 
+        const data = await response.json();
+        console.log("Fetched Data:", data.data.diagnosisData);
+
+        // ❌ Don't update the form data automatically
+        if (!data?.data?.diagnosisData?.length) {
+          console.warn("No previous data found. Keeping the form empty.");
+setFormData((prevData) => ({
+  ...prevData,
+  advice: "",
+    diagnosis: "",
+    date_diagnosis: "",
+    provisionaldiagnosis: "",
+    investigationorders: "",
+    diagnosisAdvice: {
+      medication: false,
+      surgery: false,
+      test: false,
+    },
+    // medicinesPrescribed: false,
+    medicines: {
+      aac: false,
+      antacid: false,
+      probiotics: false,
+      nsaids: false,
+      antibiotics: false,
+      other: "", // Add an "other" field for the textarea
+    },
+    medicineDetails: "",
+    surgicalAdvice: [],
+    comment: "",
+    adviceComment: "",
+    SurgicalDate: "",
+    RF: "",
+    Laser: "",
+    MW: "",
+    categoryComment: "",
+    medical_mx: {
+      mcdpa: false,
+      manometry: false,
+      diet: false,
+      echo: false,
+      uroflowmetry: false,
+      colo: false,
+      xray: false,
+      mri: false,
+      cht: false,
+      gastro: false,
+      ct: false,
+      doppler: false,
+      biofeedback: false,
+      labInvestigation: false,
+      ultrasonography: false,
+      EchoAnalImaging: false,
+    },
+    other: {
+      insurance: false,
+      reimbursement: false,
+      workshop: false,
+      pdc: false,
+    },
+    consultantDoctor: "",
+    assistanceDoctor: "",
+}));
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchPatientData();
+  }, [patientId]);
 
   // Fetch options from API
   useEffect(() => {
@@ -339,7 +399,7 @@ useEffect(() => {
         const endpoints = [
           {
             url: "/V1/patienttabsdp/consultant_dropdown",
-            setter: setConsultants,
+            setter: setConsultantsDoctor,
           },
           {
             url: "/V1/patienttabsdp/assistantDoc_dropdown",
@@ -399,8 +459,8 @@ useEffect(() => {
       // If the input is for "Other" medicines, update the "other" key in the medicinesPrescribed object
       setFormData((prevData) => ({
         ...prevData,
-        medicinesPrescribed: {
-          ...prevData.medicinesPrescribed,
+        medicines: {
+          ...prevData.medicines,
           other: value, // Update the "other" field in the medicinesPrescribed object
         },
       }));
@@ -528,12 +588,12 @@ useEffect(() => {
       }
 
       const medicineArray = [];
-      if (formData.medicines.aac) medicineArray.push("AAC");
-      if (formData.medicines.probiotics) medicineArray.push("PROBIOTICS");
-      if (formData.medicines.nsaids) medicineArray.push("NSAIDS");
-      if (formData.medicines.antibiotics) medicineArray.push("ANTIBIOTICS");
-      if (formData.medicines.antacid) medicineArray.push("ANTACID");
-      if (formData.medicines.other)
+      if (formData.medicines?.aac) medicineArray.push("AAC");
+      if (formData.medicines?.probiotics) medicineArray.push("PROBIOTICS");
+      if (formData.medicines?.nsaids) medicineArray.push("NSAIDS");
+      if (formData.medicines?.antibiotics) medicineArray.push("ANTIBIOTICS");
+      if (formData.medicines?.antacid) medicineArray.push("ANTACID");
+      if (formData.medicines?.other)
         medicineArray.push(formData.medicines.other);
 
       const otherArray = [];
@@ -671,6 +731,11 @@ useEffect(() => {
 
       const enrichedDiagnosisData = result.data.enrichedDiagnosisData;
       const diagnosisData = result.data.diagnosisData[0];
+      setPreviousRecord({
+        consultantDoctor: diagnosisData.consultantDoctor || "",
+        assistanceDoctor: diagnosisData.assistanceDoctor || "",
+      });
+
 
       const AdviceString = diagnosisData.diagnosisAdvice || "";
       const AdviceArray = AdviceString.split(",").map((item) => item.trim());
@@ -713,6 +778,7 @@ useEffect(() => {
           test: AdviceArray.includes("Test"),
         },
         medicines: {
+          ...prevData.medicines,
           aac: medicineArray.includes("AAC"),
           probiotics: medicineArray.includes("PROBIOTICS"),
           nsaids: medicineArray.includes("NSAIDS"),
@@ -850,6 +916,7 @@ useEffect(() => {
         ultrasonography: "",
         EchoAnalImaging: "",
       },
+      
     });
     setSelectedOption({
       RF: [],
@@ -873,7 +940,6 @@ useEffect(() => {
   };
 
   // Add a useEffect to log form data changes
-
 
   return (
     <div
@@ -1108,7 +1174,7 @@ useEffect(() => {
                       <Form.Label>Medicines Prescribed:</Form.Label>
                       <div className="d-flex flex-wrap">
                         {[
-                          { label: "AAC", name: "medicines?.aac" },
+                          { label: "AAC", name: "medicines.aac" },
                           { label: "ANTACID", name: "medicines.antacid" },
                           { label: "PROBIOTICS", name: "medicines.probiotics" },
                           { label: "NSAIDS", name: "medicines.nsaids" },
@@ -1526,27 +1592,38 @@ useEffect(() => {
                       <Form.Group>
                         <Form.Label>Consultant Name:</Form.Label>
                         <Form.Select
-                          value={selectedOptions?.consultantName || ""}
-                          onChange={(e) =>
+                          value={
+                            selectedOptions?.consultantsDoctorName ||
+                            previousRecord.consultantDoctor ||
+                            ""
+                          }
+                          onChange={(e) =>{
+                                    const selectedDoctorId = e.target.value; // Get the selected doctor ID
+
                             setSelectedOptions({
                               ...selectedOptions,
-                              consultantName: e.target.value,
-                            })
+                              consultantsDoctorName: e.target.value,
+                            });
+                                    setFormData({
+          ...formData,
+          consultantDoctor: selectedDoctorId, // Store the ID in formData
+        });}
+
                           }
                         >
                           <option value="">Select Consultant</option>
                           {[
                             ...new Set([
                               ...diagnosis.map(
-                                (option) => option.consultantName
+                                (option) => option.consultantDoctorName
                               ),
-                              ...consultants.map(
-                                (consultant) => consultant.name
+                              ...consultantsDoctor.map(
+                                (consultantsDoctor) => consultantsDoctor.name
                               ),
                             ]),
-                          ].map((consultantName, index) => (
-                            <option key={index} value={consultantName}>
-                              {consultantName}
+                          ].map((consultantDoctorName, index) => (
+                            <option key={index} value={consultantDoctorName}>
+                              {consultantDoctorName}
                             </option>
                           ))}
                         </Form.Select>
@@ -1556,12 +1633,23 @@ useEffect(() => {
                       <Form.Group>
                         <Form.Label>Assistant Doctor:</Form.Label>
                         <Form.Select
-                          value={selectedOptions?.assistantsDoctorName || ""}
-                          onChange={(e) =>
+                          value={
+                            selectedOptions?.assistantsDoctorName ||
+                            previousRecord.assistanceDoctor ||
+                            ""
+                          }
+                          onChange={(e) =>{
+                            const selectedAssistantId = e.target.value; // Get the selected assistant ID
+
                             setSelectedOptions({
                               ...selectedOptions,
                               assistantsDoctorName: e.target.value,
-                            })
+                            });
+                            setFormData({
+                              ...formData,
+                              assistanceDoctor: selectedAssistantId, // Store the ID in formData
+                            });
+                          }
                           }
                         >
                           <option value="">Select Assistant</option>

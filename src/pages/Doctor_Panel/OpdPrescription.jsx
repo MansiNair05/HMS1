@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.29.115:5000/api";
+const BASE_URL = "http://192.168.90.185:5000/api";
 
 export default function OpdPrescription() {
   const [formData, setFormData] = useState({
@@ -392,7 +392,7 @@ export default function OpdPrescription() {
       }
 
       const prescription = result.data.prescription;
-      const urology =result.data.urology;
+      const urology = result.data.urology;
 
       // Ensure prescription is valid
       if (!prescription || typeof prescription !== "object") {
@@ -406,10 +406,9 @@ export default function OpdPrescription() {
       // Prevent page from disappearing by ensuring no invalid state updates
       setFormData((prev) => ({
         ...prev,
-        prescription_type:prescription.prescription_type|| "",
-investigation: urology?.[0]?.investigation || prev.investigation,
-        creation_timestamp:
-          prescription.creation_timestamp,
+        prescription_type: prescription.prescription_type || "",
+        investigation: urology?.[0]?.investigation || prev.investigation,
+        creation_timestamp: prescription.creation_timestamp,
         allergy: prescription.allergy || prev.allergy || "",
         doctor_id: prescription.doctor_id || prev.doctor_id || "",
         diagnosis: prescription.diagnosis || prev.diagnosis || "",

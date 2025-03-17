@@ -15,7 +15,7 @@ const Surgery = () => {
       la: false,
       sa: false,
       ga: false,
-      other:"",
+      other: "",
     },
 
     plan: "",
@@ -37,7 +37,7 @@ const Surgery = () => {
   const [previousRecordDate, setPreviousRecordDate] = useState("");
   const [isOtherSpecifyDisabled, setIsOtherSpecifyDisabled] = useState(false);
 
-  const BASE_URL = "http://192.168.29.115:5000/api";
+  const BASE_URL = "http://192.168.90.185:5000/api";
 
   // Update the API endpoints constants
   const API_ENDPOINTS = {
@@ -107,11 +107,11 @@ const Surgery = () => {
       const surgeryData = result.data.surgeryDetails;
 
       // Ensure surgeryData and its properties are defined
-     const AnesthesiaString = surgeryData.anesthesia || "";
-     const AknownConditions = ["LA", "SA", "GA"];
-     const anesthesiaArray = AnesthesiaString.split(",").map((item) =>
-       item.trim()
-     );
+      const AnesthesiaString = surgeryData.anesthesia || "";
+      const AknownConditions = ["LA", "SA", "GA"];
+      const anesthesiaArray = AnesthesiaString.split(",").map((item) =>
+        item.trim()
+      );
 
       // Update states
       setDisablePreviousButton(true);
@@ -192,8 +192,7 @@ const Surgery = () => {
 
       // Convert anesthesia object to string
       const anesthesiaArray = [];
-      if (formData.anesthesia.la)
-        anesthesiaArray.push("LA");
+      if (formData.anesthesia.la) anesthesiaArray.push("LA");
       if (formData.anesthesia.sa) anesthesiaArray.push("SA");
       if (formData.anesthesia.ga) anesthesiaArray.push("GA");
       if (formData.anesthesia.other)
@@ -278,7 +277,6 @@ const Surgery = () => {
         .join(", ");
 
       // Include only new values in anesthesiaDetails
-    
 
       const requestBody = {
         patientId: patientId,
@@ -359,7 +357,6 @@ const Surgery = () => {
       [name]: localDate,
     }));
   };
-
 
   const handleCheckboxChange = (e) => {
     const { name, checked } = e.target;
