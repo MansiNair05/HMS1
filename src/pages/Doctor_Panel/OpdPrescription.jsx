@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.185:5000/api";
+const BASE_URL = "http://192.168.29.127:5000/api";
 
 export default function OpdPrescription() {
   const [formData, setFormData] = useState({
@@ -358,6 +358,50 @@ export default function OpdPrescription() {
       );
     }
   };
+  const handleUpdate = async () => {
+
+    try {
+      // Convert medicine_time object to a string
+      const updatedData = {
+        ...formData,
+        creation_timestamp: formData.creation_timestamp || null,
+        medicine_time: JSON.stringify(formData.medicine_time),
+      };
+
+      console.log("Sending Data:", JSON.stringify(updatedData, null, 2));
+
+      const response = await fetch(
+        `${BASE_URL}/V1/prescription/updatePrescription/${patientId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updatedData),
+        }
+      );
+
+      const responseData = await response.json();
+      console.log("Response Data:", responseData);
+
+      if (!response.ok) {
+        throw new Error(responseData.message || "Failed to update data");
+      }
+ if (responseData.statusCode === 200) {
+   alert("Prescription updated successfully!");
+   setIsDisabled(true);
+   setShowEditButton(true);
+  //  setPreviousRecordDate(formData.date_diagnosis);
+   setDisablePreviousButton(true);
+ } else {
+   throw new Error(responseData.message || "Failed to update prescription details");
+ }
+      // alert("Form updated successfully!");
+    } catch (error) {
+      console.error("Error updating form:", error);
+      alert(
+        "Failed to update form. Please check the console for more details."
+      );
+    }
+  };
 
   // Combine and remove duplicates from both arrays (opdPrescription and testAdviceU)
   useEffect(() => {
@@ -438,7 +482,7 @@ export default function OpdPrescription() {
       setDisablePreviousButton(true);
       setShowEditButton(true);
       setShowPrintButton(true);
-      setIsDisabled(false); // Keep form editable
+      setIsDisabled(true); // Keep form editable
     } catch (error) {
       console.error("Error fetching previous records:", error);
       alert("Failed to fetch previous records. Please try again.");
@@ -1154,8 +1198,13 @@ export default function OpdPrescription() {
           </Col>
         </Row>
 
-        <Button variant="success" onClick={handleSubmit} className="mt-4">
-          Save
+        <Button
+          variant="success"
+          onClick={showEditButton ? handleUpdate : handleSubmit}
+          className="mt-4 btn-primary"
+          disabled={isDisabled}
+        >
+          {showEditButton ? "Update" : "Save"}
         </Button>
       </Container>
       <style>

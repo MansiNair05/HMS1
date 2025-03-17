@@ -4,7 +4,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.185:5000/api"; // Update with your backend API base URL
+const BASE_URL = "http://192.168.29.127:5000/api"; // Update with your backend API base URL
 
 export default function OtherTests() {
   // const [dropdownOptions, setDropdownOptions] = useState([]); // Store API options
@@ -399,7 +399,7 @@ export default function OtherTests() {
                     Previous Records
                   </button>
                   {/* Add Edit button */}
-                  {showEditButton && (
+                  {/* {showEditButton && (
                     <button
                       type="button"
                       className="btn btn-warning"
@@ -412,7 +412,7 @@ export default function OtherTests() {
                     >
                       Edit Test Details
                     </button>
-                  )}
+                  )} */}
                   <br />
                   <br />
                   {/* Show previous record date */}
@@ -625,14 +625,17 @@ export default function OtherTests() {
                         </div>
                       </div>
                     )}
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      style={{ marginTop: "30px", float: "right" }}
-                      onClick={handleSubmit}
-                    >
-                      Submit
-                    </button>
+                    {(!isPreviousRecordsFetched ||
+                      previousRecordDate === "") && (
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        style={{ marginTop: "30px", float: "right" }}
+                        onClick={handleSubmit}
+                      >
+                        Submit
+                      </button>
+                    )}
                   </Row>
                 </Form>
               </Card.Body>

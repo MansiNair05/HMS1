@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.185:5000/api";
+const BASE_URL = "http://192.168.29.127:5000/api";
 
 const SurgeryTabs = ({
   selectedOptions,
@@ -391,7 +391,7 @@ export default function PatientHistory() {
           if (data?.data?.medicationHistory?.length > 0) {
             medicationData = data.data.medicationHistory;
           }
-         setMedicationHistory(medicationData);
+          setMedicationHistory(medicationData);
 
           setFormData((prevState) => ({
             ...prevState,
@@ -480,7 +480,6 @@ export default function PatientHistory() {
                 ? medicationData
                 : prevState.medications,
           }));
-          
         } else {
           console.warn("No patient data found in API response");
         }
@@ -717,62 +716,139 @@ export default function PatientHistory() {
     }
   };
 
-  const handleUpdate = async () => {
-    if (!patientId) {
-      alert("No patient selected!");
-      return;
+const handleUpdate = async () => {
+  if (!patientId) {
+    alert("No patient selected!");
+    return;
+  }
+
+  try {
+     const pastHistoryArray = [];
+     if (formData.past_history.dm) pastHistoryArray.push("DM");
+     if (formData.past_history.htn) pastHistoryArray.push("HTN");
+     if (formData.past_history.brAsthma) pastHistoryArray.push("Br.Asthma");
+     if (formData.past_history.thyroid) pastHistoryArray.push("Thyroid");
+     if (formData.past_history.otherDetails)
+       pastHistoryArray.push(formData.past_history.otherDetails);
+
+     const familyHistoryArray = [];
+     if (formData.family_history.piles) familyHistoryArray.push("Piles");
+     if (formData.family_history.constipation)
+       familyHistoryArray.push("Constipation");
+     if (formData.family_history.dm) familyHistoryArray.push("DM");
+     if (formData.family_history.htn) familyHistoryArray.push("HTN");
+     if (formData.family_history.heartDisease)
+       familyHistoryArray.push("Heart Disease");
+     if (formData.family_history.other)
+       familyHistoryArray.push(formData.family_history.other);
+
+     const ongoingMedcineArray = [];
+     if (formData.ongoing_medicines.clopidogrel)
+       ongoingMedcineArray.push("Clopidogrel");
+     if (formData.ongoing_medicines.aspirin)
+       ongoingMedcineArray.push("Aspirin");
+     if (formData.ongoing_medicines.warfarin)
+       ongoingMedcineArray.push("Warfarin");
+     if (formData.ongoing_medicines.other)
+       ongoingMedcineArray.push(formData.ongoing_medicines.other);
+
+     const investigationArray = [];
+     if (formData.investigation.hb) investigationArray.push("HB");
+     if (formData.investigation.bslr) investigationArray.push("BSL-R");
+     if (formData.investigation.bleedingTimeBt) investigationArray.push("BT");
+     if (formData.investigation.clottingTimeBt) investigationArray.push("CT");
+     if (formData.investigation.ptInr) investigationArray.push("PT INR");
+     if (formData.investigation.hiv) investigationArray.push("HIV");
+     if (formData.investigation.hbsag) investigationArray.push("Hbsag");
+     if (formData.investigation.srCreatinine)
+       investigationArray.push("SR.Creatinine");
+     if (formData.investigation.vitB) investigationArray.push("Vit B12");
+     if (formData.investigation.other)
+       investigationArray.push(formData.investigation.other);
+
+     const adviceArray = [];
+     if (formData.medical_mx.mrd) adviceArray.push("MRD");
+     if (formData.medical_mx.manoBf) adviceArray.push("Mano/BF");
+     if (formData.medical_mx.coloGastro) adviceArray.push("Colo/Gastro");
+     if (formData.medical_mx.mcdpa) adviceArray.push("MCDPA");
+     if (formData.medical_mx.diet) adviceArray.push("Diet");
+     if (formData.medical_mx.b) adviceArray.push("B12");
+     if (formData.medical_mx.d) adviceArray.push("D3");
+
+     const habitsArray = [];
+     if (formData.habits.smoking) habitsArray.push("Smoking");
+     if (formData.habits.alcohol) habitsArray.push("Alcohol");
+     if (formData.habits.tobacco) habitsArray.push("Tobacco");
+     if (formData.habits.drugs) habitsArray.push("Drugs");
+
+     const generalArray = [];
+     if (formData.general_history.hoWtLoss) generalArray.push("H/O Wt Loss");
+     if (formData.general_history.decAppetite)
+       generalArray.push("Dec Appetite");
+     if (formData.general_history.hoStrainingForurination)
+       generalArray.push("H/O Straining for urination");
+     if (formData.general_history.acidity) generalArray.push("Acidity");
+     if (formData.general_history.gas) generalArray.push("Gas");
+     if (formData.general_history.bloating) generalArray.push("Bloating");
+     if (formData.general_history.other)
+       generalArray.push(formData.general_history.other);
+
+     const updatedData = {
+       ...formData,
+       general_history: generalArray.join(","),
+       habits: habitsArray.join(","),
+       ongoing_medicines: ongoingMedcineArray.join(","), // Join the array into a string
+       investigation: investigationArray.join(","),
+       BP: formData.vitalSigns.BP,
+       Pulse: formData.vitalSigns.Pulse,
+       RR: formData.vitalSigns.RR,
+       RS: formData.systematicExamination.RS,
+       CVS: formData.systematicExamination.CVS,
+       CNS: formData.systematicExamination.CNS,
+       PA: formData.systematicExamination.PA,
+       past_history: pastHistoryArray.join(","), // Join the array into a string
+
+       family_history: familyHistoryArray.join(","), // Join the array into a string
+       medical_mx: adviceArray.join(","),
+       name: selectedOptions.name,
+       patientId,
+       surgical_history: formData.comment,
+     };
+
+    console.log("Updating patient history with:", updatedData);
+
+    const response = await fetch(
+      `${BASE_URL}/V1/patientHistory/updatePatientHistory/${patientId}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedData),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to update patient history");
     }
-
-    try {
-
-      const updatedData = {
-        ...formData,
-        BP: formData.vitalSigns.BP,
-        Pulse: formData.vitalSigns.Pulse,
-        RR: formData.vitalSigns.RR,
-        RS: formData.systematicExamination.RS,
-        CVS: formData.systematicExamination.CVS,
-        CNS: formData.systematicExamination.CNS,
-        PA: formData.systematicExamination.PA,
-        patientId,
-      };
-      console.log("Updating patient history with:", updatedData);
-
-      const response = await fetch(
-        `${BASE_URL}/V1/patientHistory/updatePatientHistory/${patientId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(updatedData),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.message || "Failed to update patient history"
-        );
-      }
-      const data = await response.json();
-      console.log("Response data:", data);
-      if (data.statusCode === 200) {
-        alert("patient history updated successfully!");
-        setIsDisabled(true);
-        setShowEditButton(true);
-        setPreviousRecordDate(formData.date_diagnosis);
-        setDisablePreviousButton(true);
-      } else {
-        throw new Error(data.message || "Failed to update surgery details");
-      }
-
+    const data = await response.json();
+    console.log("Response data:", data);
+    if (data.statusCode === 200) {
       alert("Patient history updated successfully!");
-    } catch (error) {
-      console.error("Error updating patient history:", error);
-      alert("Failed to update patient history. Please try again.");
+      setIsDisabled(true);
+      setShowEditButton(true);
+      setPreviousRecordDate(formData.date_diagnosis);
+      setDisablePreviousButton(true);
+    } else {
+      throw new Error(data.message || "Failed to update surgery details");
     }
-  };
+  } catch (error) {
+    console.error("Error updating patient history:", error);
+    alert("Failed to update patient history. Please try again.");
+  }
+};
+
 
   const [previousRecordDate, setPreviousRecordDate] = useState("");
   const [assistantDoctorName, setAssistantDoctorName] = useState("");
@@ -1012,8 +1088,6 @@ export default function PatientHistory() {
 
     alert("Editing mode enabled. You can now modify the diagnosis details.");
   };
-
-
 
   const handleNewRecord = () => {
     const newData = {
@@ -2304,9 +2378,7 @@ export default function PatientHistory() {
                   <br />
                   <Button
                     className="mt-4"
-                    onClick={
-                      showEditButton ? handleUpdate : handleSubmit
-                    }
+                    onClick={showEditButton ? handleUpdate : handleSubmit}
                     disabled={isDisabled}
                   >
                     {showEditButton ? "Update" : "Save"}

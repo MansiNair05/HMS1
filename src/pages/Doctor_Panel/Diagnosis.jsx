@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.185:5000/api"; // Replace with your actual backend URL
+const BASE_URL = "http://192.168.29.127:5000/api"; // Replace with your actual backend URL
 
 const DiagnosisTabs = () => {
   const [key, setKey] = useState("piles");
@@ -275,17 +275,18 @@ export default function Diagnosis() {
   const [diagnosis, setDiagnosis] = useState([]);
   const [consultantsDoctor, setConsultantsDoctor] = useState([]);
   const [assistantsDoctor, setAssistantsDoctor] = useState([]);
-const [selectedOptions, setSelectedOptions] = useState({
-  consultantsDoctorName: "",
-  assistantsDoctorName: "",
-});  const [showEditButton, setShowEditButton] = useState(false); // Controls visibility of "Edit Diagnosis"
+  const [selectedOptions, setSelectedOptions] = useState({
+    consultantsDoctorName: "",
+    assistantsDoctorName: "",
+  });
+  const [showEditButton, setShowEditButton] = useState(false); // Controls visibility of "Edit Diagnosis"
   const [isDisabled, setIsDisabled] = useState(false); // Controls edit mode
   const [disablePreviousButton, setDisablePreviousButton] = useState(false); // Disables "Previous Records" after clicking
   const [showSurgicalDate, setShowSurgicalDate] = useState(false);
-const [previousRecord, setPreviousRecord] = useState({
-  consultantDoctor: "",
-  assistanceDoctor: "",
-});
+  const [previousRecord, setPreviousRecord] = useState({
+    consultantDoctor: "",
+    assistanceDoctor: "",
+  });
   // Add state for previous records
   const [selectedRecord, setSelectedRecord] = useState(null);
 
@@ -326,63 +327,63 @@ const [previousRecord, setPreviousRecord] = useState({
         // ❌ Don't update the form data automatically
         if (!data?.data?.diagnosisData?.length) {
           console.warn("No previous data found. Keeping the form empty.");
-setFormData((prevData) => ({
-  ...prevData,
-  advice: "",
-    diagnosis: "",
-    date_diagnosis: "",
-    provisionaldiagnosis: "",
-    investigationorders: "",
-    diagnosisAdvice: {
-      medication: false,
-      surgery: false,
-      test: false,
-    },
-    // medicinesPrescribed: false,
-    medicines: {
-      aac: false,
-      antacid: false,
-      probiotics: false,
-      nsaids: false,
-      antibiotics: false,
-      other: "", // Add an "other" field for the textarea
-    },
-    medicineDetails: "",
-    surgicalAdvice: [],
-    comment: "",
-    adviceComment: "",
-    SurgicalDate: "",
-    RF: "",
-    Laser: "",
-    MW: "",
-    categoryComment: "",
-    medical_mx: {
-      mcdpa: false,
-      manometry: false,
-      diet: false,
-      echo: false,
-      uroflowmetry: false,
-      colo: false,
-      xray: false,
-      mri: false,
-      cht: false,
-      gastro: false,
-      ct: false,
-      doppler: false,
-      biofeedback: false,
-      labInvestigation: false,
-      ultrasonography: false,
-      EchoAnalImaging: false,
-    },
-    other: {
-      insurance: false,
-      reimbursement: false,
-      workshop: false,
-      pdc: false,
-    },
-    consultantDoctor: "",
-    assistanceDoctor: "",
-}));
+          setFormData((prevData) => ({
+            ...prevData,
+            advice: "",
+            diagnosis: "",
+            date_diagnosis: "",
+            provisionaldiagnosis: "",
+            investigationorders: "",
+            diagnosisAdvice: {
+              medication: false,
+              surgery: false,
+              test: false,
+            },
+            // medicinesPrescribed: false,
+            medicines: {
+              aac: false,
+              antacid: false,
+              probiotics: false,
+              nsaids: false,
+              antibiotics: false,
+              other: "", // Add an "other" field for the textarea
+            },
+            medicineDetails: "",
+            surgicalAdvice: [],
+            comment: "",
+            adviceComment: "",
+            SurgicalDate: "",
+            RF: "",
+            Laser: "",
+            MW: "",
+            categoryComment: "",
+            medical_mx: {
+              mcdpa: false,
+              manometry: false,
+              diet: false,
+              echo: false,
+              uroflowmetry: false,
+              colo: false,
+              xray: false,
+              mri: false,
+              cht: false,
+              gastro: false,
+              ct: false,
+              doppler: false,
+              biofeedback: false,
+              labInvestigation: false,
+              ultrasonography: false,
+              EchoAnalImaging: false,
+            },
+            other: {
+              insurance: false,
+              reimbursement: false,
+              workshop: false,
+              pdc: false,
+            },
+            consultantDoctor: "",
+            assistanceDoctor: "",
+          }));
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -736,7 +737,6 @@ setFormData((prevData) => ({
         assistanceDoctor: diagnosisData.assistanceDoctor || "",
       });
 
-
       const AdviceString = diagnosisData.diagnosisAdvice || "";
       const AdviceArray = AdviceString.split(",").map((item) => item.trim());
 
@@ -916,7 +916,6 @@ setFormData((prevData) => ({
         ultrasonography: "",
         EchoAnalImaging: "",
       },
-      
     });
     setSelectedOption({
       RF: [],
@@ -1462,39 +1461,39 @@ setFormData((prevData) => ({
                         <Form.Label>Advice:</Form.Label>
                         <Row>
                           {[
-                            { label: "MCDPA", name: "medical_mx?.mcdpa" },
+                            { label: "MCDPA", name: "medical_mx.mcdpa" },
                             {
                               label: "MANOMETRY",
-                              name: "medical_mx?.manometry",
+                              name: "medical_mx.manometry",
                             },
-                            { label: "DIET", name: "medical_mx?.diet" },
-                            { label: "ECHO", name: "medical_mx?.echo" },
+                            { label: "DIET", name: "medical_mx.diet" },
+                            { label: "ECHO", name: "medical_mx.echo" },
                             {
                               label: "UROFLOWMETRY",
-                              name: "medical_mx?.uroflowmetry",
+                              name: "medical_mx.uroflowmetry",
                             },
-                            { label: "COLO", name: "medical_mx?.colo" },
-                            { label: "X-RAY", name: "medical_mx?.xray" },
-                            { label: "MRI", name: "medical_mx?.mri" },
-                            { label: "CHT", name: "medical_mx?.cht" },
-                            { label: "GASTRO", name: "medical_mx?.gastro" },
-                            { label: "CT", name: "medical_mx?.ct" },
-                            { label: "DOPPLER", name: "medical_mx?.doppler" },
+                            { label: "COLO", name: "medical_mx.colo" },
+                            { label: "X-RAY", name: "medical_mx.xray" },
+                            { label: "MRI", name: "medical_mx.mri" },
+                            { label: "CHT", name: "medical_mx.cht" },
+                            { label: "GASTRO", name: "medical_mx.gastro" },
+                            { label: "CT", name: "medical_mx.ct" },
+                            { label: "DOPPLER", name: "medical_mx.doppler" },
                             {
                               label: "BIOFEEDBACK",
-                              name: "medical_mx?.biofeedback",
+                              name: "medical_mx.biofeedback",
                             },
                             {
                               label: "LAB INVESTIGATION",
-                              name: "medical_mx?.labInvestigation",
+                              name: "medical_mx.labInvestigation",
                             },
                             {
                               label: "ULTRASONOGRAPHY",
-                              name: "medical_mx?.ultrasonography",
+                              name: "medical_mx.ultrasonography",
                             },
                             {
                               label: "3D ENDO ANAL IMAGING",
-                              name: "medical_mx?.EchoAnalImaging",
+                              name: "medical_mx.EchoAnalImaging",
                             },
                           ].map(({ label, name }, index) => (
                             <Col md={4} key={index}>
@@ -1515,6 +1514,143 @@ setFormData((prevData) => ({
                               </label>
                             </Col>
                           ))}
+                        </Row>
+                        <Row>
+                          <Col>
+                            {formData.medical_mx?.mcdpa && (
+                              <Form.Control
+                                placeholder="MCDPA Comment Box"
+                                className="mt-2"
+                              />
+                            )}
+                          </Col>
+                          <Col>
+                            {formData.medical_mx?.manometry && (
+                              <Form.Control
+                                placeholder="MANOMETRY Comment Box"
+                                className="mt-2"
+                              />
+                            )}
+                          </Col>
+                          <Col>
+                            {formData.medical_mx?.diet && (
+                              <Form.Control
+                                placeholder="DIET Comment Box"
+                                className="mt-2"
+                              />
+                            )}
+                          </Col>
+                          <Col>
+                            {formData.medical_mx?.echo && (
+                              <Form.Control
+                                placeholder="ECHO Comment Box"
+                                className="mt-2"
+                              />
+                            )}
+                          </Col>
+                        </Row>
+                        <Row>
+                          <Col>
+                            {formData.medical_mx?.uroflowmetry && (
+                              <Form.Control
+                                placeholder="MRD Comment Box"
+                                className="mt-2"
+                              />
+                            )}
+                          </Col>
+                          <Col>
+                            {formData.medical_mx?.colo && (
+                              <Form.Control
+                                placeholder="COLO Comment Box"
+                                className="mt-2"
+                              />
+                            )}
+                          </Col>
+                          <Col>
+                            {formData.medical_mx?.xray && (
+                              <Form.Control
+                                placeholder="B12 Comment Box"
+                                className="mt-2"
+                              />
+                            )}
+                          </Col>
+                          <Col>
+                            {formData.medical_mx?.mri && (
+                              <Form.Control
+                                placeholder="USG Scrotum Comment Box"
+                                className="mt-2"
+                              />
+                            )}
+                          </Col>
+                        </Row>
+                        <Row>
+                          <Col>
+                            {formData.medical_mx?.cht && (
+                              <Form.Control
+                                placeholder="CHT Comment Box"
+                                className="mt-2"
+                              />
+                            )}
+                          </Col>
+                          <Col>
+                            {formData.medical_mx?.gastro && (
+                              <Form.Control
+                                placeholder="GASTRO Comment Box"
+                                className="mt-2"
+                              />
+                            )}
+                          </Col>
+                          <Col>
+                            {formData.medical_mx?.ct && (
+                              <Form.Control
+                                placeholder="D3 Comment Box"
+                                className="mt-2"
+                              />
+                            )}
+                          </Col>
+                          <Col>
+                            {formData.medical_mx?.doppler && (
+                              <Form.Control
+                                placeholder="DOPPLER Comment Box"
+                                className="mt-2"
+                              />
+                            )}
+                          </Col>
+                        </Row>
+                        <Row>
+                          <Col>
+                            {formData.medical_mx?.biofeedback && (
+                              <Form.Control
+                                placeholder="BIOFEEDBACK Comment Box"
+                                className="mt-2"
+                              />
+                            )}
+                          </Col>
+
+                          <Col>
+                            {formData.medical_mx?.labInvestigation && (
+                              <Form.Control
+                                placeholder="USG Comment Box"
+                                className="mt-2"
+                              />
+                            )}
+                          </Col>
+                          <Col>
+                            {formData.medical_mx?.ultrasonography && (
+                              <Form.Control
+                                placeholder="USG Abdomen & Pelvis Comment Box"
+                                className="mt-2"
+                              />
+                            )}
+                          </Col>
+                          <Col>
+                            {formData.medical_mx?.EchoAnalImaging && (
+                              <Form.Control
+                                placeholder="3D ENDO ANAL IMAGING Comment Box"
+                                className="mt-2"
+                              />
+                            )}
+                          </Col>
                         </Row>
                       </Form.Group>
                     </Col>
@@ -1583,6 +1719,59 @@ setFormData((prevData) => ({
                             </label>
                           </Col>
                         </Row>
+                        <Row>
+                          <Col>
+                            {formData.other?.insurance && (
+                              <Form.Control
+                                placeholder="INSURANCE Comment Box"
+                                className="mt-2"
+                              />
+                            )}
+                            {formData.other?.workshop && (
+                              <Form.Control
+                                placeholder="WORKSHOP Comment Box"
+                                className="mt-2"
+                              />
+                            )}
+                          </Col>
+                          <Col>
+                            {formData.other?.insurance && (
+                              <>
+                                <Form.Label>Insurance Company:</Form.Label>
+                                <Dropdown>
+                                  <Dropdown.Toggle
+                                    variant="primary"
+                                    as={Button}
+                                  >
+                                    {selectedAdviceOptions.advice.length > 0
+                                      ? selectedAdviceOptions.advice.join(", ")
+                                      : "Select Insurance Company"}
+                                  </Dropdown.Toggle>
+
+                                  <Dropdown.Menu>
+                                    {surgicalAdviceOptions.map(
+                                      (advice, index) => (
+                                        <Dropdown.Item key={index} as="div">
+                                          <Form.Check
+                                            type="checkbox"
+                                            label={advice}
+                                            value={advice}
+                                            checked={selectedAdviceOptions.advice.includes(
+                                              advice
+                                            )}
+                                            onChange={() =>
+                                              handleAdviceChange(advice)
+                                            }
+                                          />
+                                        </Dropdown.Item>
+                                      )
+                                    )}
+                                  </Dropdown.Menu>
+                                </Dropdown>
+                              </>
+                            )}
+                          </Col>
+                        </Row>
                       </Form.Group>
                     </Col>
                   </Row>
@@ -1597,19 +1786,18 @@ setFormData((prevData) => ({
                             previousRecord.consultantDoctor ||
                             ""
                           }
-                          onChange={(e) =>{
-                                    const selectedDoctorId = e.target.value; // Get the selected doctor ID
+                          onChange={(e) => {
+                            const selectedDoctorId = e.target.value; // Get the selected doctor ID
 
                             setSelectedOptions({
                               ...selectedOptions,
                               consultantsDoctorName: e.target.value,
                             });
-                                    setFormData({
-          ...formData,
-          consultantDoctor: selectedDoctorId, // Store the ID in formData
-        });}
-
-                          }
+                            setFormData({
+                              ...formData,
+                              consultantDoctor: selectedDoctorId, // Store the ID in formData
+                            });
+                          }}
                         >
                           <option value="">Select Consultant</option>
                           {[
@@ -1638,7 +1826,7 @@ setFormData((prevData) => ({
                             previousRecord.assistanceDoctor ||
                             ""
                           }
-                          onChange={(e) =>{
+                          onChange={(e) => {
                             const selectedAssistantId = e.target.value; // Get the selected assistant ID
 
                             setSelectedOptions({
@@ -1649,8 +1837,7 @@ setFormData((prevData) => ({
                               ...formData,
                               assistanceDoctor: selectedAssistantId, // Store the ID in formData
                             });
-                          }
-                          }
+                          }}
                         >
                           <option value="">Select Assistant</option>
                           {[
