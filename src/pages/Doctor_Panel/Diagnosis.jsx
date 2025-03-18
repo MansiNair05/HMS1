@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.29.127:5000/api"; // Replace with your actual backend URL
+const BASE_URL = "http://192.168.90.104:5000/api"; // Replace with your actual backend URL
 
 const DiagnosisTabs = () => {
   const [key, setKey] = useState("piles");
@@ -604,7 +604,7 @@ export default function Diagnosis() {
       if (formData.other.pdc) otherArray.push("PDC");
 
       const medical_mxArray = [];
-      if (formData.medical_mx.mcdpa) medical_mxArray.push("MCDPA");
+      if (formData.medical_mx.mcdpa) medical_mx.push("MCDPA");
       if (formData.medical_mx.manometry) medical_mxArray.push("Manometry");
       if (formData.medical_mx.diet) medical_mxArray.push("Diet");
       if (formData.medical_mx.echo) medical_mxArray.push("ECHO");

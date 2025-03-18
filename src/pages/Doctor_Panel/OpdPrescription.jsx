@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.29.127:5000/api";
+const BASE_URL = "http://192.168.90.104:5000/api";
 
 export default function OpdPrescription() {
   const [formData, setFormData] = useState({
@@ -29,7 +29,7 @@ export default function OpdPrescription() {
     advicesx: "",
     admmisionnote: "",
     nextAppointment: "",
-    // appointmentDate: "",
+    appointment_timestamp: "",
 
     adviceMedicine: "",
     medicine_quantity: "",
@@ -49,8 +49,8 @@ export default function OpdPrescription() {
   const [errors, setErrors] = useState({});
   const [opdPrescription, setOpdPrescription] = useState([]);
   const [assistantsDoctor, setAssistantsDoctor] = useState([]);
-  const [adviceMedicineP, setAdviceMedicineP] = useState([]);
-  const [adviceMedicineU, setAdviceMedicineU] = useState([]);
+  const [adviceMedicineP, setadviceMedicineP] = useState([]);
+  const [adviceMedicineU, setadviceMedicineU] = useState([]);
   const [testAdviceP, setTestAdviceP] = useState([]);
   const [testAdviceU, setTestAdviceU] = useState([]);
   const [selectedOptions, setSelectedOptions] = useState({}); // Track selected checkboxes
@@ -133,11 +133,11 @@ export default function OpdPrescription() {
           },
           {
             url: "/V1/patienttabsdp/proctologyMedicine_dropdown",
-            setter: setAdviceMedicineP,
+            setter: setadviceMedicineP,
           },
           {
             url: "/V1/patienttabsdp/urologyMedicine_dropdown",
-            setter: setAdviceMedicineU,
+            setter: setadviceMedicineU,
           },
           {
             url: "/V1/patienttabsdp/proctologyTestAdvice_dropdown",
@@ -261,7 +261,7 @@ export default function OpdPrescription() {
       .join(", ");
 
     // Validate the required fields
-    const isAdviceMedicineValid =
+    const isadviceMedicineValid =
       selectedOptions.adviceMedicine &&
       selectedOptions.adviceMedicine.trim() !== "";
     const isQtyValid =
@@ -272,7 +272,7 @@ export default function OpdPrescription() {
       formData.medicine_days && formData.medicine_days.trim() !== "";
 
     if (
-      !isAdviceMedicineValid ||
+      !isadviceMedicineValid ||
       !isQtyValid ||
       !isMealTimingsValid ||
       !isDaysValid
@@ -330,6 +330,8 @@ export default function OpdPrescription() {
         ...formData,
         creation_timestamp: formData.creation_timestamp || null,
         medicine_time: JSON.stringify(formData.medicine_time),
+        date:
+          formData.appointment_timestamp || null, // Ensure date is included
       };
 
       console.log("Sending Data:", JSON.stringify(formDataToSubmit, null, 2));
@@ -359,7 +361,6 @@ export default function OpdPrescription() {
     }
   };
   const handleUpdate = async () => {
-
     try {
       // Convert medicine_time object to a string
       const updatedData = {
@@ -385,15 +386,17 @@ export default function OpdPrescription() {
       if (!response.ok) {
         throw new Error(responseData.message || "Failed to update data");
       }
- if (responseData.statusCode === 200) {
-   alert("Prescription updated successfully!");
-   setIsDisabled(true);
-   setShowEditButton(true);
-  //  setPreviousRecordDate(formData.date_diagnosis);
-   setDisablePreviousButton(true);
- } else {
-   throw new Error(responseData.message || "Failed to update prescription details");
- }
+      if (responseData.statusCode === 200) {
+        alert("Prescription updated successfully!");
+        setIsDisabled(true);
+        setShowEditButton(true);
+        //  setPreviousRecordDate(formData.date_diagnosis);
+        setDisablePreviousButton(true);
+      } else {
+        throw new Error(
+          responseData.message || "Failed to update prescription details"
+        );
+      }
       // alert("Form updated successfully!");
     } catch (error) {
       console.error("Error updating form:", error);
@@ -437,6 +440,8 @@ export default function OpdPrescription() {
 
       const prescription = result.data.prescription;
       const urology = result.data.urology;
+            const appointment = result.data.appointment;
+
 
       // Ensure prescription is valid
       if (!prescription || typeof prescription !== "object") {
@@ -451,6 +456,7 @@ export default function OpdPrescription() {
       setFormData((prev) => ({
         ...prev,
         prescription_type: prescription.prescription_type || "",
+        appointment_timestamp: appointment.appointment_timestamp,
         investigation: urology?.[0]?.investigation || prev.investigation,
         creation_timestamp: prescription.creation_timestamp,
         allergy: prescription.allergy || prev.allergy || "",
@@ -468,7 +474,7 @@ export default function OpdPrescription() {
         setTableData(
           prescription.medicines.map((med, prev) => ({
             ...prev,
-            medicine: med.medicine_name || "N/A",
+            medicine: med.adviceMedicine || "N/A",
             qty: med.medicine_quantity || prev.medicine_quantity || "0",
             mealTimings: med.medicine_time || "N/A",
             days: med.medicine_days || "0",
@@ -512,6 +518,7 @@ export default function OpdPrescription() {
       prepo_investigation: [],
       medical_history: "",
       investigation: "",
+
       creation_timestamp: new Date().toISOString().split("T")[0],
       allergy: "",
       doctor_id: "",
@@ -520,7 +527,7 @@ export default function OpdPrescription() {
       advicesx: "",
       admmisionnote: "",
       nextAppointment: "",
-      appointmentDate: "",
+      appointment_timestamp: new Date().toISOString().split("T")[0],
       adviceMedicine: "",
       medicine_quantity: "",
       medicine_time: {
@@ -993,20 +1000,18 @@ export default function OpdPrescription() {
                       <Form.Label className="d-block">Date:</Form.Label>
                       <DatePicker
                         selected={
-                          formData?.appointmentDate &&
-                          !isNaN(new Date(formData.appointmentDate).getTime())
-                            ? new Date(formData.appointmentDate)
+                          formData?.appointment_timestamp
+                            ? new Date(formData.appointment_timestamp)
                             : null
                         }
                         onChange={(date) => {
-                          handleInputChange({
-                            target: {
-                              name: "appointmentDate",
-                              value: date
+                            setFormData((prev) => ({
+                           ...prev,
+                              appointment_timestamp: date
                                 ? date.toISOString().split("T")[0]
                                 : "",
-                            },
-                          });
+                            })
+                          );
                         }}
                         dateFormat="yyyy-MM-dd"
                         className="form-control"

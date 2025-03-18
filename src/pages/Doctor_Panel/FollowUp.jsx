@@ -4,7 +4,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.29.127:5000/api"; // Update with your backend API base URL
+const BASE_URL = "http://192.168.90.104:5000/api"; // Update with your backend API base URL
 
 export default function FollowUp() {
   const [patientId, setPatientId] = useState(
@@ -29,10 +29,15 @@ export default function FollowUp() {
   });
   const [errors, setErrors] = useState({});
 
-  useEffect(() => {
-    const storedPatientId = localStorage.getItem("selectedPatientId");
-    if (storedPatientId) setPatientId(storedPatientId);
-  }, []);
+useEffect(() => {
+  const storedPatientId = localStorage.getItem("selectedPatientId");
+  if (storedPatientId) {
+    setPatientId(storedPatientId);
+  } else {
+    // Handle the case where no patient ID is found
+    setErrors({ noPatientId: "No patient ID found. Please select a patient." });
+  }
+}, []);
 
   useEffect(() => {
     if (!patientId) {
@@ -127,7 +132,7 @@ export default function FollowUp() {
       }
     } catch (error) {
       console.error("Error updating patient data:", error);
-    }
+    }             
   };
 
   const validate = () => {
@@ -409,7 +414,8 @@ export default function FollowUp() {
                         </Form.Label>
                         <DatePicker
                           selected={
-                            formData?.firstVisitDate
+                            formData?.firstVisitDate &&
+                            !isNaN(new Date(formData.firstVisitDate))
                               ? new Date(formData.firstVisitDate)
                               : null
                           }
@@ -429,10 +435,6 @@ export default function FollowUp() {
                           showMonthDropdown
                           showYearDropdown
                           dropdownMode="select"
-                          style={{
-                            height: "38px",
-                            width: "100%",
-                          }}
                         />
                       </Form.Group>
                     </Col>
