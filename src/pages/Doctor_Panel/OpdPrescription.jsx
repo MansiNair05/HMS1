@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.104:5000/api";
+const BASE_URL = "http://192.168.90.100:5000/api";
 
 export default function OpdPrescription() {
   const [formData, setFormData] = useState({
@@ -30,7 +30,7 @@ export default function OpdPrescription() {
     admmisionnote: "",
     nextAppointment: "",
     appointment_timestamp: "",
-
+medicine_name:"",
     adviceMedicine: "",
     medicine_quantity: "",
     medicine_time: {
@@ -109,6 +109,18 @@ export default function OpdPrescription() {
         if (data?.data?.patientData?.length > 0) {
           console.log("Setting OpdPrescription Data...");
           setOpdPrescription(data.data.patientData[0]);
+          // setFormData((prevState) => ({
+          //   medicine_time: {
+          //     ...prevState.medicine_time,
+          //     BeforeBreakfast: pafalse,
+          //     AfterBreakfast: false,
+          //     BeforeLunch: false,
+          //     AfterLunch: false,
+          //     BeforeDinner: false,
+          //     AfterDinner: false,
+          //     AfterEveningSnacks: false,
+          //   },
+          // }));
         } else {
           console.warn("No patient data found in API response");
           setOpdPrescription({});
@@ -255,60 +267,55 @@ export default function OpdPrescription() {
     });
   };
 
-  const handleAddToTable = () => {
-    const selectedMealTime = Object.keys(formData.medicine_time)
-      .filter((timings) => formData.medicine_time[timings])
-      .join(", ");
+const handleAddToTable = () => {
+  const selectedMealTime = Object.keys(formData.medicine_time)
+    .filter((key) => formData.medicine_time[key]) // ✅ Get selected times
+    .join(", "); // ✅ Convert to a comma-separated string
 
-    // Validate the required fields
-    const isadviceMedicineValid =
-      selectedOptions.adviceMedicine &&
-      selectedOptions.adviceMedicine.trim() !== "";
-    const isQtyValid =
-      formData.medicine_quantity && formData.medicine_quantity.trim() !== "";
-    const isMealTimingsValid =
-      selectedMealTime && selectedMealTime.trim() !== "None";
-    const isDaysValid =
-      formData.medicine_days && formData.medicine_days.trim() !== "";
+  console.log("Selected Medicine Time:", selectedMealTime); // 🔍 Check if it's a string
 
-    if (
-      !isadviceMedicineValid ||
-      !isQtyValid ||
-      !isMealTimingsValid ||
-      !isDaysValid
-    ) {
-      alert(
-        "Please fill in all fields: Advice Medicine, Quantity, Meal Timings, and Days."
-      );
-      return; // Exit the function if validation fails
-    }
+  if (
+    !formData.medicine_name ||
+    !formData.medicine_quantity ||
+    !selectedMealTime ||
+    !formData.medicine_days
+  ) {
+    alert("Please fill in all medicine details before adding.");
+    return;
+  }
 
-    const newTableRow = {
-      medicine: selectedOptions.adviceMedicine,
-      qty: formData.medicine_quantity,
-      mealTimings: selectedMealTime,
-      days: formData.medicine_days,
-    };
-
-    setTableData((prevData) => [...prevData, newTableRow]);
-
-    // Reset specific fields
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      adviceMedicine: "",
-      qty: "",
-      days: "",
-      medicine_time: {
-        BeforeBreakfast: false,
-        AfterBreakfast: false,
-        BeforeLunch: false,
-        AfterLunch: false,
-        BeforeDinner: false,
-        AfterDinner: false,
-        AfterEveningSnacks: false,
-      },
-    }));
+  const newTableRow = {
+    medicine: formData.medicine_name,
+    qty: formData.medicine_quantity,
+    mealTimings: selectedMealTime, // ✅ Store as a string
+    days: formData.medicine_days,
   };
+
+  console.log("New Table Row Data:", newTableRow); // 🔍 Check final format
+
+  setTableData((prevData) => [...prevData, newTableRow]);
+
+  // Reset form fields
+  setFormData((prevFormData) => ({
+    ...prevFormData,
+    medicine_name: "",
+    medicine_quantity: "",
+    medicine_days: "",
+    medicine_time: {
+      BeforeBreakfast: false,
+      AfterBreakfast: false,
+      BeforeLunch: false,
+      AfterLunch: false,
+      BeforeDinner: false,
+      AfterDinner: false,
+      AfterEveningSnacks: false,
+    },
+  }));
+
+  console.log("Updated Table Data:", tableData); // 🔍 Ensure `tableData` updates correctly
+};
+
+
   const validate = () => {
     const errors = {};
     // Add validation logic here
@@ -325,14 +332,32 @@ export default function OpdPrescription() {
     }
 
     try {
-      // Convert medicine_time object to a string
-      const formDataToSubmit = {
-        ...formData,
-        creation_timestamp: formData.creation_timestamp || null,
-        medicine_time: JSON.stringify(formData.medicine_time),
-        date:
-          formData.appointment_timestamp || null, // Ensure date is included
-      };
+//       const medicineTimeArray = [];
+//       if (formData.medicine_time.BeforeBreakfast)
+//         medicineTimeArray.push("Before Breakfast");
+//       if (formData.medicine_time.AfterBreakfast)
+//         medicineTimeArray.push("After Breakfast");
+//       if (formData.medicine_time.BeforeLunch)
+//         medicineTimeArray.push("Before Lunch");
+//       if (formData.medicine_time.AfterLunch)
+//         medicineTimeArray.push("After Lunch");
+// if (formData.medicine_time.BeforeDinner) medicineTimeArray.push("Before Dinner");
+// if (formData.medicine_time.AfterDinner) medicineTimeArray.push("After Dinner");
+// if (formData.medicine_time.AfterEveningSnacks)
+//   medicineTimeArray.push("After Evening Snacks");      
+const medicinesArray = tableData.map((row) => ({
+  medicine_name: row.medicine,
+  medicine_quantity: row.qty.toString(), // ✅ Ensure it's a string
+  medicine_time: row.mealTimings.toString(), // ✅ Ensure it's a string
+  medicine_days: row.days.toString(),
+}));
+const formDataToSubmit = {
+  ...formData,
+  creation_timestamp: formData.creation_timestamp || null,
+  medicines: medicinesArray, // Store only medicines from the table
+
+  date: formData.appointment_timestamp || null, // Ensure date is included
+};
 
       console.log("Sending Data:", JSON.stringify(formDataToSubmit, null, 2));
 
@@ -434,14 +459,13 @@ export default function OpdPrescription() {
           response.status,
           result.message || "No prescription data found."
         );
-        alert("Failed to fetch previous records.");
+        alert("No previous records.");
         return;
       }
 
       const prescription = result.data.prescription;
       const urology = result.data.urology;
-            const appointment = result.data.appointment;
-
+      const appointment = result.data.appointment;
 
       // Ensure prescription is valid
       if (!prescription || typeof prescription !== "object") {
@@ -474,7 +498,7 @@ export default function OpdPrescription() {
         setTableData(
           prescription.medicines.map((med, prev) => ({
             ...prev,
-            medicine: med.adviceMedicine || "N/A",
+            medicine: med.medicine_name || "N/A",
             qty: med.medicine_quantity || prev.medicine_quantity || "0",
             mealTimings: med.medicine_time || "N/A",
             days: med.medicine_days || "0",
@@ -530,6 +554,7 @@ export default function OpdPrescription() {
       appointment_timestamp: new Date().toISOString().split("T")[0],
       adviceMedicine: "",
       medicine_quantity: "",
+      medicine_name: "",
       medicine_time: {
         BeforeBreakfast: false,
         AfterBreakfast: false,
@@ -613,11 +638,11 @@ export default function OpdPrescription() {
 
     return (
       <Form.Select
-        value={selectedOptions?.adviceMedicine || ""}
+        value={selectedOptions?.medicine_name || ""}
         onChange={(e) =>
           setSelectedOptions({
             ...selectedOptions,
-            adviceMedicine: e.target.value,
+            medicine_name: e.target.value,
           })
         }
         disabled={isDisabled}
@@ -1005,13 +1030,12 @@ export default function OpdPrescription() {
                             : null
                         }
                         onChange={(date) => {
-                            setFormData((prev) => ({
-                           ...prev,
-                              appointment_timestamp: date
-                                ? date.toISOString().split("T")[0]
-                                : "",
-                            })
-                          );
+                          setFormData((prev) => ({
+                            ...prev,
+                            appointment_timestamp: date
+                              ? date.toISOString().split("T")[0]
+                              : "",
+                          }));
                         }}
                         dateFormat="yyyy-MM-dd"
                         className="form-control"
@@ -1034,14 +1058,19 @@ export default function OpdPrescription() {
                     <Form.Group>
                       <Form.Label>Advice Medicine:</Form.Label>
                       <Form.Select
-                        value={selectedOptions?.adviceMedicine || ""}
+                        value={selectedOptions?.medicine_name || formData.medicine_name||""}
                         placeholder="Select Medicine"
-                        onChange={(e) =>
+                        onChange={(e) =>{
                           setSelectedOptions({
                             ...selectedOptions,
-                            adviceMedicine: e.target.value,
-                          })
-                        }
+                            medicine_name: e.target.value,
+                          }),
+                          setFormData((prev) => ({
+                              ...prev,
+                              ...formData,
+                              medicine_name: e.target.value, // Update form data with the selected doctor's name
+                            }));
+                        }}
                         disabled={isDisabled}
                       >
                         {selectedPrescriptionType === "PROCTOLOGY" && (
@@ -1109,13 +1138,14 @@ export default function OpdPrescription() {
                               name={timings}
                               checked={formData.medicine_time[timings]}
                               onChange={(e) =>
-                                setFormData({
+                                setFormData((prev)=>({
+                                  ...prev,
                                   ...formData,
                                   medicine_time: {
                                     ...formData.medicine_time,
                                     [timings]: e.target.checked,
                                   },
-                                })
+                                }))
                               }
                               disabled={isDisabled}
                               id={timings}

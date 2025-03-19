@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.104:5000/api";
+const BASE_URL = "http://192.168.90.100:5000/api";
 
 const SurgeryTabs = ({
   selectedOptions,
@@ -80,9 +80,9 @@ const SurgeryTabs = ({
       textarea: "varicose_duration",
     },
     {
-      id: "uninary",
-      title: "Uninary",
-      checkboxes: ["Uninary Incontinence"],
+      id: "urinary",
+      title: "urinary",
+      checkboxes: ["urinary Incontinence"],
       textarea: "Urinary_incontinence_duration",
     },
     {
@@ -117,7 +117,7 @@ const SurgeryTabs = ({
         "Fragmented Defecation",
       ],
       textareas: [
-        { name: "ods_duration", placeholder: "Duration" },
+        { name: "ODS_duration", placeholder: "Duration" },
         { name: "bowel_habits", placeholder: "Bowel Habits" },
       ],
     },
@@ -141,6 +141,7 @@ const SurgeryTabs = ({
       checked ? [...prev, value] : prev.filter((item) => item !== value)
     );
   };
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -327,10 +328,10 @@ export default function PatientHistory() {
       fistula_duration: "",
       hernia_duration: "",
       varicose_duration: "",
-      uninary_duration: "",
+      urinary_duration: "",
       fecal_duration: "",
       urology_duration: "",
-      ods_duration: "",
+      ODS_duration: "",
       bowel_habits: "",
       pilonidalsinus: "",
       circumcision: "",
@@ -396,6 +397,7 @@ export default function PatientHistory() {
           setFormData((prevState) => ({
             ...prevState,
             ...patientData,
+
             vitalSigns: {
               ...prevState.vitalSigns,
               ...(patientData.vitalSigns || {}),
@@ -589,6 +591,20 @@ export default function PatientHistory() {
 
     try {
       console.log("Form data before saving:", formData);
+       const pilesSymptoms = selectedOptions.filter((item) =>
+         [
+           "PR Bleeding: Painless",
+           "PR Bleeding: Painful",
+           "Burning",
+           "Pricking",
+           "Itching",
+           "Incomplete Evacuation",
+           "Prolapse",
+           "Swelling",
+           "Pain at Anal Region",
+           "Mucus Mixed Blood",
+         ].includes(item)
+       );
       const pastHistoryArray = [];
       if (formData.past_history.dm) pastHistoryArray.push("DM");
       if (formData.past_history.htn) pastHistoryArray.push("HTN");
@@ -661,6 +677,8 @@ export default function PatientHistory() {
 
       const formattedData = {
         ...formData,
+        symptoms: pilesSymptoms.join(", "), // Store selected symptoms
+        diagnosis: pilesSymptoms.length > 0 ? "Piles" : formData.diagnosis, // Store "Piles" in diagnosis if any checkbox is checked
         general_history: generalArray.join(","),
         habits: habitsArray.join(","),
         ongoing_medicines: ongoingMedcineArray.join(","), // Join the array into a string
@@ -1019,15 +1037,17 @@ export default function PatientHistory() {
           ...prevData.surgeryTabs,
           piles_duration: patientHistory.piles_duration || "",
           fistula_duration: patientHistory.fistula_duration || "",
-          ods_duration: patientHistory.ods_duration || "",
+          ODS_duration: patientHistory.ODS_duration || "",
           hernia_duration: patientHistory.hernia_duration || "",
           varicose_duration: patientHistory.varicose_duration || "",
+          Urinary_incontinence_duration:
+            patientHistory.Urinary_incontinence_duration || "",
         },
         piles: patientHistory.piles || [],
         fistula: patientHistory.fistula || [],
         hernia: patientHistory.hernia || [],
         varicose: patientHistory.varicose || [],
-        uninary: patientHistory.uninary || [],
+        urinary: patientHistory.urinary || [],
         fecal: patientHistory.fecal || [],
         urology: patientHistory.urology || [],
         ods: patientHistory.ods || [],
@@ -1119,7 +1139,7 @@ export default function PatientHistory() {
       fistula: [],
       hernia: [],
       varicose: [],
-      uninary: [],
+      urinary: [],
       fecal: [],
       urology: [],
       ods: [],
@@ -1162,10 +1182,10 @@ export default function PatientHistory() {
         fistula_duration: "",
         hernia_duration: "",
         varicose_duration: "",
-        uninary_duration: "",
+        urinary_duration: "",
         fecal_duration: "",
         urology_duration: "",
-        ods_duration: "",
+        ODS_duration: "",
         bowel_habits: "",
         pilonidal_sinus: "",
       },
