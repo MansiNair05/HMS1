@@ -4,7 +4,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.100:5000/api"; // Update with your backend API base URL
+const BASE_URL = "http://192.168.29.108:5000/api"; // Update with your backend API base URL
 
 export default function OtherTests() {
   // const [dropdownOptions, setDropdownOptions] = useState([]); // Store API options
@@ -283,9 +283,8 @@ export default function OtherTests() {
       if (!response.ok) {
         const errorText = await response.text();
         console.error("API Error Response:", errorText);
-        throw new Error(
-          `Failed to fetch previous records: ${response.status} ${errorText}`
-        );
+               alert("No previous records.");
+
       }
 
       const result = await response.json();
@@ -343,7 +342,7 @@ export default function OtherTests() {
       setIsPreviousRecordsFetched(true);
     } catch (error) {
       console.error("Error in fetchPreviousRecords:", error);
-      alert(`Failed to fetch previous records: ${error.message}`);
+      alert("Failed to fetch previous records");
       // Hide medical history table if there's an error
       setShowMedicalHistory(false);
       setMedicalHistory([]);

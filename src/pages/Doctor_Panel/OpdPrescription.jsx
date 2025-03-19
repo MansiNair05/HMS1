@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.100:5000/api";
+const BASE_URL = "http://192.168.29.108:5000/api";
 
 export default function OpdPrescription() {
   const [formData, setFormData] = useState({
@@ -30,7 +30,7 @@ export default function OpdPrescription() {
     admmisionnote: "",
     nextAppointment: "",
     appointment_timestamp: "",
-medicine_name:"",
+    medicine_name: "",
     adviceMedicine: "",
     medicine_quantity: "",
     medicine_time: {
@@ -44,6 +44,8 @@ medicine_name:"",
     },
     medicine_days: "",
   });
+
+  const [isViewingPreviousRecords, setIsViewingPreviousRecords] = useState(false);
 
   const [tableData, setTableData] = useState([]);
   const [errors, setErrors] = useState({});
@@ -59,7 +61,6 @@ medicine_name:"",
   );
   const [isDisabled, setIsDisabled] = useState(false); // Controls edit mode
   const [disablePreviousButton, setDisablePreviousButton] = useState(false); // Disables "Previous Records" after clicking
-  const [showEditButton, setShowEditButton] = useState(false);
   const [showPrintButton, setShowPrintButton] = useState(false);
   const [previousRecordDate, setPreviousRecordDate] = useState("");
   const [selectedPrescriptionType, setSelectedPrescriptionType] = useState("");
@@ -269,10 +270,8 @@ medicine_name:"",
 
 const handleAddToTable = () => {
   const selectedMealTime = Object.keys(formData.medicine_time)
-    .filter((key) => formData.medicine_time[key]) // ✅ Get selected times
-    .join(", "); // ✅ Convert to a comma-separated string
-
-  console.log("Selected Medicine Time:", selectedMealTime); // 🔍 Check if it's a string
+    .filter((key) => formData.medicine_time[key])
+    .join(", ");
 
   if (
     !formData.medicine_name ||
@@ -287,34 +286,19 @@ const handleAddToTable = () => {
   const newTableRow = {
     medicine: formData.medicine_name,
     qty: formData.medicine_quantity,
-    mealTimings: selectedMealTime, // ✅ Store as a string
+    mealTimings: selectedMealTime,
     days: formData.medicine_days,
   };
 
-  console.log("New Table Row Data:", newTableRow); // 🔍 Check final format
-
   setTableData((prevData) => [...prevData, newTableRow]);
 
-  // Reset form fields
+  // Reset form fields but keep medicine_quantity in the main form data
   setFormData((prevFormData) => ({
     ...prevFormData,
-    medicine_name: "",
-    medicine_quantity: "",
-    medicine_days: "",
-    medicine_time: {
-      BeforeBreakfast: false,
-      AfterBreakfast: false,
-      BeforeLunch: false,
-      AfterLunch: false,
-      BeforeDinner: false,
-      AfterDinner: false,
-      AfterEveningSnacks: false,
-    },
+    
+   
   }));
-
-  console.log("Updated Table Data:", tableData); // 🔍 Ensure `tableData` updates correctly
 };
-
 
   const validate = () => {
     const errors = {};
@@ -332,33 +316,35 @@ const handleAddToTable = () => {
     }
 
     try {
-//       const medicineTimeArray = [];
-//       if (formData.medicine_time.BeforeBreakfast)
-//         medicineTimeArray.push("Before Breakfast");
-//       if (formData.medicine_time.AfterBreakfast)
-//         medicineTimeArray.push("After Breakfast");
-//       if (formData.medicine_time.BeforeLunch)
-//         medicineTimeArray.push("Before Lunch");
-//       if (formData.medicine_time.AfterLunch)
-//         medicineTimeArray.push("After Lunch");
-// if (formData.medicine_time.BeforeDinner) medicineTimeArray.push("Before Dinner");
-// if (formData.medicine_time.AfterDinner) medicineTimeArray.push("After Dinner");
-// if (formData.medicine_time.AfterEveningSnacks)
-//   medicineTimeArray.push("After Evening Snacks");      
-const medicinesArray = tableData.map((row) => ({
-  medicine_name: row.medicine,
-  medicine_quantity: row.qty.toString(), // ✅ Ensure it's a string
-  medicine_time: row.mealTimings.toString(), // ✅ Ensure it's a string
-  medicine_days: row.days.toString(),
-}));
-const formDataToSubmit = {
-  ...formData,
-  creation_timestamp: formData.creation_timestamp || null,
-  medicines: medicinesArray, // Store only medicines from the table
-
-  date: formData.appointment_timestamp || null, // Ensure date is included
-};
-
+            const medicineTimeArray = [];
+            if (formData.medicine_time.BeforeBreakfast)
+              medicineTimeArray.push("Before Breakfast");
+            if (formData.medicine_time.AfterBreakfast)
+              medicineTimeArray.push("After Breakfast");
+            if (formData.medicine_time.BeforeLunch)
+              medicineTimeArray.push("Before Lunch");
+            if (formData.medicine_time.AfterLunch)
+              medicineTimeArray.push("After Lunch");
+      if (formData.medicine_time.BeforeDinner) medicineTimeArray.push("Before Dinner");
+      if (formData.medicine_time.AfterDinner) medicineTimeArray.push("After Dinner");
+      if (formData.medicine_time.AfterEveningSnacks)
+        medicineTimeArray.push("After Evening Snacks");
+      const medicinesArray = tableData.map((row) => ({
+        medicine_name: row.medicine,
+        medicine_quantity: row.qty.toString(), // ✅ Ensure it's a string
+        medicine_time: row.mealTimings.toString(), // ✅ Ensure it's a string
+        medicine_days: row.days.toString(),
+      }));
+      const formDataToSubmit = {
+        ...formData,
+        creation_timestamp: formData.creation_timestamp || null,
+        medicines: medicinesArray, // Store only medicines from the table
+        medicine_time: medicineTimeArray.join(","),
+        medicine_quantity: formData.medicine_quantity,
+        medicine_days: formData.medicine_days,
+        date: formData.appointment_timestamp || null, // Ensure date is included
+      };
+console.log("Medicine Quantity before submission:", formData.medicine_quantity);
       console.log("Sending Data:", JSON.stringify(formDataToSubmit, null, 2));
 
       const response = await fetch(
@@ -385,51 +371,51 @@ const formDataToSubmit = {
       );
     }
   };
-  const handleUpdate = async () => {
-    try {
-      // Convert medicine_time object to a string
-      const updatedData = {
-        ...formData,
-        creation_timestamp: formData.creation_timestamp || null,
-        medicine_time: JSON.stringify(formData.medicine_time),
-      };
+  // const handleUpdate = async () => {
+  //   try {
+  //     // Convert medicine_time object to a string
+  //     const updatedData = {
+  //       ...formData,
+  //       creation_timestamp: formData.creation_timestamp || null,
+  //       medicine_time: JSON.stringify(formData.medicine_time),
+  //     };
 
-      console.log("Sending Data:", JSON.stringify(updatedData, null, 2));
+  //     console.log("Sending Data:", JSON.stringify(updatedData, null, 2));
 
-      const response = await fetch(
-        `${BASE_URL}/V1/prescription/updatePrescription/${patientId}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updatedData),
-        }
-      );
+  //     const response = await fetch(
+  //       `${BASE_URL}/V1/prescription/updatePrescription/${patientId}`,
+  //       {
+  //         method: "PUT",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify(updatedData),
+  //       }
+  //     );
 
-      const responseData = await response.json();
-      console.log("Response Data:", responseData);
+  //     const responseData = await response.json();
+  //     console.log("Response Data:", responseData);
 
-      if (!response.ok) {
-        throw new Error(responseData.message || "Failed to update data");
-      }
-      if (responseData.statusCode === 200) {
-        alert("Prescription updated successfully!");
-        setIsDisabled(true);
-        setShowEditButton(true);
-        //  setPreviousRecordDate(formData.date_diagnosis);
-        setDisablePreviousButton(true);
-      } else {
-        throw new Error(
-          responseData.message || "Failed to update prescription details"
-        );
-      }
-      // alert("Form updated successfully!");
-    } catch (error) {
-      console.error("Error updating form:", error);
-      alert(
-        "Failed to update form. Please check the console for more details."
-      );
-    }
-  };
+  //     if (!response.ok) {
+  //       throw new Error(responseData.message || "Failed to update data");
+  //     }
+  //     if (responseData.statusCode === 200) {
+  //       alert("Prescription updated successfully!");
+  //       setIsDisabled(true);
+  //       setShowEditButton(true);
+  //       //  setPreviousRecordDate(formData.date_diagnosis);
+  //       setDisablePreviousButton(true);
+  //     } else {
+  //       throw new Error(
+  //         responseData.message || "Failed to update prescription details"
+  //       );
+  //     }
+  //     // alert("Form updated successfully!");
+  //   } catch (error) {
+  //     console.error("Error updating form:", error);
+  //     alert(
+  //       "Failed to update form. Please check the console for more details."
+  //     );
+  //   }
+  // };
 
   // Combine and remove duplicates from both arrays (opdPrescription and testAdviceU)
   useEffect(() => {
@@ -491,26 +477,39 @@ const formDataToSubmit = {
         testAdvice: Array.isArray(prescription.testAdvice)
           ? prescription.testAdvice
           : [],
+        medicine_name: prescription.medicine_name || prev.medicine_name,
       }));
+ const medicinesArray = [
+   {
+     medicine: prescription.medicine_name || "N/A",
+     qty: prescription.medicine_quantity || "0",
+     days: prescription.medicine_days || "0",
+     mealTimings: prescription.medicine_time || "N/A", // Ensure this is included
+   },
+ ];
 
+ setTableData(medicinesArray); 
+ 
       // Update table data safely
-      if (Array.isArray(prescription.medicines)) {
-        setTableData(
-          prescription.medicines.map((med, prev) => ({
-            ...prev,
-            medicine: med.medicine_name || "N/A",
-            qty: med.medicine_quantity || prev.medicine_quantity || "0",
-            mealTimings: med.medicine_time || "N/A",
-            days: med.medicine_days || "0",
-          }))
-        );
-      } else {
-        setTableData([]); // Ensure no errors due to undefined medicine list
-      }
+      // if (Array.isArray(prescription.medicines)) {
+      //   setTableData(
+      //     prescription.medicines.map((med, prev) => ({
+      //       ...prev,
+      //       medicine: med.medicine_name || "N/A",
+      //       qty: med.medicine_quantity || prev.medicine_quantity || "0",
+      //       mealTimings: med.medicine_time || "N/A",
+      //       days: med.medicine_days || prev.medicine_days || "0",
+      //     })
+        
+      //   )
+      //   );
+      // } else {
+      //   setTableData([]); // Ensure no errors due to undefined medicine list
+      // }
 
       // Prevent unnecessary UI changes that may cause the disappearance
       setDisablePreviousButton(true);
-      setShowEditButton(true);
+      setIsViewingPreviousRecords(true); // Set to true when fetching previous records
       setShowPrintButton(true);
       setIsDisabled(true); // Keep form editable
     } catch (error) {
@@ -556,13 +555,13 @@ const formDataToSubmit = {
       medicine_quantity: "",
       medicine_name: "",
       medicine_time: {
-        BeforeBreakfast: false,
-        AfterBreakfast: false,
-        BeforeLunch: false,
-        AfterLunch: false,
-        BeforeDinner: false,
-        AfterDinner: false,
-        AfterEveningSnacks: false,
+        BeforeBreakfast: "",
+        AfterBreakfast: "",
+        BeforeLunch: "",
+        AfterLunch: "",
+        BeforeDinner: "",
+        AfterDinner: "",
+        AfterEveningSnacks: "",
       },
       medicine_days: "",
     });
@@ -572,9 +571,9 @@ const formDataToSubmit = {
 
     // Enable the "Previous Records" button
     setDisablePreviousButton(false);
+    setIsViewingPreviousRecords(false); // Reset to false when creating a new record
 
     // Hide the Edit button
-    setShowEditButton(false);
 
     // Enable form editing
     setIsDisabled(false);
@@ -589,10 +588,7 @@ const formDataToSubmit = {
     window.print();
   };
 
-  const handleEditPrescription = () => {
-    setIsDisabled(false);
-    alert("You can now edit the prescription details.");
-  };
+
 
   const renderAssistantDoctorSelect = () => (
     <Form.Select
@@ -702,16 +698,6 @@ const formDataToSubmit = {
                     >
                       Previous Records
                     </button>
-                    {showEditButton && (
-                      <button
-                        type="button"
-                        className="btn btn-warning"
-                        style={{ float: "right", marginRight: "7px" }}
-                        onClick={handleEditPrescription}
-                      >
-                        Edit Prescription
-                      </button>
-                    )}
 
                     {/* Print Button - Only Visible After Clicking "Previous Records" */}
                     {showPrintButton && (
@@ -1053,19 +1039,26 @@ const formDataToSubmit = {
                   </Col>
                 </Row>
                 <br />
+                {!isViewingPreviousRecords && (
+                  <>
+
                 <Row className="mb-3">
                   <Col md={3}>
                     <Form.Group>
                       <Form.Label>Advice Medicine:</Form.Label>
                       <Form.Select
-                        value={selectedOptions?.medicine_name || formData.medicine_name||""}
+                        value={
+                          selectedOptions?.medicine_name ||
+                          formData.medicine_name ||
+                          ""
+                        }
                         placeholder="Select Medicine"
-                        onChange={(e) =>{
+                        onChange={(e) => {
                           setSelectedOptions({
                             ...selectedOptions,
                             medicine_name: e.target.value,
                           }),
-                          setFormData((prev) => ({
+                            setFormData((prev) => ({
                               ...prev,
                               ...formData,
                               medicine_name: e.target.value, // Update form data with the selected doctor's name
@@ -1138,7 +1131,7 @@ const formDataToSubmit = {
                               name={timings}
                               checked={formData.medicine_time[timings]}
                               onChange={(e) =>
-                                setFormData((prev)=>({
+                                setFormData((prev) => ({
                                   ...prev,
                                   ...formData,
                                   medicine_time: {
@@ -1162,7 +1155,7 @@ const formDataToSubmit = {
                       <Form.Label>Days:</Form.Label>
                       <Form.Select
                         name="medicine_days"
-                        value={formData.medicine_days}
+                        value={formData.medicine_days || setTableData.days}
                         onChange={handleInputChange}
                         disabled={isDisabled}
                       >
@@ -1182,7 +1175,8 @@ const formDataToSubmit = {
                 </Row>
                 <br />
                 <button onClick={handleAddToTable}>Add to Table</button>
-              </Card.Body>
+                      </>)}
+                </Card.Body>
             </Card>
           </Col>
         </Row>
@@ -1235,11 +1229,12 @@ const formDataToSubmit = {
 
         <Button
           variant="success"
-          onClick={showEditButton ? handleUpdate : handleSubmit}
+          onClick={handleSubmit}
           className="mt-4 btn-primary"
-          disabled={isDisabled}
+          disabled={isDisabled || isViewingPreviousRecords} // Disable if viewing previous records
+          style={{ display: isViewingPreviousRecords ? "none" : "block" }} // Hide if viewing previous records
         >
-          {showEditButton ? "Update" : "Save"}
+          Save
         </Button>
       </Container>
       <style>

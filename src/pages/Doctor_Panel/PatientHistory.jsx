@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.100:5000/api";
+const BASE_URL = "http://192.168.29.108:5000/api";
 
 const SurgeryTabs = ({
   selectedOptions,
@@ -141,7 +141,6 @@ const SurgeryTabs = ({
       checked ? [...prev, value] : prev.filter((item) => item !== value)
     );
   };
-
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -591,20 +590,20 @@ export default function PatientHistory() {
 
     try {
       console.log("Form data before saving:", formData);
-       const pilesSymptoms = selectedOptions.filter((item) =>
-         [
-           "PR Bleeding: Painless",
-           "PR Bleeding: Painful",
-           "Burning",
-           "Pricking",
-           "Itching",
-           "Incomplete Evacuation",
-           "Prolapse",
-           "Swelling",
-           "Pain at Anal Region",
-           "Mucus Mixed Blood",
-         ].includes(item)
-       );
+      const pilesSymptoms = selectedOptions.filter((item) =>
+        [
+          "PR Bleeding: Painless",
+          "PR Bleeding: Painful",
+          "Burning",
+          "Pricking",
+          "Itching",
+          "Incomplete Evacuation",
+          "Prolapse",
+          "Swelling",
+          "Pain at Anal Region",
+          "Mucus Mixed Blood",
+        ].includes(item)
+      );
       const pastHistoryArray = [];
       if (formData.past_history.dm) pastHistoryArray.push("DM");
       if (formData.past_history.htn) pastHistoryArray.push("HTN");
