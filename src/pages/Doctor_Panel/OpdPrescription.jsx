@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.29.108:5000/api";
+const BASE_URL = "http://192.168.90.108:5000/api";
 
 export default function OpdPrescription() {
   const [formData, setFormData] = useState({
@@ -45,7 +45,8 @@ export default function OpdPrescription() {
     medicine_days: "",
   });
 
-  const [isViewingPreviousRecords, setIsViewingPreviousRecords] = useState(false);
+  const [isViewingPreviousRecords, setIsViewingPreviousRecords] =
+    useState(false);
 
   const [tableData, setTableData] = useState([]);
   const [errors, setErrors] = useState({});
@@ -268,37 +269,47 @@ export default function OpdPrescription() {
     });
   };
 
-const handleAddToTable = () => {
-  const selectedMealTime = Object.keys(formData.medicine_time)
-    .filter((key) => formData.medicine_time[key])
-    .join(", ");
+  const handleAddToTable = () => {
+    const selectedMealTime = Object.keys(formData.medicine_time)
+      .filter((key) => formData.medicine_time[key])
+      .join(", ");
 
-  if (
-    !formData.medicine_name ||
-    !formData.medicine_quantity ||
-    !selectedMealTime ||
-    !formData.medicine_days
-  ) {
-    alert("Please fill in all medicine details before adding.");
-    return;
-  }
+    if (
+      !formData.medicine_name ||
+      !formData.medicine_quantity ||
+      !selectedMealTime ||
+      !formData.medicine_days
+    ) {
+      alert("Please fill in all medicine details before adding.");
+      return;
+    }
 
-  const newTableRow = {
-    medicine: formData.medicine_name,
-    qty: formData.medicine_quantity,
-    mealTimings: selectedMealTime,
-    days: formData.medicine_days,
+    const newTableRow = {
+      medicine: formData.medicine_name,
+      qty: formData.medicine_quantity,
+      mealTimings: selectedMealTime,
+      days: formData.medicine_days,
+    };
+
+    setTableData((prevData) => [...prevData, newTableRow]);
+
+    // Reset form fields after adding to the table
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      medicine_name: "", // Reset medicine name
+      medicine_quantity: "", // Reset medicine quantity
+      medicine_time: {
+        BeforeBreakfast: false,
+        AfterBreakfast: false,
+        BeforeLunch: false,
+        AfterLunch: false,
+        BeforeDinner: false,
+        AfterDinner: false,
+        AfterEveningSnacks: false,
+      }, // Reset medicine time
+      days: "", // Reset medicine days
+    }));
   };
-
-  setTableData((prevData) => [...prevData, newTableRow]);
-
-  // Reset form fields but keep medicine_quantity in the main form data
-  setFormData((prevFormData) => ({
-    ...prevFormData,
-    
-   
-  }));
-};
 
   const validate = () => {
     const errors = {};
@@ -316,17 +327,19 @@ const handleAddToTable = () => {
     }
 
     try {
-            const medicineTimeArray = [];
-            if (formData.medicine_time.BeforeBreakfast)
-              medicineTimeArray.push("Before Breakfast");
-            if (formData.medicine_time.AfterBreakfast)
-              medicineTimeArray.push("After Breakfast");
-            if (formData.medicine_time.BeforeLunch)
-              medicineTimeArray.push("Before Lunch");
-            if (formData.medicine_time.AfterLunch)
-              medicineTimeArray.push("After Lunch");
-      if (formData.medicine_time.BeforeDinner) medicineTimeArray.push("Before Dinner");
-      if (formData.medicine_time.AfterDinner) medicineTimeArray.push("After Dinner");
+      const medicineTimeArray = [];
+      if (formData.medicine_time.BeforeBreakfast)
+        medicineTimeArray.push("Before Breakfast");
+      if (formData.medicine_time.AfterBreakfast)
+        medicineTimeArray.push("After Breakfast");
+      if (formData.medicine_time.BeforeLunch)
+        medicineTimeArray.push("Before Lunch");
+      if (formData.medicine_time.AfterLunch)
+        medicineTimeArray.push("After Lunch");
+      if (formData.medicine_time.BeforeDinner)
+        medicineTimeArray.push("Before Dinner");
+      if (formData.medicine_time.AfterDinner)
+        medicineTimeArray.push("After Dinner");
       if (formData.medicine_time.AfterEveningSnacks)
         medicineTimeArray.push("After Evening Snacks");
       const medicinesArray = tableData.map((row) => ({
@@ -344,7 +357,10 @@ const handleAddToTable = () => {
         medicine_days: formData.medicine_days,
         date: formData.appointment_timestamp || null, // Ensure date is included
       };
-console.log("Medicine Quantity before submission:", formData.medicine_quantity);
+      console.log(
+        "Medicine Quantity before submission:",
+        formData.medicine_quantity
+      );
       console.log("Sending Data:", JSON.stringify(formDataToSubmit, null, 2));
 
       const response = await fetch(
@@ -479,17 +495,17 @@ console.log("Medicine Quantity before submission:", formData.medicine_quantity);
           : [],
         medicine_name: prescription.medicine_name || prev.medicine_name,
       }));
- const medicinesArray = [
-   {
-     medicine: prescription.medicine_name || "N/A",
-     qty: prescription.medicine_quantity || "0",
-     days: prescription.medicine_days || "0",
-     mealTimings: prescription.medicine_time || "N/A", // Ensure this is included
-   },
- ];
+      const medicinesArray = [
+        {
+          medicine: prescription.medicine_name || "N/A",
+          qty: prescription.medicine_quantity || "0",
+          days: prescription.medicine_days || "0",
+          mealTimings: prescription.medicine_time || "N/A", // Ensure this is included
+        },
+      ];
 
- setTableData(medicinesArray); 
- 
+      setTableData(medicinesArray);
+
       // Update table data safely
       // if (Array.isArray(prescription.medicines)) {
       //   setTableData(
@@ -500,7 +516,7 @@ console.log("Medicine Quantity before submission:", formData.medicine_quantity);
       //       mealTimings: med.medicine_time || "N/A",
       //       days: med.medicine_days || prev.medicine_days || "0",
       //     })
-        
+
       //   )
       //   );
       // } else {
@@ -587,8 +603,6 @@ console.log("Medicine Quantity before submission:", formData.medicine_quantity);
   const handlePrint = () => {
     window.print();
   };
-
-
 
   const renderAssistantDoctorSelect = () => (
     <Form.Select
@@ -1041,142 +1055,146 @@ console.log("Medicine Quantity before submission:", formData.medicine_quantity);
                 <br />
                 {!isViewingPreviousRecords && (
                   <>
-
-                <Row className="mb-3">
-                  <Col md={3}>
-                    <Form.Group>
-                      <Form.Label>Advice Medicine:</Form.Label>
-                      <Form.Select
-                        value={
-                          selectedOptions?.medicine_name ||
-                          formData.medicine_name ||
-                          ""
-                        }
-                        placeholder="Select Medicine"
-                        onChange={(e) => {
-                          setSelectedOptions({
-                            ...selectedOptions,
-                            medicine_name: e.target.value,
-                          }),
-                            setFormData((prev) => ({
-                              ...prev,
-                              ...formData,
-                              medicine_name: e.target.value, // Update form data with the selected doctor's name
-                            }));
-                        }}
-                        disabled={isDisabled}
-                      >
-                        {selectedPrescriptionType === "PROCTOLOGY" && (
-                          <>
-                            <option value="" disabled>
-                              Select Medicine
-                            </option>
-                            {adviceMedicineP.map((medicine, index) => (
-                              <option key={index} value={medicine.name}>
-                                {medicine.name}
-                              </option>
-                            ))}
-                          </>
-                        )}
-                        {selectedPrescriptionType === "UROLOGY" && (
-                          <>
-                            <option value="" disabled>
-                              Select Medicine
-                            </option>
-                            {adviceMedicineU.map((medicine, index) => (
-                              <option key={index} value={medicine.name}>
-                                {medicine.name}
-                              </option>
-                            ))}
-                          </>
-                        )}
-                      </Form.Select>
-                    </Form.Group>
-                  </Col>
-                  <Col md={1}>
-                    <Form.Group>
-                      <Form.Label>Quantity:</Form.Label>
-                      <Form.Select
-                        name="medicine_quantity"
-                        value={formData.medicine_quantity || setTableData.qty}
-                        onChange={handleInputChange}
-                        disabled={isDisabled}
-                      >
-                        <option value="" disabled>
-                          Qty
-                        </option>
-                        {Array.from({ length: 60 }, (_, i) => i + 1).map(
-                          (num) => (
-                            <option key={num} value={num}>
-                              {num}
-                            </option>
-                          )
-                        )}
-                      </Form.Select>
-                    </Form.Group>
-                  </Col>
-
-                  <Col>
-                    <Form.Group>
-                      <Form.Label>Time Slot:</Form.Label>
-                      <div className="d-flex flex-wrap">
-                        {Object.keys(formData?.medicine_time).map((timings) => (
-                          <label
-                            key={timings}
-                            className="d-flex align-items-center me-3"
-                          >
-                            <Form.Check
-                              inline
-                              type="checkbox"
-                              name={timings}
-                              checked={formData.medicine_time[timings]}
-                              onChange={(e) =>
+                    <Row className="mb-3">
+                      <Col md={3}>
+                        <Form.Group>
+                          <Form.Label>Advice Medicine:</Form.Label>
+                          <Form.Select
+                            value={
+                              selectedOptions?.medicine_name ||
+                              formData.medicine_name ||
+                              ""
+                            }
+                            placeholder="Select Medicine"
+                            onChange={(e) => {
+                              setSelectedOptions({
+                                ...selectedOptions,
+                                medicine_name: e.target.value,
+                              }),
                                 setFormData((prev) => ({
                                   ...prev,
                                   ...formData,
-                                  medicine_time: {
-                                    ...formData.medicine_time,
-                                    [timings]: e.target.checked,
-                                  },
-                                }))
-                              }
-                              disabled={isDisabled}
-                              id={timings}
-                              style={{ marginRight: "5px" }}
-                            />
-                            {timings.replace(/([A-Z])/g, " $1").trim()}
-                          </label>
-                        ))}
-                      </div>
-                    </Form.Group>
-                  </Col>
-                  <Col md={1}>
-                    <Form.Group>
-                      <Form.Label>Days:</Form.Label>
-                      <Form.Select
-                        name="medicine_days"
-                        value={formData.medicine_days || setTableData.days}
-                        onChange={handleInputChange}
-                        disabled={isDisabled}
-                      >
-                        <option value="" disabled>
-                          Days
-                        </option>
-                        {[1, 2, 3, 5, 7, 10, 15, 30, 45, 60, 90, 120].map(
-                          (num) => (
-                            <option key={num} value={num}>
-                              {num}
+                                  medicine_name: e.target.value, // Update form data with the selected doctor's name
+                                }));
+                            }}
+                            disabled={isDisabled}
+                          >
+                            {selectedPrescriptionType === "PROCTOLOGY" && (
+                              <>
+                                <option value="" disabled>
+                                  Select Medicine
+                                </option>
+                                {adviceMedicineP.map((medicine, index) => (
+                                  <option key={index} value={medicine.name}>
+                                    {medicine.name}
+                                  </option>
+                                ))}
+                              </>
+                            )}
+                            {selectedPrescriptionType === "UROLOGY" && (
+                              <>
+                                <option value="" disabled>
+                                  Select Medicine
+                                </option>
+                                {adviceMedicineU.map((medicine, index) => (
+                                  <option key={index} value={medicine.name}>
+                                    {medicine.name}
+                                  </option>
+                                ))}
+                              </>
+                            )}
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col md={1}>
+                        <Form.Group>
+                          <Form.Label>Quantity:</Form.Label>
+                          <Form.Select
+                            name="medicine_quantity"
+                            value={
+                              formData.medicine_quantity || setTableData.qty
+                            }
+                            onChange={handleInputChange}
+                            disabled={isDisabled}
+                          >
+                            <option value="" disabled>
+                              Qty
                             </option>
-                          )
-                        )}
-                      </Form.Select>
-                    </Form.Group>
-                  </Col>
-                </Row>
-                <br />
-                <button onClick={handleAddToTable}>Add to Table</button>
-                      </>)}
-                </Card.Body>
+                            {Array.from({ length: 60 }, (_, i) => i + 1).map(
+                              (num) => (
+                                <option key={num} value={num}>
+                                  {num}
+                                </option>
+                              )
+                            )}
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+
+                      <Col>
+                        <Form.Group>
+                          <Form.Label>Time Slot:</Form.Label>
+                          <div className="d-flex flex-wrap">
+                            {Object.keys(formData?.medicine_time).map(
+                              (timings) => (
+                                <label
+                                  key={timings}
+                                  className="d-flex align-items-center me-3"
+                                >
+                                  <Form.Check
+                                    inline
+                                    type="checkbox"
+                                    name={timings}
+                                    checked={formData.medicine_time[timings]}
+                                    onChange={(e) =>
+                                      setFormData((prev) => ({
+                                        ...prev,
+                                        ...formData,
+                                        medicine_time: {
+                                          ...formData.medicine_time,
+                                          [timings]: e.target.checked,
+                                        },
+                                      }))
+                                    }
+                                    disabled={isDisabled}
+                                    id={timings}
+                                    style={{ marginRight: "5px" }}
+                                  />
+                                  {timings.replace(/([A-Z])/g, " $1").trim()}
+                                </label>
+                              )
+                            )}
+                          </div>
+                        </Form.Group>
+                      </Col>
+                      <Col md={1}>
+                        <Form.Group>
+                          <Form.Label>Days:</Form.Label>
+                          <Form.Select
+                            name="medicine_days"
+                            value={formData.medicine_days || setTableData.days}
+                            onChange={handleInputChange}
+                            disabled={isDisabled}
+                          >
+                            <option value="" disabled>
+                              Days
+                            </option>
+                            {[1, 2, 3, 5, 7, 10, 15, 30, 45, 60, 90, 120].map(
+                              (num) => (
+                                <option key={num} value={num}>
+                                  {num}
+                                </option>
+                              )
+                            )}
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                    <br />
+                    <button onClick={handleAddToTable}>Add to Table</button>
+                  </>
+                )}
+              </Card.Body>
             </Card>
           </Col>
         </Row>

@@ -4,7 +4,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.29.108:5000/api"; // Update with your backend API base URL
+const BASE_URL = "http://192.168.90.108:5000/api"; // Update with your backend API base URL
 
 export default function OtherTests() {
   // const [dropdownOptions, setDropdownOptions] = useState([]); // Store API options
@@ -283,8 +283,7 @@ export default function OtherTests() {
       if (!response.ok) {
         const errorText = await response.text();
         console.error("API Error Response:", errorText);
-               alert("No previous records.");
-
+        alert("No previous records.");
       }
 
       const result = await response.json();

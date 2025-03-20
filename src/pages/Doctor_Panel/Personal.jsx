@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-const BASE_URL = "http://192.168.29.108:5000/api";
+const BASE_URL = "http://192.168.90.108:5000/api";
 
 export default function Personal() {
   const location = useLocation();

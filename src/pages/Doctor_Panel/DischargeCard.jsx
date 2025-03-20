@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.29.108:5000/api"; // Update with your backend API base URL
+const BASE_URL = "http://192.168.90.108:5000/api"; // Update with your backend API base URL
 
 export default function DischargeCard() {
   const [discharge, setDischarge] = useState([]);
@@ -110,6 +110,7 @@ export default function DischargeCard() {
     },
     medicine_days: "",
     medicine_name: "",
+    medicine_time: "",
     medicineType: "",
     medicalStrength: "",
     medicineUnit: "",
@@ -348,7 +349,6 @@ export default function DischargeCard() {
           pulse: urologyData?.pulse || "",
           RR: urologyData?.RR || "",
           temperature: urologyData?.temperature || "",
-          surgery_type: dischargeCardDetails?.surgery_type || [],
           chife_complaints: dischargeCardData?.chife_complaints || "",
           past_history: dischargeCardData?.past_history || "",
           surgical_history: dischargeCardData?.surgical_history || "",
@@ -391,9 +391,7 @@ export default function DischargeCard() {
           status: medicineData.status || "",
           medicine_dosage: medicineData.medicine_dosage || "",
 
-          prescription_type: prescriptionOpdData.prescription_type || "",
           medicine_name: prescriptionOpdData.medicine_name || "",
-          medicine_quantity: prescriptionOpdData.medicine_quantity || "",
           medicine_time: prescriptionOpdData.medicine_time || "",
           medicine_days: prescriptionOpdData.medicine_days || "",
         }));
@@ -564,12 +562,38 @@ export default function DischargeCard() {
     e.preventDefault();
 
     try {
+      const medicineTimeArray = [];
+      if (formData.medicine_time.BeforeBreakfast)
+        medicineTimeArray.push("Before Breakfast");
+      if (formData.medicine_time.AfterBreakfast)
+        medicineTimeArray.push("After Breakfast");
+      if (formData.medicine_time.BeforeLunch)
+        medicineTimeArray.push("Before Lunch");
+      if (formData.medicine_time.AfterLunch)
+        medicineTimeArray.push("After Lunch");
+      if (formData.medicine_time.BeforeDinner)
+        medicineTimeArray.push("Before Dinner");
+      if (formData.medicine_time.AfterDinner)
+        medicineTimeArray.push("After Dinner");
+      if (formData.medicine_time.AfterEveningSnacks)
+        medicineTimeArray.push("After Evening Snacks");
+      const medicinesArray = tableData.map((row) => ({
+        medicine_name: row.medicine,
+        medicine_quantity: row.qty.toString(), // ✅ Ensure it's a string
+        medicine_time: row.mealTimings.toString(), // ✅ Ensure it's a string
+        medicine_days: row.days.toString(),
+      }));
+
       const requestBody = {
         patientId: patientId,
         ...formData,
         is_deleted: 0,
         doctor_id: localStorage.getItem("doctor_id") || "",
         creation_timestamp: new Date().toISOString(),
+        medicines: medicinesArray, // Store only medicines from the table
+        medicine_time: medicineTimeArray.join(","),
+        medicine_quantity: formData.medicine_quantity,
+        medicine_days: formData.medicine_days,
       };
 
       const response = await fetch(
@@ -584,6 +608,7 @@ export default function DischargeCard() {
       );
 
       const data = await response.json();
+      console.log("Response data:", data);
 
       // First update the states
       setIsDisabled(true);

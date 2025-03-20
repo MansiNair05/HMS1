@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.29.108:5000/api";
+const BASE_URL = "http://192.168.90.108:5000/api";
 
 const SurgeryTabs = ({
   selectedOptions,
@@ -136,10 +136,48 @@ const SurgeryTabs = ({
   ];
 
   const handleCheckboxChange = (e) => {
-    const { value, checked } = e.target;
-    setSelectedOptions((prev) =>
-      checked ? [...prev, value] : prev.filter((item) => item !== value)
-    );
+    const { value, checked } = e.target; // value should be the symptom name
+    const currentTab = tabData.find((tab) => tab.id === key); // Get the current tab
+    const tabTitle = currentTab.title; // Get the current tab title
+
+   setSelectedOptions((prev) => {
+      console.log("Previous state:", prev);
+
+     const prevOptions = Array.isArray(prev) ? prev : []; // Ensure it's an array
+     return checked
+       ? [...prevOptions, value]
+       : prevOptions.filter((item) => item !== value);
+   });
+
+
+    // Update the formData for diagnosis and symptoms
+    setFormData((prevState) => {
+      // Split the existing symptoms string into an array
+      const currentSymptoms = prevState.symptoms
+        ? prevState.symptoms.split(", ")
+        : [];
+
+      const updatedSymptoms = checked
+        ? [...currentSymptoms, value] // Add the new symptom
+        : currentSymptoms.filter((item) => item !== value); // Remove the unchecked symptom
+
+      // Create a unique diagnosis string based on checked symptoms
+      const diagnosisSet = new Set(prevState.diagnosis.split(", ")); // Use a Set to avoid duplicates
+
+      // Check if any symptoms belong to the current tab
+      if (currentTab.checkboxes.includes(value)) {
+        diagnosisSet.add(tabTitle); // Add the tab title if any symptom from this tab is checked
+      }
+
+      // Update the diagnosis string
+      const updatedDiagnosis = Array.from(diagnosisSet).join(", "); // Convert Set back to string
+
+      return {
+        ...prevState,
+        symptoms: updatedSymptoms.join(", "), // Store symptoms as a string
+        diagnosis: updatedDiagnosis, // Store diagnosis as a string
+      };
+    });
   };
 
   const handleInputChange = (e) => {
@@ -321,7 +359,8 @@ export default function PatientHistory() {
       d: false,
     },
     medications: [],
-
+    symptoms: "", // Initialize as a string
+    diagnosis: "",
     surgeryTabs: {
       piles_duration: "",
       fistula_duration: "",
@@ -396,7 +435,8 @@ export default function PatientHistory() {
           setFormData((prevState) => ({
             ...prevState,
             ...patientData,
-
+            symptoms: patientData.symptoms|| "",
+            diagnosis: patientData.diagnosis || "",
             vitalSigns: {
               ...prevState.vitalSigns,
               ...(patientData.vitalSigns || {}),
@@ -481,6 +521,8 @@ export default function PatientHistory() {
                 ? medicationData
                 : prevState.medications,
           }));
+                  setSelectedOptions(patientData.selectedOptions || []);
+
         } else {
           console.warn("No patient data found in API response");
         }
@@ -590,20 +632,20 @@ export default function PatientHistory() {
 
     try {
       console.log("Form data before saving:", formData);
-      const pilesSymptoms = selectedOptions.filter((item) =>
-        [
-          "PR Bleeding: Painless",
-          "PR Bleeding: Painful",
-          "Burning",
-          "Pricking",
-          "Itching",
-          "Incomplete Evacuation",
-          "Prolapse",
-          "Swelling",
-          "Pain at Anal Region",
-          "Mucus Mixed Blood",
-        ].includes(item)
-      );
+      // const pilesSymptoms = selectedOptions.filter((item) =>
+      //   [
+      //     "PR Bleeding: Painless",
+      //     "PR Bleeding: Painful",
+      //     "Burning",
+      //     "Pricking",
+      //     "Itching",
+      //     "Incomplete Evacuation",
+      //     "Prolapse",
+      //     "Swelling",
+      //     "Pain at Anal Region",
+      //     "Mucus Mixed Blood",
+      //   ].includes(item)
+      // );
       const pastHistoryArray = [];
       if (formData.past_history.dm) pastHistoryArray.push("DM");
       if (formData.past_history.htn) pastHistoryArray.push("HTN");
@@ -676,8 +718,10 @@ export default function PatientHistory() {
 
       const formattedData = {
         ...formData,
-        symptoms: pilesSymptoms.join(", "), // Store selected symptoms
-        diagnosis: pilesSymptoms.length > 0 ? "Piles" : formData.diagnosis, // Store "Piles" in diagnosis if any checkbox is checked
+        diagnosis: formData.diagnosis, // Store diagnosis as a string
+        symptoms: formData.symptoms,
+        // symptoms: pilesSymptoms.join(", "), // Store selected symptoms
+        // diagnosis: pilesSymptoms.length > 0 ? "Piles" : formData.diagnosis, // Store "Piles" in diagnosis if any checkbox is checked
         general_history: generalArray.join(","),
         habits: habitsArray.join(","),
         ongoing_medicines: ongoingMedcineArray.join(","), // Join the array into a string

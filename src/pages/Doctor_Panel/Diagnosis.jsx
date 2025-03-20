@@ -13,10 +13,12 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.29.108:5000/api"; // Replace with your actual backend URL
+const BASE_URL = "http://192.168.90.108:5000/api"; // Replace with your actual backend URL
 
-const DiagnosisTabs = () => {
+const DiagnosisTabs = ({ formData, setFormData }) => {
   const [key, setKey] = useState("piles");
+  const [diagnosis, setDiagnosis] = useState([]);
+  const [symptoms, setSymptoms] = useState([]);
 
   const tabData = [
     {
@@ -99,6 +101,42 @@ const DiagnosisTabs = () => {
       textarea: "urology_duration",
     },
   ];
+const handleSymptomsChange = (e) => {
+  const { value, checked } = e.target;
+  const currentTab = tabData.find((tab) => tab.id === key);
+  const tabTitle = currentTab.title;
+
+  setFormData((prevState) => {
+    const currentSymptoms = (prevState.symptoms || "").split(", ");
+
+    const updatedSymptoms = checked
+      ? [...currentSymptoms, value]
+      : currentSymptoms.filter((item) => item !== value);
+
+    const diagnosisSet = new Set((prevState.diagnosis || "").split(", "));
+
+    if (checked) {
+      diagnosisSet.add(tabTitle);
+    } else {
+      const hasSymptoms = updatedSymptoms.some((symptom) =>
+        currentTab.checkboxes.includes(symptom)
+      );
+      if (!hasSymptoms) {
+        diagnosisSet.delete(tabTitle);
+      }
+    }
+
+    return {
+      ...prevState,
+      symptoms: updatedSymptoms.join(", "), // ✅ Ensure symptoms is always a string
+      diagnosis: Array.from(diagnosisSet).join(", "),
+    };
+  });
+};
+
+
+
+
 
   return (
     <div className="box">
@@ -148,8 +186,14 @@ const DiagnosisTabs = () => {
                       {tab.checkboxes.map((checkbox, index) => (
                         <Form.Check
                           key={index}
+                          id={`${tab.id}-${index}`}
                           type="checkbox"
                           label={checkbox}
+                          value={checkbox} // ✅ Ensure correct value is stored
+                          checked={(formData.symptoms || "")
+                            .split(", ")
+                            .includes(checkbox)}
+                          onChange={handleSymptomsChange}
                           style={{
                             flex: "0 0 auto",
                             minWidth: "200px",
@@ -186,6 +230,7 @@ const DiagnosisTabs = () => {
     </div>
   );
 };
+
 
 export default function Diagnosis() {
   const [patientId, setPatientId] = useState(
@@ -331,6 +376,7 @@ export default function Diagnosis() {
             ...prevData,
             advice: "",
             diagnosis: "",
+            symptoms:"",
             date_diagnosis: "",
             provisionaldiagnosis: "",
             investigationorders: "",
@@ -628,6 +674,7 @@ export default function Diagnosis() {
       const requestBody = {
         patientId: patientId.toString(),
         diagnosis: formData.diagnosis,
+        symptoms: formData.symptoms,
         advice: selectedAdviceOptions.advice.join(","),
         date_diagnosis: formData.date_diagnosis || null,
         provisionaldiagnosis: formData.provisionaldiagnosis || "",
@@ -1165,7 +1212,10 @@ export default function Diagnosis() {
                     </Col>
                   </Row>
                   <br />
-                  <DiagnosisTabs />
+                  <DiagnosisTabs
+                    formData={formData}
+                    setFormData={setFormData}
+                  />
                   <br />
 
                   <Row className="mb-3">
