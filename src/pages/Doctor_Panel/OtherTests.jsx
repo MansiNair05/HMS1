@@ -4,7 +4,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.108:5000/api"; // Update with your backend API base URL
+const BASE_URL = "http://192.168.188.47:5000/api"; // Update with your backend API base URL
 
 export default function OtherTests() {
   // const [dropdownOptions, setDropdownOptions] = useState([]); // Store API options

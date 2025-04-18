@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.108:5000/api";
+const BASE_URL = "http://192.168.117.47:5000/api";
 
 const SurgeryTabs = ({
   selectedOptions,
@@ -140,15 +140,14 @@ const SurgeryTabs = ({
     const currentTab = tabData.find((tab) => tab.id === key); // Get the current tab
     const tabTitle = currentTab.title; // Get the current tab title
 
-   setSelectedOptions((prev) => {
+    setSelectedOptions((prev) => {
       console.log("Previous state:", prev);
 
-     const prevOptions = Array.isArray(prev) ? prev : []; // Ensure it's an array
-     return checked
-       ? [...prevOptions, value]
-       : prevOptions.filter((item) => item !== value);
-   });
-
+      const prevOptions = Array.isArray(prev) ? prev : []; // Ensure it's an array
+      return checked
+        ? [...prevOptions, value]
+        : prevOptions.filter((item) => item !== value);
+    });
 
     // Update the formData for diagnosis and symptoms
     setFormData((prevState) => {
@@ -435,7 +434,7 @@ export default function PatientHistory() {
           setFormData((prevState) => ({
             ...prevState,
             ...patientData,
-            symptoms: patientData.symptoms|| "",
+            symptoms: patientData.symptoms || "",
             diagnosis: patientData.diagnosis || "",
             vitalSigns: {
               ...prevState.vitalSigns,
@@ -521,8 +520,7 @@ export default function PatientHistory() {
                 ? medicationData
                 : prevState.medications,
           }));
-                  setSelectedOptions(patientData.selectedOptions || []);
-
+          setSelectedOptions(patientData.selectedOptions || []);
         } else {
           console.warn("No patient data found in API response");
         }

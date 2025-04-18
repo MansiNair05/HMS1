@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.90.108:5000/api"; // Replace with your actual backend URL
+const BASE_URL = "http://192.168.188.47:5000/api"; // Replace with your actual backend URL
 
 const DiagnosisTabs = ({ formData, setFormData }) => {
   const [key, setKey] = useState("piles");
@@ -101,42 +101,38 @@ const DiagnosisTabs = ({ formData, setFormData }) => {
       textarea: "urology_duration",
     },
   ];
-const handleSymptomsChange = (e) => {
-  const { value, checked } = e.target;
-  const currentTab = tabData.find((tab) => tab.id === key);
-  const tabTitle = currentTab.title;
+  const handleSymptomsChange = (e) => {
+    const { value, checked } = e.target;
+    const currentTab = tabData.find((tab) => tab.id === key);
+    const tabTitle = currentTab.title;
 
-  setFormData((prevState) => {
-    const currentSymptoms = (prevState.symptoms || "").split(", ");
+    setFormData((prevState) => {
+      const currentSymptoms = (prevState.symptoms || "").split(", ");
 
-    const updatedSymptoms = checked
-      ? [...currentSymptoms, value]
-      : currentSymptoms.filter((item) => item !== value);
+      const updatedSymptoms = checked
+        ? [...currentSymptoms, value]
+        : currentSymptoms.filter((item) => item !== value);
 
-    const diagnosisSet = new Set((prevState.diagnosis || "").split(", "));
+      const diagnosisSet = new Set((prevState.diagnosis || "").split(", "));
 
-    if (checked) {
-      diagnosisSet.add(tabTitle);
-    } else {
-      const hasSymptoms = updatedSymptoms.some((symptom) =>
-        currentTab.checkboxes.includes(symptom)
-      );
-      if (!hasSymptoms) {
-        diagnosisSet.delete(tabTitle);
+      if (checked) {
+        diagnosisSet.add(tabTitle);
+      } else {
+        const hasSymptoms = updatedSymptoms.some((symptom) =>
+          currentTab.checkboxes.includes(symptom)
+        );
+        if (!hasSymptoms) {
+          diagnosisSet.delete(tabTitle);
+        }
       }
-    }
 
-    return {
-      ...prevState,
-      symptoms: updatedSymptoms.join(", "), // ✅ Ensure symptoms is always a string
-      diagnosis: Array.from(diagnosisSet).join(", "),
-    };
-  });
-};
-
-
-
-
+      return {
+        ...prevState,
+        symptoms: updatedSymptoms.join(", "), // ✅ Ensure symptoms is always a string
+        diagnosis: Array.from(diagnosisSet).join(", "),
+      };
+    });
+  };
 
   return (
     <div className="box">
@@ -231,7 +227,6 @@ const handleSymptomsChange = (e) => {
   );
 };
 
-
 export default function Diagnosis() {
   const [patientId, setPatientId] = useState(
     localStorage.getItem("selectedPatientId")
@@ -274,6 +269,25 @@ export default function Diagnosis() {
     Laser: "",
     MW: "",
     categoryComment: "",
+    medical_mxComment: "",
+    mcdpaComment: "",
+    manometryComment: "",
+    dietComment: "",
+    echoComment: "",
+    uroflowmetryComment: "",
+    coloComment: "",
+    gastroComment: "",
+    xrayComment: "",
+    mriComment: "",
+    chtComment: "",
+    biofeedbackComment: "",
+    labInvestigationComment: "",
+    ultrasonographyComment: "",
+    EchoAnalImagingComment: "",
+    dopplerComment: "",
+    USGComment: "",
+    USGScrotumComment: "",
+    USGAbdomenComment: "",
     medical_mx: {
       mcdpa: false,
       manometry: false,
@@ -340,7 +354,43 @@ export default function Diagnosis() {
     console.log("Retrieved from localStorage:", storedPatientId);
     if (storedPatientId) setPatientId(storedPatientId);
   }, []);
+const handleCommentChange = (e) => {
+  const { name, value } = e.target;
 
+  // Update the specific comment field
+  setFormData((prevData) => ({
+    ...prevData,
+    [name]: value,
+  }));
+
+  // Collect all comments into medical_mxComment
+  const comments = [
+    prevData.mcdpaComment,
+    prevData.manometryComment,
+    prevData.dietComment,
+    prevData.echoComment,
+    prevData.uroflowmetryComment,
+    prevData.coloComment,
+    prevData.gastroComment,
+    prevData.xrayComment,
+    prevData.mriComment,
+    prevData.chtComment,
+    prevData.biofeedbackComment,
+    prevData.labInvestigationComment,
+    prevData.ultrasonographyComment,
+    prevData.EchoAnalImagingComment,
+    prevData.dopplerComment,
+    prevData.USGComment,
+    prevData.USGScrotumComment,
+    prevData.USGAbdomenComment,
+  ].filter(Boolean); // Filter out any empty comments
+
+  // Update the medical_mxComment field
+  setFormData((prevData) => ({
+    ...prevData,
+    medical_mxComment: comments.join(", "), // Join comments into a single string
+  }));
+};
   useEffect(() => {
     if (!patientId) {
       console.warn("No patientId found, skipping fetch");
@@ -376,7 +426,7 @@ export default function Diagnosis() {
             ...prevData,
             advice: "",
             diagnosis: "",
-            symptoms:"",
+            symptoms: "",
             date_diagnosis: "",
             provisionaldiagnosis: "",
             investigationorders: "",
@@ -403,6 +453,7 @@ export default function Diagnosis() {
             Laser: "",
             MW: "",
             categoryComment: "",
+            medical_mxComment: "",
             medical_mx: {
               mcdpa: false,
               manometry: false,
@@ -650,7 +701,7 @@ export default function Diagnosis() {
       if (formData.other.pdc) otherArray.push("PDC");
 
       const medical_mxArray = [];
-      if (formData.medical_mx.mcdpa) medical_mx.push("MCDPA");
+      if (formData.medical_mx.mcdpa) medical_mxArray.push("MCDPA");
       if (formData.medical_mx.manometry) medical_mxArray.push("Manometry");
       if (formData.medical_mx.diet) medical_mxArray.push("Diet");
       if (formData.medical_mx.echo) medical_mxArray.push("ECHO");
@@ -694,6 +745,7 @@ export default function Diagnosis() {
         consultantDoctor: formData.consultantDoctor || "",
         assistanceDoctor: formData.assistanceDoctor || "",
         medical_mx: medical_mxArray.join(","),
+        medical_mxComment: formData.medical_mxComment,
       };
       // Determine URL and method based on the button clicked
       const url = isEdit
@@ -1569,31 +1621,44 @@ export default function Diagnosis() {
                           <Col>
                             {formData.medical_mx?.mcdpa && (
                               <Form.Control
+                                as="textarea"
+                                name="mcdpaComment"
                                 placeholder="MCDPA Comment Box"
-                                className="mt-2"
+                                value={formData.mcdpaComment}
+                                onChange={handleCommentChange}
                               />
                             )}
                           </Col>
                           <Col>
                             {formData.medical_mx?.manometry && (
                               <Form.Control
+                                as="textarea"
+                                name="manometryComment"
                                 placeholder="MANOMETRY Comment Box"
-                                className="mt-2"
+                                value={formData.manometryComment}
+                                onChange={handleCommentChange}
                               />
                             )}
                           </Col>
                           <Col>
                             {formData.medical_mx?.diet && (
                               <Form.Control
+                                as="textarea"
+                                name="dietComment"
                                 placeholder="DIET Comment Box"
-                                className="mt-2"
+                                value={formData.dietComment}
+                                onChange={handleCommentChange}
                               />
                             )}
                           </Col>
                           <Col>
                             {formData.medical_mx?.echo && (
                               <Form.Control
+                                as="textarea"
+                                name="echoComment"
                                 placeholder="ECHO Comment Box"
+                                value={formData.echoComment}
+                                onChange={handleCommentChange}
                                 className="mt-2"
                               />
                             )}
@@ -1603,7 +1668,11 @@ export default function Diagnosis() {
                           <Col>
                             {formData.medical_mx?.uroflowmetry && (
                               <Form.Control
+                                as="textarea"
+                                name="uroflowmetryComment"
                                 placeholder="MRD Comment Box"
+                                value={formData.uroflowmetryComment}
+                                onChange={handleCommentChange}
                                 className="mt-2"
                               />
                             )}
@@ -1611,7 +1680,11 @@ export default function Diagnosis() {
                           <Col>
                             {formData.medical_mx?.colo && (
                               <Form.Control
+                                as="textarea"
+                                name="coloComment"
                                 placeholder="COLO Comment Box"
+                                value={formData.coloComment}
+                                onChange={handleCommentChange}
                                 className="mt-2"
                               />
                             )}
@@ -1619,7 +1692,11 @@ export default function Diagnosis() {
                           <Col>
                             {formData.medical_mx?.xray && (
                               <Form.Control
+                                as="textarea"
+                                name="gastroComment"
                                 placeholder="B12 Comment Box"
+                                value={formData.gastroComment}
+                                onChange={handleCommentChange}
                                 className="mt-2"
                               />
                             )}
@@ -1627,7 +1704,11 @@ export default function Diagnosis() {
                           <Col>
                             {formData.medical_mx?.mri && (
                               <Form.Control
+                                as="textarea"
+                                name="xrayComment"
                                 placeholder="USG Scrotum Comment Box"
+                                value={formData.xrayComment}
+                                onChange={handleCommentChange}
                                 className="mt-2"
                               />
                             )}
@@ -1637,7 +1718,11 @@ export default function Diagnosis() {
                           <Col>
                             {formData.medical_mx?.cht && (
                               <Form.Control
+                                as="textarea"
+                                name="mriComment"
                                 placeholder="CHT Comment Box"
+                                value={formData.mriComment}
+                                onChange={handleCommentChange}
                                 className="mt-2"
                               />
                             )}
@@ -1645,7 +1730,11 @@ export default function Diagnosis() {
                           <Col>
                             {formData.medical_mx?.gastro && (
                               <Form.Control
+                                as="textarea"
+                                name="chtComment"
                                 placeholder="GASTRO Comment Box"
+                                value={formData.chtComment}
+                                onChange={handleCommentChange}
                                 className="mt-2"
                               />
                             )}
@@ -1653,7 +1742,11 @@ export default function Diagnosis() {
                           <Col>
                             {formData.medical_mx?.ct && (
                               <Form.Control
+                                as="textarea"
+                                name="biofeedbackComment"
                                 placeholder="D3 Comment Box"
+                                value={formData.biofeedbackComment}
+                                onChange={handleCommentChange}
                                 className="mt-2"
                               />
                             )}
@@ -1661,7 +1754,11 @@ export default function Diagnosis() {
                           <Col>
                             {formData.medical_mx?.doppler && (
                               <Form.Control
+                                as="textarea"
+                                name="labInvestigationComment"
                                 placeholder="DOPPLER Comment Box"
+                                value={formData.labInvestigationComment}
+                                onChange={handleCommentChange}
                                 className="mt-2"
                               />
                             )}
@@ -1671,7 +1768,11 @@ export default function Diagnosis() {
                           <Col>
                             {formData.medical_mx?.biofeedback && (
                               <Form.Control
+                                as="textarea"
+                                name="ultrasonographyComment"
                                 placeholder="BIOFEEDBACK Comment Box"
+                                value={formData.ultrasonographyComment}
+                                onChange={handleCommentChange}
                                 className="mt-2"
                               />
                             )}
@@ -1680,7 +1781,11 @@ export default function Diagnosis() {
                           <Col>
                             {formData.medical_mx?.labInvestigation && (
                               <Form.Control
+                                as="textarea"
+                                name="EchoAnalImagingComment"
                                 placeholder="USG Comment Box"
+                                value={formData.EchoAnalImagingComment}
+                                onChange={handleCommentChange}
                                 className="mt-2"
                               />
                             )}
@@ -1688,7 +1793,11 @@ export default function Diagnosis() {
                           <Col>
                             {formData.medical_mx?.ultrasonography && (
                               <Form.Control
+                                as="textarea"
+                                name="dopplerComment"
                                 placeholder="USG Abdomen & Pelvis Comment Box"
+                                value={formData.dopplerComment}
+                                onChange={handleCommentChange}
                                 className="mt-2"
                               />
                             )}
@@ -1696,7 +1805,11 @@ export default function Diagnosis() {
                           <Col>
                             {formData.medical_mx?.EchoAnalImaging && (
                               <Form.Control
+                                as="textarea"
+                                name="USGComment"
                                 placeholder="3D ENDO ANAL IMAGING Comment Box"
+                                value={formData.USGComment}
+                                onChange={handleCommentChange}
                                 className="mt-2"
                               />
                             )}
