@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.117.47:5000/api";
+const BASE_URL = "http://192.168.131.47:5000/api";
 
 const SurgeryTabs = ({
   selectedOptions,
@@ -852,6 +852,12 @@ export default function PatientHistory() {
       if (formData.general_history.other)
         generalArray.push(formData.general_history.other);
 
+      const medicationsArray = formData.medications.map((med) => ({
+        medicine: med.medicine || "",
+        indication: med.indication || "",
+        since: med.since || "",
+      }));
+
       const updatedData = {
         ...formData,
         general_history: generalArray.join(","),
@@ -872,6 +878,7 @@ export default function PatientHistory() {
         name: selectedOptions.name,
         patientId,
         surgical_history: formData.comment,
+        medications: medicationsArray,
       };
 
       console.log("Updating patient history with:", updatedData);
@@ -933,7 +940,12 @@ export default function PatientHistory() {
       }
 
       const patientHistory = result.data.patientHistory;
-      setAssistantDoctorName(result.data.doctor.name);
+      if (result.data.doctor && result.data.doctor.name) {
+        setAssistantDoctorName(result.data.doctor.name);
+      } else {
+        // Ignore if null or undefined, no error
+        setAssistantDoctorName("");
+      }
 
       const medicationHistory = result.data.medicationHistory;
 

@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.188.47:5000/api"; // Replace with your actual backend URL
+const BASE_URL = "http://192.168.131.47:5000/api"; // Replace with your actual backend URL
 
 const DiagnosisTabs = ({ formData, setFormData }) => {
   const [key, setKey] = useState("piles");
@@ -354,43 +354,43 @@ export default function Diagnosis() {
     console.log("Retrieved from localStorage:", storedPatientId);
     if (storedPatientId) setPatientId(storedPatientId);
   }, []);
-const handleCommentChange = (e) => {
-  const { name, value } = e.target;
+  const handleCommentChange = (e) => {
+    const { name, value } = e.target;
 
-  // Update the specific comment field
-  setFormData((prevData) => ({
-    ...prevData,
-    [name]: value,
-  }));
+    // Update the specific comment field
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
 
-  // Collect all comments into medical_mxComment
-  const comments = [
-    prevData.mcdpaComment,
-    prevData.manometryComment,
-    prevData.dietComment,
-    prevData.echoComment,
-    prevData.uroflowmetryComment,
-    prevData.coloComment,
-    prevData.gastroComment,
-    prevData.xrayComment,
-    prevData.mriComment,
-    prevData.chtComment,
-    prevData.biofeedbackComment,
-    prevData.labInvestigationComment,
-    prevData.ultrasonographyComment,
-    prevData.EchoAnalImagingComment,
-    prevData.dopplerComment,
-    prevData.USGComment,
-    prevData.USGScrotumComment,
-    prevData.USGAbdomenComment,
-  ].filter(Boolean); // Filter out any empty comments
+    // Collect all comments into medical_mxComment
+    const comments = [
+      prevData.mcdpaComment,
+      prevData.manometryComment,
+      prevData.dietComment,
+      prevData.echoComment,
+      prevData.uroflowmetryComment,
+      prevData.coloComment,
+      prevData.gastroComment,
+      prevData.xrayComment,
+      prevData.mriComment,
+      prevData.chtComment,
+      prevData.biofeedbackComment,
+      prevData.labInvestigationComment,
+      prevData.ultrasonographyComment,
+      prevData.EchoAnalImagingComment,
+      prevData.dopplerComment,
+      prevData.USGComment,
+      prevData.USGScrotumComment,
+      prevData.USGAbdomenComment,
+    ].filter(Boolean); // Filter out any empty comments
 
-  // Update the medical_mxComment field
-  setFormData((prevData) => ({
-    ...prevData,
-    medical_mxComment: comments.join(", "), // Join comments into a single string
-  }));
-};
+    // Update the medical_mxComment field
+    setFormData((prevData) => ({
+      ...prevData,
+      medical_mxComment: comments.join(", "), // Join comments into a single string
+    }));
+  };
   useEffect(() => {
     if (!patientId) {
       console.warn("No patientId found, skipping fetch");
