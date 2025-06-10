@@ -149,7 +149,6 @@ export default function FollowUp() {
       "ref",
       "diagnosis",
       "advice",
-      "adviceComment",
       "diagnosisAdvice",
       "present_complaints",
       "firstVisitDate",
