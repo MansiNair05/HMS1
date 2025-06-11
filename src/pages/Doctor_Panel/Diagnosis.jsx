@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.131.47:5000/api"; // Replace with your actual backend URL
+const BASE_URL = "http://192.168.156.47:5000/api"; // Replace with your actual backend URL
 
 const DiagnosisTabs = ({ formData, setFormData }) => {
   const [key, setKey] = useState("piles");

@@ -8,12 +8,13 @@ import {
   Container,
   Tab,
   Tabs,
+  Dropdown,
 } from "react-bootstrap";
 import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.131.47:5000/api";
+const BASE_URL = "http://192.168.156.47:5000/api";
 
 const SurgeryTabs = ({
   selectedOptions,
@@ -383,13 +384,28 @@ export default function PatientHistory() {
   const [isDisabled, setIsDisabled] = useState(false);
   const [disablePreviousButton, setDisablePreviousButton] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState([]); // Track selected checkboxes
-
+  const [showPreviousRecordsDropdown, setShowPreviousRecordsDropdown] =
+    useState(false);
+  const [previousRecords, setPreviousRecords] = useState([]);
   useEffect(() => {
     const storedPatientId = localStorage.getItem("selectedPatientId");
     console.log("Retrieved from localStorage:", storedPatientId);
     if (storedPatientId) setPatientId(storedPatientId);
   }, []);
+  const parseApiDate = (dateString) => {
+    if (!dateString) return null;
 
+    // For "DD-MM-YYYY" format
+    const parts = dateString.split("-");
+    if (parts.length === 3) {
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1; // Months are 0-based
+      const year = parseInt(parts[2], 10);
+      return new Date(year, month, day);
+    }
+
+    return null;
+  };
   useEffect(() => {
     if (!patientId) {
       console.warn("No patientId found, skipping fetch");
@@ -919,7 +935,87 @@ export default function PatientHistory() {
 
   const [previousRecordDate, setPreviousRecordDate] = useState("");
   const [assistantDoctorName, setAssistantDoctorName] = useState("");
+  const fetchPreviousRecordsList = async () => {
+    try {
+      console.log("Fetching previous records list for patientId:", patientId);
+      const response = await fetch(
+        `${BASE_URL}/V1/patientHistory/listPatientHistory/${patientId}`
+      );
 
+      if (!response.ok) {
+        throw new Error("Failed to fetch previous records");
+      }
+
+      const result = await response.json();
+      if (result.data?.patientHistory?.length > 0) {
+        setPreviousRecords(result.data.patientHistory);
+        setShowPreviousRecordsDropdown(true);
+      } else {
+        alert("No previous records found for this patient");
+      }
+    } catch (error) {
+      console.error("Error fetching previous records list:", error);
+      alert("Failed to fetch previous records list.");
+    }
+  };
+  const fetchPreviousRecordData = async (record) => {
+    try {
+      // Set the form data with the selected record's data
+      setFormData((prev) => ({
+        ...prev,
+        patient_date: record.patient_date || "",
+        height: record.height || "",
+        weight: record.weight || "",
+        painscale: record.painscale || "",
+        vitalSigns: {
+          BP: record.BP || "",
+          Pulse: record.Pulse || "",
+          RR: record.RR || "",
+        },
+        systematicExamination: {
+          RS: record.RS || "",
+          CVS: record.CVS || "",
+          CNS: record.CNS || "",
+          PA: record.PA || "",
+        },
+        symptoms: record.symptoms || "",
+        diagnosis: record.diagnosis || "",
+        surgeryTabs: {
+          piles_duration: record.piles_duration || "",
+          fistula_duration: record.fistula_duration || "",
+          hernia_duration: record.hernia_duration || "",
+          varicose_duration: record.varicose_duration || "",
+          urinary_duration: record.Urinary_incontinence_duration || "",
+          fecal_duration: record.Fecal_incontinence_duration || "",
+          ODS_duration: record.ODS_duration || "",
+          pilonidalsinus: record.pilonidalsinus || "",
+          circumcision: record.circumcision || "",
+        },
+        drugs_allery: record.drugs_allery || "",
+        comment: record.comment || "",
+        presentcomplaints: record.presentcomplaints || "",
+        complaints: record.complaints || "",
+        knowncaseof: record.knowncaseof || "",
+      }));
+
+      // Parse the symptoms into selectedOptions
+      if (record.symptoms) {
+        const symptomsArray = record.symptoms.split(",");
+        setSelectedOptions(symptomsArray);
+      }
+
+      setPreviousRecordDate(record.patient_date || "");
+      setShowEditButton(true);
+      setDisablePreviousButton(true);
+      setIsDisabled(true);
+      setShowPreviousRecordsDropdown(false);
+
+      console.log("Form data updated with selected record");
+    } catch (error) {
+      console.error("Error loading selected record:", error);
+      alert("Failed to load selected record.");
+    }
+  };
   const fetchPreviousRecords = async (prevData) => {
     try {
       console.log("Fetching previous records for patientId:", patientId);
@@ -1290,17 +1386,37 @@ export default function PatientHistory() {
                     >
                       New Record
                     </button>
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      style={{
-                        float: "right",
-                      }}
-                      onClick={fetchPreviousRecords}
-                      disabled={disablePreviousButton}
-                    >
-                      Previous Records
-                    </button>
+                    <div style={{ float: "right", position: "relative" }}>
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        style={{ marginRight: "7px" }}
+                        onClick={fetchPreviousRecordsList}
+                        disabled={disablePreviousButton}
+                      >
+                        Previous Records
+                      </button>
+                      {showPreviousRecordsDropdown && (
+                        <Dropdown.Menu
+                          show={showPreviousRecordsDropdown}
+                          style={{
+                            position: "absolute",
+                            right: 0,
+                            left: "auto",
+                            minWidth: "200px",
+                          }}
+                        >
+                          {previousRecords.map((record, index) => (
+                            <Dropdown.Item
+                              key={index}
+                              onClick={() => fetchPreviousRecordData(record)}
+                            >
+                              {record.patient_date || "No date"}
+                            </Dropdown.Item>
+                          ))}
+                        </Dropdown.Menu>
+                      )}
+                    </div>
                     {showEditButton && (
                       <button
                         type="button"
@@ -1326,7 +1442,7 @@ export default function PatientHistory() {
                         <DatePicker
                           selected={
                             formData?.patient_date
-                              ? new Date(formData.patient_date)
+                              ? parseApiDate(formData.patient_date)
                               : null
                           }
                           onChange={(date) => {

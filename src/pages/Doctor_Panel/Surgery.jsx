@@ -44,7 +44,7 @@ const Surgery = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [previousRecords, setPreviousRecords] = useState([]);
 
-  const BASE_URL = "http://192.168.131.47:5000/api";
+  const BASE_URL = "http://192.168.156.47:5000/api";
 
   const API_ENDPOINTS = {
     GET_SURGERY: "/V1/surgeryDetails/listSurgeryDetails",
@@ -370,78 +370,84 @@ const Surgery = () => {
     });
   };
 
-    return (
-      <div
-        className="themebody-wrap"
-        style={{
-          background: "linear-gradient(to right, #e0f7fa, #80deea)",
-          minHeight: "100vh",
-          padding: "20px",
-          fontFamily: "'Poppins', Arial, sans-serif",
-        }}
-      >
-        <NavBarD pagename="Surgery Details" />
-        <Container fluid>
-          <Row>
-            <Col>
-              <Card
-                style={{
-                  borderRadius: "12px",
-                  boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
-                  borderColor: "#00bcd4",
-                  background: "#f8f9fa",
-                  border: "3px solid #00bcd4",
-                }}
-              >
-                <Card.Body>
-                  <Form>
-                    <div>
+  return (
+    <div
+      className="themebody-wrap"
+      style={{
+        background: "linear-gradient(to right, #e0f7fa, #80deea)",
+        minHeight: "100vh",
+        padding: "20px",
+        fontFamily: "'Poppins', Arial, sans-serif",
+      }}
+    >
+      <NavBarD pagename="Surgery Details" />
+      <Container fluid>
+        <Row>
+          <Col>
+            <Card
+              style={{
+                borderRadius: "12px",
+                boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
+                borderColor: "#00bcd4",
+                background: "#f8f9fa",
+                border: "3px solid #00bcd4",
+              }}
+            >
+              <Card.Body>
+                <Form>
+                  <div>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      style={{ marginRight: "20px" }}
+                      onClick={handleNewRecord}
+                    >
+                      New Record
+                    </button>
+
+                    <div style={{ float: "right", position: "relative" }}>
                       <button
                         type="button"
                         className="btn btn-primary"
-                        style={{ marginRight: "20px" }}
-                        onClick={handleNewRecord}
+                        style={{ marginRight: "7px" }}
+                        onClick={fetchPreviousRecords}
                       >
-                        New Record
+                        Previous Records
                       </button>
-                      
-                      <div style={{ float: "right", position: "relative" }}>
-                        <button
-                          type="button"
-                          className="btn btn-primary"
-                          style={{ marginRight: "7px" }}
-                          onClick={fetchPreviousRecords}
+
+                      {showDropdown && previousRecords.length > 0 && (
+                        <Dropdown.Menu
+                          show
+                          style={{
+                            position: "absolute",
+                            right: 0,
+                            left: "auto",
+                            minWidth: "200px",
+                          }}
                         >
-                          Previous Records
-                        </button>
-                        
-                        {showDropdown && previousRecords.length > 0 && (
-                          <Dropdown.Menu show style={{ position: "absolute", right: 0, left: "auto" }}>
-                            {previousRecords.map((record, index) => (
-                              <Dropdown.Item 
-                                key={index}
-                                onClick={() => loadRecordByDate(record)}
-                              >
-                                {record.surgery_date}
-                              </Dropdown.Item>
-                            ))}
-                          </Dropdown.Menu>
-                        )}
-                      </div>
-  
-                      {showEditButton && (
-                        <button
-                          type="button"
-                          className="btn btn-warning"
-                          style={{ float: "right", marginRight: "7px" }}
-                          onClick={handleEditSurgery}
-                        >
-                          Edit Surgery
-                        </button>
+                          {previousRecords.map((record, index) => (
+                            <Dropdown.Item
+                              key={index}
+                              onClick={() => loadRecordByDate(record)}
+                            >
+                              {record.surgery_date}
+                            </Dropdown.Item>
+                          ))}
+                        </Dropdown.Menu>
                       )}
                     </div>
-  
-  
+
+                    {showEditButton && (
+                      <button
+                        type="button"
+                        className="btn btn-warning"
+                        style={{ float: "right", marginRight: "7px" }}
+                        onClick={handleEditSurgery}
+                      >
+                        Edit Surgery
+                      </button>
+                    )}
+                  </div>
 
                   <br />
                   {/* Row 1 */}
