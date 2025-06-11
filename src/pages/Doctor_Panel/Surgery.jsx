@@ -106,11 +106,12 @@ const Surgery = () => {
 
       const surgeryData = result.data.surgeryDetails;
 
-      // Ensure surgeryData and its properties are defined
-      const AnesthesiaString = surgeryData.anesthesia || "";
-      const AknownConditions = ["LA", "SA", "GA"];
-      const anesthesiaArray = AnesthesiaString.split(",").map((item) =>
-        item.trim()
+      // Convert date strings to Date objects
+      const admissionDate = new Date(
+        surgeryData.admission_date.split("-").reverse().join("-")
+      );
+      const surgeryDate = new Date(
+        surgeryData.surgery_date.split("-").reverse().join("-")
       );
 
       // Update states
@@ -121,19 +122,22 @@ const Surgery = () => {
 
       // Update form data
       setFormData({
-        admission_date: surgeryData.admission_date || "",
-        surgery_date: surgeryData.surgery_date || "",
+        admission_date: admissionDate,
+        surgery_date: surgeryDate,
         risk_consent: surgeryData.risk_consent || "",
         assistanceDoctor: surgeryData.assistanceDoctor || "",
         anaesthetist: surgeryData.anaesthetist || "",
         anesthesia: {
-          la: anesthesiaArray.includes("LA"),
-          sa: anesthesiaArray.includes("SA"),
-          ga: anesthesiaArray.includes("GA"),
-          other: anesthesiaArray
-            .filter((condition) => !AknownConditions.includes(condition))
-            .join(", "), // Set otherDetails
-        }, // Set the parsed object
+          la: surgeryData.anesthesia.includes("LA"),
+          sa: surgeryData.anesthesia.includes("SA"),
+          ga: surgeryData.anesthesia.includes("GA"),
+          other: surgeryData.anesthesia
+            .split(",")
+            .filter(
+              (condition) => !["LA", "SA", "GA"].includes(condition.trim())
+            )
+            .join(", "),
+        },
         surgery_remarks: surgeryData.surgery_remarks || "",
         plan: surgeryData.plan || "",
         surgery_note: surgeryData.surgery_note || "",
@@ -144,6 +148,7 @@ const Surgery = () => {
       alert("Failed to fetch previous records");
     }
   };
+  
 
   // Function to handle new record
   const handleNewRecord = () => {
