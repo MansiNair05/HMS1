@@ -429,16 +429,7 @@ const Surgery = () => {
                     )}
                   </div>
 
-                  {previousRecordDate && (
-                    <div style={{ marginTop: "15px" }}>
-                      <strong>Previous Record Date: </strong>
-                      <span>
-                        {new Date(previousRecordDate).toLocaleDateString() ||
-                          ""}
-                      </span>{" "}
-                      {/* Convert Date to Local String */}
-                    </div>
-                  )}
+
 
                   <br />
                   {/* Row 1 */}
