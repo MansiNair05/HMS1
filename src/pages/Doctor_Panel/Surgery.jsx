@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
-import { Card, Button, Form, Row, Col, Container } from "react-bootstrap";
-import NavBarD from "./NavbarD"; // Fixed typo in 'components'
+import {
+  Card,
+  Button,
+  Form,
+  Row,
+  Col,
+  Container,
+  Dropdown,
+} from "react-bootstrap";
+import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -17,7 +25,6 @@ const Surgery = () => {
       ga: false,
       other: "",
     },
-
     plan: "",
     surgery_remarks: "",
     surgery_note: "",
@@ -32,21 +39,19 @@ const Surgery = () => {
     localStorage.getItem("selectedPatientId")
   );
   const [isDisabled, setIsDisabled] = useState(false);
-  const [disablePreviousButton, setDisablePreviousButton] = useState(false);
   const [showEditButton, setShowEditButton] = useState(false);
-  const [previousRecordDate, setPreviousRecordDate] = useState("");
   const [isOtherSpecifyDisabled, setIsOtherSpecifyDisabled] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [previousRecords, setPreviousRecords] = useState([]);
 
   const BASE_URL = "http://192.168.131.47:5000/api";
 
-  // Update the API endpoints constants
   const API_ENDPOINTS = {
-    GET_SURGERY: "/V1/surgeryDetails/listSurgeryDetails", // Updated endpoint
-    ADD_SURGERY: "/V1/surgeryDetails/addSurgeryDetails", // Updated endpoint
+    GET_SURGERY: "/V1/surgeryDetails/listSurgeryDetails",
+    ADD_SURGERY: "/V1/surgeryDetails/addSurgeryDetails",
     UPDATE_SURGERY: "/V1/surgeryDetails/updateSurgeryDetails",
   };
 
-  // Fetch options from API
   useEffect(() => {
     const fetchDropdownOptions = async () => {
       try {
@@ -73,13 +78,11 @@ const Surgery = () => {
     fetchDropdownOptions();
   }, []);
 
-  // Fetch patient ID from localStorage
   useEffect(() => {
     const storedPatientId = localStorage.getItem("selectedPatientId");
     if (storedPatientId) setPatientId(storedPatientId);
   }, []);
 
-  // Function to fetch previous records
   const fetchPreviousRecords = async () => {
     try {
       if (!patientId) {
@@ -88,8 +91,6 @@ const Surgery = () => {
       }
 
       const url = `${BASE_URL}${API_ENDPOINTS.GET_SURGERY}/${patientId}`;
-      console.log("Fetching from URL:", url);
-
       const response = await fetch(url);
 
       if (!response.ok) {
@@ -97,60 +98,60 @@ const Surgery = () => {
       }
 
       const result = await response.json();
-      console.log("API Response:", result);
 
       if (!result?.data?.surgeryDetails) {
         alert("No previous records found");
         return;
       }
 
-      const surgeryData = result.data.surgeryDetails;
-
-      // Convert date strings to Date objects
-      const admissionDate = new Date(
-        surgeryData.admission_date.split("-").reverse().join("-")
-      );
-      const surgeryDate = new Date(
-        surgeryData.surgery_date.split("-").reverse().join("-")
-      );
-
-      // Update states
-      setDisablePreviousButton(true);
-      setShowEditButton(true);
-      setIsDisabled(true);
-      setPreviousRecordDate(surgeryData.surgery_date || "");
-
-      // Update form data
-      setFormData({
-        admission_date: admissionDate,
-        surgery_date: surgeryDate,
-        risk_consent: surgeryData.risk_consent || "",
-        assistanceDoctor: surgeryData.assistanceDoctor || "",
-        anaesthetist: surgeryData.anaesthetist || "",
-        anesthesia: {
-          la: surgeryData.anesthesia.includes("LA"),
-          sa: surgeryData.anesthesia.includes("SA"),
-          ga: surgeryData.anesthesia.includes("GA"),
-          other: surgeryData.anesthesia
-            .split(",")
-            .filter(
-              (condition) => !["LA", "SA", "GA"].includes(condition.trim())
-            )
-            .join(", "),
-        },
-        surgery_remarks: surgeryData.surgery_remarks || "",
-        plan: surgeryData.plan || "",
-        surgery_note: surgeryData.surgery_note || "",
-        additional_comment: surgeryData.additional_comment || "",
-      });
+      setPreviousRecords(result.data.surgeryDetails);
+      setShowDropdown(true);
     } catch (error) {
       console.error("Error fetching previous records:", error);
       alert("Failed to fetch previous records");
     }
   };
-  
 
-  // Function to handle new record
+  const loadRecordByDate = (record) => {
+    // Convert date strings to Date objects
+    const admissionDate = new Date(
+      record.admission_date.split("-").reverse().join("-")
+    );
+    const surgeryDate = new Date(
+      record.surgery_date.split("-").reverse().join("-")
+    );
+
+    // Update form data
+    setFormData({
+      admission_date: admissionDate,
+      surgery_date: surgeryDate,
+      risk_consent: record.risk_consent || "",
+      assistanceDoctor: record.assistanceDoctor || "",
+      anaesthetist: record.anaesthetist || "",
+      anesthesia: {
+        la: record.anesthesia?.includes("LA") || false,
+        sa: record.anesthesia?.includes("SA") || false,
+        ga: record.anesthesia?.includes("GA") || false,
+        other:
+          record.anesthesia
+            ?.split(",")
+            .filter(
+              (condition) => !["LA", "SA", "GA"].includes(condition.trim())
+            )
+            .join(", ") || "",
+      },
+      surgery_remarks: record.surgery_remarks || "",
+      plan: record.plan || "",
+      surgery_note: record.surgery_note || "",
+      additional_comment: record.additional_comment || "",
+    });
+
+    // Update states
+    setIsDisabled(true);
+    setShowEditButton(true);
+    setShowDropdown(false);
+  };
+
   const handleNewRecord = () => {
     setFormData({
       admission_date: "",
@@ -159,36 +160,31 @@ const Surgery = () => {
       assistanceDoctor: "",
       anaesthetist: "",
       anesthesia: {
-        LA: "",
-        SA: "",
-        GA: "",
+        la: false,
+        sa: false,
+        ga: false,
+        other: "",
       },
-
       surgery_remarks: "",
       plan: "",
       surgery_note: "",
       additional_comment: "",
     });
 
-    // Reset states
-    setDisablePreviousButton(false);
     setShowEditButton(false);
     setIsDisabled(false);
-    setPreviousRecordDate("");
-
-    alert("New Record: You can now enter new data.");
+    setShowDropdown(false);
   };
 
-  // Function to handle edit
   const handleEditSurgery = () => {
     setIsDisabled(false);
     setSelectedOptions((prev) => ({
       ...prev,
-      assistanceDoctor: formData.assistanceDoctor || "", // Ensure old value is loaded
+      assistanceDoctor: formData.assistanceDoctor || "",
     }));
     setIsOtherSpecifyDisabled(true);
-    alert("You can now edit the surgery details.");
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -374,62 +370,78 @@ const Surgery = () => {
     });
   };
 
-  return (
-    <div
-      className="themebody-wrap"
-      style={{
-        background: "linear-gradient(to right, #e0f7fa, #80deea)",
-        minHeight: "100vh",
-        padding: "20px",
-        fontFamily: "'Poppins', Arial, sans-serif",
-      }}
-    >
-      <NavBarD pagename="Surgery Details" />
-      <Container fluid>
-        <Row>
-          <Col>
-            <Card
-              style={{
-                borderRadius: "12px",
-                boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
-                borderColor: "#00bcd4",
-                background: "#f8f9fa",
-                border: "3px solid #00bcd4",
-              }}
-            >
-              <Card.Body>
-                <Form>
-                  <div>
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      style={{ marginRight: "20px" }}
-                      onClick={handleNewRecord}
-                    >
-                      New Record
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      style={{ float: "right", marginRight: "7px" }}
-                      onClick={fetchPreviousRecords}
-                      disabled={disablePreviousButton}
-                    >
-                      Previous Records
-                    </button>
-                    {showEditButton && (
+    return (
+      <div
+        className="themebody-wrap"
+        style={{
+          background: "linear-gradient(to right, #e0f7fa, #80deea)",
+          minHeight: "100vh",
+          padding: "20px",
+          fontFamily: "'Poppins', Arial, sans-serif",
+        }}
+      >
+        <NavBarD pagename="Surgery Details" />
+        <Container fluid>
+          <Row>
+            <Col>
+              <Card
+                style={{
+                  borderRadius: "12px",
+                  boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
+                  borderColor: "#00bcd4",
+                  background: "#f8f9fa",
+                  border: "3px solid #00bcd4",
+                }}
+              >
+                <Card.Body>
+                  <Form>
+                    <div>
                       <button
                         type="button"
-                        className="btn btn-warning"
-                        style={{ float: "right", marginRight: "7px" }}
-                        onClick={handleEditSurgery}
+                        className="btn btn-primary"
+                        style={{ marginRight: "20px" }}
+                        onClick={handleNewRecord}
                       >
-                        Edit Surgery
+                        New Record
                       </button>
-                    )}
-                  </div>
-
-
+                      
+                      <div style={{ float: "right", position: "relative" }}>
+                        <button
+                          type="button"
+                          className="btn btn-primary"
+                          style={{ marginRight: "7px" }}
+                          onClick={fetchPreviousRecords}
+                        >
+                          Previous Records
+                        </button>
+                        
+                        {showDropdown && previousRecords.length > 0 && (
+                          <Dropdown.Menu show style={{ position: "absolute", right: 0, left: "auto" }}>
+                            {previousRecords.map((record, index) => (
+                              <Dropdown.Item 
+                                key={index}
+                                onClick={() => loadRecordByDate(record)}
+                              >
+                                {record.surgery_date}
+                              </Dropdown.Item>
+                            ))}
+                          </Dropdown.Menu>
+                        )}
+                      </div>
+  
+                      {showEditButton && (
+                        <button
+                          type="button"
+                          className="btn btn-warning"
+                          style={{ float: "right", marginRight: "7px" }}
+                          onClick={handleEditSurgery}
+                        >
+                          Edit Surgery
+                        </button>
+                      )}
+                    </div>
+  
+  
 
                   <br />
                   {/* Row 1 */}
