@@ -113,43 +113,65 @@ const Surgery = () => {
   };
 
   const loadRecordByDate = (record) => {
-    // Convert date strings to Date objects
-    const admissionDate = new Date(
-      record.admission_date.split("-").reverse().join("-")
-    );
-    const surgeryDate = new Date(
-      record.surgery_date.split("-").reverse().join("-")
-    );
+    try {
+      // Parse dates safely
+      const parseDate = (dateStr) => {
+        if (!dateStr) return null;
 
-    // Update form data
-    setFormData({
-      admission_date: admissionDate,
-      surgery_date: surgeryDate,
-      risk_consent: record.risk_consent || "",
-      assistanceDoctor: record.assistanceDoctor || "",
-      anaesthetist: record.anaesthetist || "",
-      anesthesia: {
-        la: record.anesthesia?.includes("LA") || false,
-        sa: record.anesthesia?.includes("SA") || false,
-        ga: record.anesthesia?.includes("GA") || false,
-        other:
-          record.anesthesia
-            ?.split(",")
-            .filter(
-              (condition) => !["LA", "SA", "GA"].includes(condition.trim())
-            )
-            .join(", ") || "",
-      },
-      surgery_remarks: record.surgery_remarks || "",
-      plan: record.plan || "",
-      surgery_note: record.surgery_note || "",
-      additional_comment: record.additional_comment || "",
-    });
+        // Handle both "YYYY-MM-DD" and "DD-MM-YYYY" formats
+        const parts = dateStr.includes("-")
+          ? dateStr.split("-")
+          : dateStr.split("/");
 
-    // Update states
-    setIsDisabled(true);
-    setShowEditButton(true);
-    setShowDropdown(false);
+        if (parts.length === 3) {
+          // If the first part is > 31, it's likely YYYY-MM-DD
+          if (parts[0].length === 4) {
+            return new Date(dateStr);
+          }
+          // Otherwise assume DD-MM-YYYY
+          return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+        }
+
+        return null;
+      };
+
+      // Convert date strings to Date objects
+      const admissionDate = parseDate(record.admission_date);
+      const surgeryDate = parseDate(record.surgery_date);
+
+      // Update form data
+      setFormData({
+        admission_date: admissionDate,
+        surgery_date: surgeryDate,
+        risk_consent: record.risk_consent || "",
+        assistanceDoctor: record.assistanceDoctor || "",
+        anaesthetist: record.anaesthetist || "",
+        anesthesia: {
+          la: record.anesthesia?.includes("LA") || false,
+          sa: record.anesthesia?.includes("SA") || false,
+          ga: record.anesthesia?.includes("GA") || false,
+          other:
+            record.anesthesia
+              ?.split(",")
+              .filter(
+                (condition) => !["LA", "SA", "GA"].includes(condition.trim())
+              )
+              .join(", ") || "",
+        },
+        surgery_remarks: record.surgery_remarks || "",
+        plan: record.plan || "",
+        surgery_note: record.surgery_note || "",
+        additional_comment: record.additional_comment || "",
+      });
+
+      // Update states
+      setIsDisabled(true);
+      setShowEditButton(true);
+      setShowDropdown(false);
+    } catch (error) {
+      console.error("Error loading record:", error);
+      alert("Failed to load record. Please try again.");
+    }
   };
 
   const handleNewRecord = () => {
@@ -252,8 +274,6 @@ const Surgery = () => {
         setIsDisabled(true);
         ``;
         setShowEditButton(true);
-        setPreviousRecordDate(formData.surgery_date);
-        setDisablePreviousButton(true);
 
         setSelectedOptions({
           assistantsDoctor: requestBody.assistanceDoctor,
@@ -322,8 +342,6 @@ const Surgery = () => {
         alert("Surgery details updated successfully!");
         setIsDisabled(true);
         setShowEditButton(true);
-        setPreviousRecordDate(formData.surgery_date);
-        setDisablePreviousButton(true);
       } else {
         throw new Error(data.message || "Failed to update surgery details");
       }
@@ -566,18 +584,12 @@ const Surgery = () => {
                           disabled={isDisabled}
                         >
                           <option value="">Select Assistant</option>
-                          {[
-                            ...new Set([
-                              ...surgery.map(
-                                (option) => option.assistanceDoctor
-                              ),
-                              ...assistantsDoctor.map(
-                                (assistantDoctor) => assistantDoctor.name
-                              ),
-                            ]),
-                          ].map((assistanceDoctor, index) => (
-                            <option key={index} value={assistanceDoctor}>
-                              {assistanceDoctor}
+                          {assistantsDoctor.map((doctor) => (
+                            <option
+                              key={doctor.doctor_id}
+                              value={doctor.doctor_id}
+                            >
+                              {`${doctor.doctor_id}-${doctor.name}`}
                             </option>
                           ))}
                         </Form.Select>
