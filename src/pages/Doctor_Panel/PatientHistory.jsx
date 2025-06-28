@@ -14,7 +14,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.156.47:5000/api";
+const BASE_URL = "http://192.168.87.47:5000/api";
 
 const SurgeryTabs = ({
   selectedOptions,
@@ -413,136 +413,133 @@ export default function PatientHistory() {
     }
 
     const fetchPatientData = async () => {
-      console.log(`Fetching data for patient ID: ${patientId}`);
-      try {
-        const response = await fetch(
-          `${BASE_URL}/V1/patientHistory/listPatientHistory/${patientId}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+      // console.log(`Fetching data for patient ID: ${patientId}`);
+      // try {
+      //   const response = await fetch(
+      //     `${BASE_URL}/V1/patientHistory/listPatientHistory/${patientId}`,
+      //     {
+      //       method: "GET",
+      //       headers: {
+      //         "Content-Type": "application/json",
+      //       },
+      //     }
+      //   );
 
-        if (!response.ok) {
-          console.error(
-            "API Response Error:",
-            response.status,
-            await response.text()
-          );
-          return;
-        }
+      //   if (!response.ok) {
+      //     console.error(
+      //       "API Response Error:",
+      //       response.status,
+      //       await response.text()
+      //     );
+      //     return;
+      //   }
 
-        const data = await response.json();
-        console.log("Fetched Data:", data);
+      //   const data = await response.json();
+      //   console.log("Fetched Data:", data);
 
-        if (data?.data?.patientHistory?.length > 0) {
-          const patientData = data.data.patientHistory[0];
+      //   if (data?.data?.patientHistory?.length > 0) {
+      //     const patientData = data.data.patientHistory[0];
 
-          // Initialize medicationData to avoid undefined reference
-          let medicationData = [];
-          if (data?.data?.medicationHistory?.length > 0) {
-            medicationData = data.data.medicationHistory;
-          }
-          setMedicationHistory(medicationData);
+      //     // Initialize medicationData to avoid undefined reference
+      //     let medicationData = [];
+      //     if (data?.data?.medicationHistory?.length > 0) {
+      //       medicationData = data.data.medicationHistory;
+      //     }
+      //     setMedicationHistory(medicationData);
 
-          setFormData((prevState) => ({
-            ...prevState,
-            ...patientData,
-            symptoms: patientData.symptoms || "",
-            diagnosis: patientData.diagnosis || "",
-            vitalSigns: {
-              ...prevState.vitalSigns,
-              ...(patientData.vitalSigns || {}),
-            },
-            systematicExamination: {
-              ...prevState.systematicExamination,
-              ...(patientData.systematicExamination || {}),
-            },
-            general_history: {
-              ...prevState.general_history,
-              hoWtLoss: patientData.general_history?.hoWtLoss || false,
-              decAppetite: patientData.general_history?.decAppetite || false,
-              hoStrainingForurination:
-                patientData.general_history?.hoStrainingForurination || false,
-              acidity: patientData.general_history?.acidity || false,
-              gas: patientData.general_history?.gas || false,
-              bloating: patientData.general_history?.bloating || false,
-              other: patientData.general_history?.other || "",
-            },
-            family_history: {
-              ...prevState.family_history,
-              piles: patientData.family_history?.piles || false,
-              constipation: patientData.family_history?.constipation || false,
-              dm: patientData.family_history?.dm || false,
-              htn: patientData.family_history?.htn || false,
-              heartDisease: patientData.family_history?.heartDisease || false,
-              other: patientData.family_history?.other || "",
-            },
-            past_history: {
-              ...prevState.past_history,
-              dm: patientData.past_history?.dm || false,
-              htn: patientData.past_history?.htn || false,
-              brAsthma: patientData.past_history?.brAsthma || false,
-              thyroid: patientData.past_history?.thyroid || false,
-              otherDetails: patientData.past_history?.otherDetails || "",
-            },
-            habits: {
-              ...prevState.habits,
-              smoking: patientData.habits?.smoking || false,
-              alcohol: patientData.habits?.alcohol || false,
-              tobacco: patientData.habits?.tobacco || false,
-              drugs: patientData.habits?.drugs || false,
-            },
-            ongoing_medicines: {
-              ...prevState.ongoing_medicines,
-              clopidogrel: patientData.ongoing_medicines?.clopidogrel || false,
-              aspirin: patientData.ongoing_medicines?.aspirin || false,
-              warfarin: patientData.ongoing_medicines?.warfarin || false,
-              other: patientData.ongoing_medicines?.other || "",
-            },
-            investigation: {
-              ...prevState.investigation,
-              hb: patientData.investigation?.hb || false,
-              bslr: patientData.investigation?.bslr || false,
-              bleedingTimeBt:
-                patientData.investigation?.bleedingTimeBt || false,
-              clottingTimeBt:
-                patientData.investigation?.clottingTimeBt || false,
-              ptInr: patientData.investigation?.ptInr || false,
-              hiv: patientData.investigation?.hiv || false,
-              hbsag: patientData.investigation?.hbsag || false,
-              srCreatinine: patientData.investigation?.srCreatinine || false,
-              vitB: patientData.investigation?.vitB || false,
-              other: patientData.investigation?.other || "",
-            },
-            medical_mx: {
-              ...prevState.medical_mx,
-              mrd: patientData.medical_mx?.mrd || false,
-              manoBf: patientData.medical_mx?.manoBf || false,
-              coloGastro: patientData.medical_mx?.coloGastro || false,
-              mcdpa: patientData.medical_mx?.mcdpa || false,
-              diet: patientData.medical_mx?.diet || false,
-              b: patientData.medical_mx?.b || false,
-              d: patientData.medical_mx?.d || false,
-            },
-            knowncaseof: {
-              ...prevState.knowncaseof,
-              ...(patientData.knowncaseof || {}),
-            },
-            medications:
-              medicationData.length > 0
-                ? medicationData
-                : prevState.medications,
-          }));
-          setSelectedOptions(patientData.selectedOptions || []);
-        } else {
-          console.warn("No patient data found in API response");
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
+      //     setFormData((prevState) => ({
+      //       ...prevState,
+      //       ...patientData,
+      //       symptoms: patientData.symptoms || "",
+      //       diagnosis: patientData.diagnosis || "",
+      //       vitalSigns: {
+      //         ...prevState.vitalSigns,
+      //         ...(patientData.vitalSigns || {}),
+      //       },
+      //       systematicExamination: {
+      //         ...prevState.systematicExamination,
+      //         ...(patientData.systematicExamination || {}),
+      //       },
+      //       general_history: {
+      //         ...prevState.general_history,
+      //         hoWtLoss: patientData.general_history?.hoWtLoss || false,
+      //         decAppetite: patientData.general_history?.decAppetite || false,
+      //         hoStrainingForurination:
+      //           patientData.general_history?.hoStrainingForurination || false,
+      //         acidity: patientData.general_history?.acidity || false,
+      //         gas: patientData.general_history?.gas || false,
+      //         bloating: patientData.general_history?.bloating || false,
+      //         other: patientData.general_history?.other || "",
+      //       },
+      //       family_history: {
+      //         ...prevState.family_history,
+      //         piles: patientData.family_history?.piles || false,
+      //         constipation: patientData.family_history?.constipation || false,
+      //         dm: patientData.family_history?.dm || false,
+      //         htn: patientData.family_history?.htn || false,
+      //         heartDisease: patientData.family_history?.heartDisease || false,
+      //         other: patientData.family_history?.other || "",
+      //       },
+      //       past_history: {
+      //         ...prevState.past_history,
+      //         dm: patientData.past_history?.dm || false,
+      //         htn: patientData.past_history?.htn || false,
+      //         brAsthma: patientData.past_history?.brAsthma || false,
+      //         thyroid: patientData.past_history?.thyroid || false,
+      //         otherDetails: patientData.past_history?.otherDetails || "",
+      //       },
+      //       habits: {
+      //         ...prevState.habits,
+      //         smoking: patientData.habits?.smoking || false,
+      //         alcohol: patientData.habits?.alcohol || false,
+      //         tobacco: patientData.habits?.tobacco || false,
+      //         drugs: patientData.habits?.drugs || false,
+      //       },
+      //       ongoing_medicines: {
+      //         ...prevState.ongoing_medicines,
+      //         clopidogrel: patientData.ongoing_medicines?.clopidogrel || false,
+      //         aspirin: patientData.ongoing_medicines?.aspirin || false,
+      //         warfarin: patientData.ongoing_medicines?.warfarin || false,
+      //         other: patientData.ongoing_medicines?.other || "",
+      //       },
+      //       investigation: {
+      //         ...prevState.investigation,
+      //         hb: patientData.investigation?.hb || false,
+      //         bslr: patientData.investigation?.bslr || false,
+      //         bleedingTimeBt:
+      //           patientData.investigation?.bleedingTimeBt || false,
+      //         clottingTimeBt:
+      //           patientData.investigation?.clottingTimeBt || false,
+      //         ptInr: patientData.investigation?.ptInr || false,
+      //         hiv: patientData.investigation?.hiv || false,
+      //         hbsag: patientData.investigation?.hbsag || false,
+      //         srCreatinine: patientData.investigation?.srCreatinine || false,
+      //         vitB: patientData.investigation?.vitB || false,
+      //         other: patientData.investigation?.other || "",
+      //       },
+      //       medical_mx: {
+      //         ...prevState.medical_mx,
+      //         mrd: patientData.medical_mx?.mrd || false,
+      //         manoBf: patientData.medical_mx?.manoBf || false,
+      //         coloGastro: patientData.medical_mx?.coloGastro || false,
+      //         mcdpa: patientData.medical_mx?.mcdpa || false,
+      //         diet: patientData.medical_mx?.diet || false,
+      //         b: patientData.medical_mx?.b || false,
+      //         d: patientData.medical_mx?.d || false,
+      //       },
+      //       knowncaseof: patientData.knowncaseof || "",
+      //       medications:
+      //         medicationData.length > 0
+      //           ? medicationData
+      //           : prevState.medications,
+      //     }));
+      //     setSelectedOptions(patientData.selectedOptions || []);
+      //   } else {
+      //     console.warn("No patient data found in API response");
+      //   }
+      // } catch (error) {
+      //   console.error("Error fetching data:", error);
+      // }
     };
 
     fetchPatientData();
@@ -732,6 +729,7 @@ export default function PatientHistory() {
 
       const formattedData = {
         ...formData,
+        patient_date: formData.patient_date || null,
         diagnosis: formData.diagnosis, // Store diagnosis as a string
         symptoms: formData.symptoms,
         // symptoms: pilesSymptoms.join(", "), // Store selected symptoms
@@ -922,7 +920,7 @@ export default function PatientHistory() {
         alert("Patient history updated successfully!");
         setIsDisabled(true);
         setShowEditButton(true);
-        setPreviousRecordDate(formData.date_diagnosis);
+        setPreviousRecordDate(formData.patient_date);
         setDisablePreviousButton(true);
       } else {
         throw new Error(data.message || "Failed to update surgery details");
@@ -960,6 +958,75 @@ export default function PatientHistory() {
   };
   const fetchPreviousRecordData = async (record) => {
     try {
+      const pastHistoryString = record.past_history || "";
+      const knownConditions = ["DM", "HTN", "Br.Asthma", "Thyroid"];
+      const pastHistoryArray = pastHistoryString
+        .split(",")
+        .map((item) => item.trim());
+
+      const generalString = record.general_history || "";
+      // const GknownConditions = [
+      //   "H/O Wt Loss",
+      //   "Dec Appetite",
+      //   "H/O Straining for urination",
+      //   "Acidity",
+      //   "Gas",
+      //   "Bloating",
+      // ];
+      const generalArray = generalString.split(",").map((item) => item.trim());
+
+      const AdviceString = record.medical_mx || "";
+      const AdviceArray = AdviceString.split(",").map((item) => item.trim());
+
+      const familyHistoryString = record.family_history || "";
+      const FknownConditions = [
+        "Piles",
+        "Constipation",
+        "DM",
+        "HTN",
+        "Heart Disease",
+      ];
+      const familyHistoryArray = familyHistoryString
+        .split(",")
+        .map((item) => item.trim());
+
+      const ongoingMedicineString = record.ongoing_medicines || "";
+      const MknownConditions = ["Clopidogrel", "Aspirin", "Warfarin"];
+      const ongoingMedicineArray = ongoingMedicineString
+        .split(",")
+        .map((item) => item.trim());
+
+      const investigationString = record.investigation || "";
+      const IknownConditions = [
+        "HB",
+        "BSL-R",
+        "BT",
+        "CT",
+        "PT INR",
+        "HIV",
+        "Hbsag",
+        "SR.Creatinine",
+        "Vit B12",
+      ];
+      const investigationArray = investigationString
+        .split(",")
+        .map((item) => item.trim());
+
+      const habitsString = record.habits || "";
+      const habitsArray = habitsString.split(",").map((item) => item.trim());
+
+      const formattedMedications =
+        record.length > 0
+          ? record.map((med, index) => ({
+              id: index + 1,
+              medicine: med.medicine || "",
+              indication: med.indication || "",
+              since: med.since || "",
+            }))
+          : [
+              { id: 1, medicine: "", indication: "", since: "" },
+              { id: 2, medicine: "", indication: "", since: "" },
+            ];
       // Set the form data with the selected record's data
       setFormData((prev) => ({
         ...prev,
@@ -980,6 +1047,50 @@ export default function PatientHistory() {
         },
         symptoms: record.symptoms || "",
         diagnosis: record.diagnosis || "",
+        general_history: {
+          hoWtLoss: generalArray.includes("H/O Wt Loss"),
+          decAppetite: generalArray.includes("Dec Appetite"),
+          hoStrainingForurination: generalArray.includes(
+            "H/O Straining for urination"
+          ),
+          acidity: generalArray.includes("Acidity"),
+          gas: generalArray.includes("Gas"),
+          bloating: generalArray.includes("Bloating"),
+        },
+        // symptoms: {
+        //   ...prevData.symptoms,
+        //   pusDischarge: symptomsArray.includes("Pus Discharge"),
+        //   boil: symptomsArray.includes("Boil"),
+        //   wateryDischarge: symptomsArray.includes("Watery Discharge"),
+        //   swellingAnalRegion: symptomsArray.includes(
+        //     "Swelling near anal region"
+        //   ),
+        // },
+        family_history: {
+          piles: familyHistoryArray.includes("Piles"),
+          constipation: familyHistoryArray.includes("Constipation"),
+          dm: familyHistoryArray.includes("DM"),
+          htn: familyHistoryArray.includes("HTN"),
+          heartDisease: familyHistoryArray.includes("Heart Disease"),
+          other: familyHistoryArray
+            .filter((condition) => !FknownConditions.includes(condition))
+            .join(", "), // Set otherDetails
+        },
+        past_history: {
+          dm: pastHistoryArray.includes("DM"),
+          htn: pastHistoryArray.includes("HTN"),
+          brAsthma: pastHistoryArray.includes("Br.Asthma"),
+          thyroid: pastHistoryArray.includes("Thyroid"),
+          otherDetails: pastHistoryArray
+            .filter((condition) => !knownConditions.includes(condition))
+            .join(", "), // Set otherDetails
+        },
+        habits: {
+          smoking: habitsArray.includes("Smoking"),
+          alcohol: habitsArray.includes("Alcohol"),
+          tobacco: habitsArray.includes("Tobacco"),
+          drugs: habitsArray.includes("Drugs"),
+        },
         surgeryTabs: {
           piles_duration: record.piles_duration || "",
           fistula_duration: record.fistula_duration || "",
@@ -991,11 +1102,53 @@ export default function PatientHistory() {
           pilonidalsinus: record.pilonidalsinus || "",
           circumcision: record.circumcision || "",
         },
+        piles: record.piles || [],
+        fistula: record.fistula || [],
+        hernia: record.hernia || [],
+        varicose: record.varicose || [],
+        urinary: record.urinary || [],
+        fecal: record.fecal || [],
+        urology: record.urology || [],
+        ods: record.ods || [],
+        pilonidal: record.pilonidal || "",
+        circumcision: record.circumcision || "",
         drugs_allery: record.drugs_allery || "",
         comment: record.comment || "",
         presentcomplaints: record.presentcomplaints || "",
         complaints: record.complaints || "",
+        ongoing_medicines: {
+          clopidogrel: ongoingMedicineArray.includes("Clopidogrel"),
+          aspirin: ongoingMedicineArray.includes("Aspirin"),
+          warfarin: ongoingMedicineArray.includes("Warfarin"),
+          other: ongoingMedicineArray
+            .filter((condition) => !MknownConditions.includes(condition))
+            .join(", "), // Set otherDetails
+        },
+        investigation: {
+          hb: investigationArray?.includes("HB"),
+          bslr: investigationArray?.includes("BSL-R"),
+          bleedingTimeBt: investigationArray?.includes("BT"),
+          clottingTimeBt: investigationArray?.includes("CT"),
+          ptInr: investigationArray?.includes("PT INR"),
+          hiv: investigationArray?.includes("HIV"),
+          hbsag: investigationArray?.includes("Hbsag"),
+          srCreatinine: investigationArray?.includes("Sr.Creatinine"),
+          vitB: investigationArray?.includes("Vit B12"),
+          other: investigationArray
+            .filter((condition) => !IknownConditions.includes(condition))
+            .join(", "),
+        },
         knowncaseof: record.knowncaseof || "",
+        medical_mx: {
+          mrd: AdviceArray.includes("MRD"),
+          manoBf: AdviceArray.includes("Mano/BF"),
+          coloGastro: AdviceArray.includes("Colo/Gastro"),
+          mcdpa: AdviceArray.includes("MCDPA"),
+          diet: AdviceArray.includes("Diet"),
+          b: AdviceArray.includes("B12"),
+          d: AdviceArray.includes("D3"),
+        },
+        medications: formattedMedications, // ✅ Set medications properly
       }));
 
       // Parse the symptoms into selectedOptions
@@ -1442,7 +1595,7 @@ export default function PatientHistory() {
                         <DatePicker
                           selected={
                             formData?.patient_date
-                              ? parseApiDate(formData.patient_date)
+                              ? new Date(formData.patient_date)
                               : null
                           }
                           onChange={(date) => {

@@ -30,7 +30,9 @@ const Surgery = () => {
     surgery_note: "",
     additional_comment: "",
   });
-
+  const [errors, setErrors] = useState({
+    dateError: "",
+  });
   const [surgery, setSurgery] = useState([]);
   const [assistantsDoctor, setAssistantsDoctor] = useState([]);
   const [anaesthetist, setAnaesthetist] = useState([]);
@@ -44,7 +46,7 @@ const Surgery = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [previousRecords, setPreviousRecords] = useState([]);
 
-  const BASE_URL = "http://192.168.156.47:5000/api";
+  const BASE_URL = "http://192.168.87.47:5000/api";
 
   const API_ENDPOINTS = {
     GET_SURGERY: "/V1/surgeryDetails/listSurgeryDetails",
@@ -141,6 +143,7 @@ const Surgery = () => {
 
       // Update form data
       setFormData({
+        ...formData,
         admission_date: admissionDate,
         surgery_date: surgeryDate,
         risk_consent: record.risk_consent || "",
@@ -203,13 +206,17 @@ const Surgery = () => {
     setSelectedOptions((prev) => ({
       ...prev,
       assistanceDoctor: formData.assistanceDoctor || "",
+      anaesthetist: formData.anaesthetist || "",
     }));
     setIsOtherSpecifyDisabled(true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    if (errors.dateError) {
+      alert("Please correct the date errors before submitting");
+      return;
+    }
     try {
       console.log("Submitting surgery details for patientId:", patientId);
 
@@ -229,7 +236,8 @@ const Surgery = () => {
         risk_consent: formData.risk_consent,
         assistanceDoctor:
           selectedOptions.assistanceDoctor || formData.assistanceDoctor || "",
-        anaesthetist: selectedOptions.anaesthetist || "",
+        anaesthetist:
+          selectedOptions.anaesthetist || formData.anaesthetist || "",
         anesthesia: anesthesiaArray.join(","), // Only LA, SA, GA
 
         surgery_remarks: formData.surgery_remarks,
@@ -277,6 +285,7 @@ const Surgery = () => {
 
         setSelectedOptions({
           assistantsDoctor: requestBody.assistanceDoctor,
+          anaesthetist: requestBody.anaesthetist,
         });
       } else {
         throw new Error("Failed to save surgery details.");
@@ -288,6 +297,10 @@ const Surgery = () => {
   };
 
   const handleUpdateSurgery = async () => {
+    if (errors.dateError) {
+      alert("Please correct the date errors before updating");
+      return;
+    }
     try {
       console.log("Updating surgery details for patientId:", patientId);
 
@@ -370,6 +383,29 @@ const Surgery = () => {
     )
       .toISOString()
       .split("T")[0];
+
+    // Validate surgery date is not before admission date
+    if (name === "surgery_date" && formData.admission_date) {
+      const admissionDate = new Date(formData.admission_date);
+      if (date < admissionDate) {
+        setErrors({
+          dateError: "Surgery date cannot be before admission date",
+        });
+        return;
+      }
+    }
+
+    // Validate admission date is not after surgery date
+    if (name === "admission_date" && formData.surgery_date) {
+      const surgeryDate = new Date(formData.surgery_date);
+      if (date > surgeryDate) {
+        setErrors({ dateError: "Admission date cannot be after surgery date" });
+        return;
+      }
+    }
+
+    // Clear any previous errors if validation passes
+    setErrors({ dateError: "" });
 
     setFormData((prev) => ({
       ...prev,
@@ -519,6 +555,14 @@ const Surgery = () => {
                           showYearDropdown
                           dropdownMode="select"
                         />
+                        {errors.dateError && (
+                          <div
+                            className="text-danger"
+                            style={{ fontSize: "0.875rem" }}
+                          >
+                            {errors.dateError}
+                          </div>
+                        )}
                       </Form.Group>
                     </Col>
                     <Col>
@@ -599,26 +643,31 @@ const Surgery = () => {
                       <Form.Group controlId="anaesthetist">
                         <Form.Label>Anaesthetist:</Form.Label>
                         <Form.Select
-                          value={selectedOptions.anaesthetist || ""}
-                          onChange={(e) =>
-                            setSelectedOptions({
-                              ...selectedOptions,
-                              anaesthetist: e.target.value,
-                            })
+                          value={
+                            selectedOptions.anaesthetist ||
+                            formData.anaesthetist ||
+                            ""
                           }
+                          onChange={(e) => {
+                            const selectedValue = e.target.value;
+                            setSelectedOptions((prev) => ({
+                              ...prev,
+                              anaesthetist: selectedValue,
+                            }));
+                            setFormData((prev) => ({
+                              ...prev,
+                              anaesthetist: selectedValue, // Update form data so it reflects immediately
+                            }));
+                          }}
                           disabled={isDisabled}
                         >
                           <option value="">Select Anaesthetist</option>
-                          {[
-                            ...new Set([
-                              ...surgery.map((option) => option.anaesthetist),
-                              ...anaesthetist.map(
-                                (anaesthetist) => anaesthetist.name
-                              ),
-                            ]),
-                          ].map((anaesthetist, index) => (
-                            <option key={index} value={anaesthetist}>
-                              {anaesthetist}
+                          {anaesthetist.map((doctor) => (
+                            <option
+                              key={doctor.doctor_id}
+                              value={doctor.doctor_id}
+                            >
+                              {`${doctor.doctor_id}-${doctor.name}`}
                             </option>
                           ))}
                         </Form.Select>
@@ -813,7 +862,11 @@ const Surgery = () => {
             color: #2c3e50;
             font-size: 0.95rem;
           }
-
+.text-danger {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 5px;
+}
           .form-control:focus, .form-select:focus {
             border-color: #00bcd4;
             box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
