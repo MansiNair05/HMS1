@@ -137,45 +137,48 @@ const SurgeryTabs = ({
   ];
 
   const handleCheckboxChange = (e) => {
-    const { value, checked } = e.target; // value should be the symptom name
-    const currentTab = tabData.find((tab) => tab.id === key); // Get the current tab
-    const tabTitle = currentTab.title; // Get the current tab title
+    const { value, checked } = e.target;
+    const currentTab = tabData.find((tab) => tab.id === key);
 
     setSelectedOptions((prev) => {
-      console.log("Previous state:", prev);
-
-      const prevOptions = Array.isArray(prev) ? prev : []; // Ensure it's an array
+      const prevOptions = Array.isArray(prev) ? prev : [];
       return checked
         ? [...prevOptions, value]
         : prevOptions.filter((item) => item !== value);
     });
 
-    // Update the formData for diagnosis and symptoms
     setFormData((prevState) => {
-      // Split the existing symptoms string into an array
       const currentSymptoms = prevState.symptoms
         ? prevState.symptoms.split(", ")
         : [];
 
       const updatedSymptoms = checked
-        ? [...currentSymptoms, value] // Add the new symptom
-        : currentSymptoms.filter((item) => item !== value); // Remove the unchecked symptom
+        ? [...currentSymptoms, value]
+        : currentSymptoms.filter((item) => item !== value);
 
-      // Create a unique diagnosis string based on checked symptoms
-      const diagnosisSet = new Set(prevState.diagnosis.split(", ")); // Use a Set to avoid duplicates
+      // Set diagnosis based on the current tab if any symptoms are checked
+      const diagnosisSet = new Set(
+        prevState.diagnosis.split(", ").filter(Boolean)
+      );
 
-      // Check if any symptoms belong to the current tab
       if (currentTab.checkboxes.includes(value)) {
-        diagnosisSet.add(tabTitle); // Add the tab title if any symptom from this tab is checked
+        if (checked) {
+          diagnosisSet.add(currentTab.title);
+        } else {
+          // Only remove the diagnosis if no symptoms from this tab remain checked
+          const hasOtherSymptoms = currentTab.checkboxes.some((symptom) =>
+            updatedSymptoms.includes(symptom)
+          );
+          if (!hasOtherSymptoms) {
+            diagnosisSet.delete(currentTab.title);
+          }
+        }
       }
-
-      // Update the diagnosis string
-      const updatedDiagnosis = Array.from(diagnosisSet).join(", "); // Convert Set back to string
 
       return {
         ...prevState,
-        symptoms: updatedSymptoms.join(", "), // Store symptoms as a string
-        diagnosis: updatedDiagnosis, // Store diagnosis as a string
+        symptoms: updatedSymptoms.join(", "),
+        diagnosis: Array.from(diagnosisSet).join(", "),
       };
     });
   };
@@ -726,9 +729,8 @@ export default function PatientHistory() {
       const formattedData = {
         ...formData,
         patient_date: formData.patient_date || null,
-        diagnosis: formData.diagnosis, // Store diagnosis as a string
-        symptoms: formData.symptoms,
-        // symptoms: pilesSymptoms.join(", "), // Store selected symptoms
+        diagnosis: formData.diagnosis || "", // Store diagnosis as a string
+        symptoms: formData.symptoms.split(", ").filter(Boolean).join(","), // Standardize to comma-separated        // symptoms: pilesSymptoms.join(", "), // Store selected symptoms
         // diagnosis: pilesSymptoms.length > 0 ? "Piles" : formData.diagnosis, // Store "Piles" in diagnosis if any checkbox is checked
         general_history: generalArray.join(","),
         habits: habitsArray.join(","),
@@ -747,8 +749,7 @@ export default function PatientHistory() {
         medical_mx: adviceArray.join(","),
         doctor_id: selectedOptions.doctor_id,
         patientId,
-          medications: formData.medications  // ✅ add this line
-
+        medications: formData.medications, // ✅ add this line
       };
 
       const saveResponse = await fetch(
@@ -1024,7 +1025,15 @@ export default function PatientHistory() {
         indication: med.indication || "",
         since: med.since || "",
       }));
-  
+      if (record.symptoms) {
+        // Handle both comma and slash separated symptoms
+        const symptomsArray = record.symptoms
+          .split(/[,/]/)
+          .map((item) => item.trim())
+          .filter((item) => item);
+        setSelectedOptions(symptomsArray);
+      }
+      
 
       // Set the form data with the selected record's data
       setFormData((prev) => ({
