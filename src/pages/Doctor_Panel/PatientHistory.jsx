@@ -14,7 +14,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://192.168.87.47:5000/api";
+const BASE_URL = "http://192.168.21.47:5000/api";
 
 const SurgeryTabs = ({
   selectedOptions,
@@ -366,14 +366,15 @@ export default function PatientHistory() {
       fistula_duration: "",
       hernia_duration: "",
       varicose_duration: "",
-      urinary_duration: "",
-      fecal_duration: "",
+      Urinary_incontinence_duration: "",
+      Fecal_incontinence_duration: "",
       urology_duration: "",
       ODS_duration: "",
       bowel_habits: "",
       pilonidalsinus: "",
       circumcision: "",
     },
+    doctor: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -424,7 +425,6 @@ export default function PatientHistory() {
       //       },
       //     }
       //   );
-
       //   if (!response.ok) {
       //     console.error(
       //       "API Response Error:",
@@ -433,20 +433,16 @@ export default function PatientHistory() {
       //     );
       //     return;
       //   }
-
       //   const data = await response.json();
       //   console.log("Fetched Data:", data);
-
       //   if (data?.data?.patientHistory?.length > 0) {
       //     const patientData = data.data.patientHistory[0];
-
       //     // Initialize medicationData to avoid undefined reference
       //     let medicationData = [];
       //     if (data?.data?.medicationHistory?.length > 0) {
       //       medicationData = data.data.medicationHistory;
       //     }
       //     setMedicationHistory(medicationData);
-
       //     setFormData((prevState) => ({
       //       ...prevState,
       //       ...patientData,
@@ -701,13 +697,13 @@ export default function PatientHistory() {
         investigationArray.push(formData.investigation.other);
 
       const adviceArray = [];
-      if (formData.medical_mx.mrd) adviceArray.push("MRD");
-      if (formData.medical_mx.manoBf) adviceArray.push("Mano/BF");
-      if (formData.medical_mx.coloGastro) adviceArray.push("Colo/Gastro");
-      if (formData.medical_mx.mcdpa) adviceArray.push("MCDPA");
-      if (formData.medical_mx.diet) adviceArray.push("Diet");
-      if (formData.medical_mx.b) adviceArray.push("B12");
-      if (formData.medical_mx.d) adviceArray.push("D3");
+      if (formData.medical_mx?.mrd) adviceArray.push("MRD");
+      if (formData.medical_mx?.manoBf) adviceArray.push("Mano/BF");
+      if (formData.medical_mx?.coloGastro) adviceArray.push("Colo/Gastro");
+      if (formData.medical_mx?.mcdpa) adviceArray.push("MCDPA");
+      if (formData.medical_mx?.diet) adviceArray.push("Diet");
+      if (formData.medical_mx?.b) adviceArray.push("B12");
+      if (formData.medical_mx?.d) adviceArray.push("D3");
 
       const habitsArray = [];
       if (formData.habits.smoking) habitsArray.push("Smoking");
@@ -749,8 +745,10 @@ export default function PatientHistory() {
 
         family_history: familyHistoryArray.join(","), // Join the array into a string
         medical_mx: adviceArray.join(","),
-        name: selectedOptions.name,
+        doctor_id: selectedOptions.doctor_id,
         patientId,
+          medications: formData.medications  // ✅ add this line
+
       };
 
       const saveResponse = await fetch(
@@ -1014,22 +1012,24 @@ export default function PatientHistory() {
 
       const habitsString = record.habits || "";
       const habitsArray = habitsString.split(",").map((item) => item.trim());
+      const response = await fetch(
+        `${BASE_URL}/V1/patientHistory/listPatientHistory/${record.patient_id}`
+      );
+      const result = await response.json();
+      const medicationHistory = result.data?.medicationHistory || [];
 
-      const formattedMedications =
-        record.length > 0
-          ? record.map((med, index) => ({
-              id: index + 1,
-              medicine: med.medicine || "",
-              indication: med.indication || "",
-              since: med.since || "",
-            }))
-          : [
-              { id: 1, medicine: "", indication: "", since: "" },
-              { id: 2, medicine: "", indication: "", since: "" },
-            ];
+      const formattedMedications = medicationHistory.map((med, index) => ({
+        id: index + 1,
+        medicine: med.medicine || "",
+        indication: med.indication || "",
+        since: med.since || "",
+      }));
+  
+
       // Set the form data with the selected record's data
       setFormData((prev) => ({
         ...prev,
+        doctor_id: record.doctor_id || "",
         patient_date: record.patient_date || "",
         height: record.height || "",
         weight: record.weight || "",
@@ -1096,8 +1096,8 @@ export default function PatientHistory() {
           fistula_duration: record.fistula_duration || "",
           hernia_duration: record.hernia_duration || "",
           varicose_duration: record.varicose_duration || "",
-          urinary_duration: record.Urinary_incontinence_duration || "",
-          fecal_duration: record.Fecal_incontinence_duration || "",
+          Urinary_incontinence_duration: record.Urinary_incontinence_duration || "",
+          Fecal_incontinence_duration: record.Fecal_incontinence_duration || "",
           ODS_duration: record.ODS_duration || "",
           pilonidalsinus: record.pilonidalsinus || "",
           circumcision: record.circumcision || "",
@@ -1484,8 +1484,8 @@ export default function PatientHistory() {
         fistula_duration: "",
         hernia_duration: "",
         varicose_duration: "",
-        urinary_duration: "",
-        fecal_duration: "",
+        Urinary_incontinence_duration: "",
+        Fecal_incontinence_duration: "",
         urology_duration: "",
         ODS_duration: "",
         bowel_habits: "",
@@ -1581,13 +1581,7 @@ export default function PatientHistory() {
                       </button>
                     )}
                   </div>
-                  {previousRecordDate && (
-                    <div style={{ marginTop: "15px" }}>
-                      <strong>Previous Record Date: </strong>
-                      <span>{previousRecordDate}</span>
-                    </div>
-                  )}
-                  <br />
+                  <br></br>
                   <Row>
                     <Col md={2} className="mb-4">
                       <Form.Group className="mb-3">
@@ -2683,35 +2677,30 @@ export default function PatientHistory() {
                         <Form.Select
                           name="assistantDoctorName"
                           value={
-                            selectedOptions?.name || assistantDoctorName || ""
+                            selectedOptions?.doctor_id ||
+                            formData.doctor_id ||
+                            assistantDoctorName ||
+                            ""
                           }
                           onChange={(e) => {
                             const selectedDoctorName = e.target.value; // Get the selected value
                             setSelectedOptions({
                               ...selectedOptions,
-                              name: selectedDoctorName, // Update selected options with the selected doctor's name
+                              doctor_id: selectedDoctorName, // Update selected options with the selected doctor's name
                             });
                             setFormData((prev) => ({
                               ...prev,
-                              assistanceDoctor: selectedDoctorName, // Update form data with the selected doctor's name
+                              doctor_id: selectedDoctorName, // Update form data with the selected doctor's name
                             }));
                           }}
                         >
                           <option value="">Select Assistant</option>
-                          {[
-                            ...new Set([
-                              // Include the fetched doctor's name
-                              assistantDoctorName,
-                              ...patientHistory
-                                .map((option) => option.assistantDoctorName)
-                                .filter(Boolean),
-                              ...assistantsDoctor
-                                .map((doctor) => doctor.name)
-                                .filter(Boolean),
-                            ]),
-                          ].map((name, index) => (
-                            <option key={index} value={name}>
-                              {name}
+                          {assistantsDoctor.map((doctor) => (
+                            <option
+                              key={doctor.doctor_id}
+                              value={doctor.doctor_id}
+                            >
+                              {`${doctor.doctor_id}-${doctor.name}`}
                             </option>
                           ))}
                         </Form.Select>

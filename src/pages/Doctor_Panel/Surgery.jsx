@@ -46,7 +46,7 @@ const Surgery = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [previousRecords, setPreviousRecords] = useState([]);
 
-  const BASE_URL = "http://192.168.87.47:5000/api";
+  const BASE_URL = "http://192.168.21.47:5000/api";
 
   const API_ENDPOINTS = {
     GET_SURGERY: "/V1/surgeryDetails/listSurgeryDetails",
