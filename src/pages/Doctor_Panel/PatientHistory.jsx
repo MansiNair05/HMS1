@@ -728,6 +728,8 @@ export default function PatientHistory() {
 
       const formattedData = {
         ...formData,
+        ...formData.surgeryTabs, // This is what's missing
+
         patient_date: formData.patient_date || null,
         diagnosis: formData.diagnosis || "", // Store diagnosis as a string
         symptoms: formData.symptoms.split(", ").filter(Boolean).join(","), // Standardize to comma-separated        // symptoms: pilesSymptoms.join(", "), // Store selected symptoms
